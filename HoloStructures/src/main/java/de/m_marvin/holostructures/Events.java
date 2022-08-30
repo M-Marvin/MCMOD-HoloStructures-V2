@@ -1,5 +1,6 @@
 package de.m_marvin.holostructures;
 
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -7,6 +8,8 @@ import net.minecraftforge.fml.common.Mod;
 public class Events {
 	
 	@SubscribeEvent
-	public static void onCommandRegister(COmmand)
+	public static void onCommandRegister(RegisterCommandsEvent event) {
+		//TestCommand.register(event.getDispatcher());
+	}
 	
 }
