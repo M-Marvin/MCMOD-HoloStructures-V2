@@ -1,0 +1,21 @@
+{
+
+"commands.unaviable.internalerror": "Interner Fehler!",
+"commands.unaviable.nopermissions": "Unzureichende Berechtigungen",
+"commands.unaviable.noselection": "Kein Bereich ausgewählt",
+
+"commands.selection.corners.first": "Erster Eckpunkt markiert",
+"commands.selection.corners.second": "Zweiter Eckpunkt markiert",
+"commands.selection.expand.grow": "Auswahl um %1$s nach %2$s vergrößert",
+"commands.selection.expand.shrink": "Auswahl um %1$s nach %2$s verkleinert",
+"commands.selection.expand.invalidshrink": "Wert zu groß",
+"commands.selection.clear": "Auswahl zurückgesetzt",
+
+"commands.blueprint.copy.unable": "Konnte Kopier-Befehl nicht starten!",
+"commands.blueprint.copy.started": "Kopiervorgang gestartet",
+"commands.blueprint.copy.completed": "Kopiervorhang abgeschlossen, Bereich in Zwischenablage kopiert",
+"commands.blueprint.paste.unable": "Konnte Einfüg-Befehl nicht starten!",
+"commands.blueprint.paste.started": "Einfügvorgang gestartet",
+"commands.blueprint.paste.completed": "Einfügvorgang abgeschlossen, Bereich eingefügt",
+"commands.blueprint.paste.incomplete": "Einfügen unvolständig!"
+}
