@@ -1,6 +1,7 @@
 package de.m_marvin.holostructures.client.worldaccess;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -18,6 +19,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerGamePacketListener;
@@ -152,8 +154,8 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public void setBlockEntity(BlockPos pos, Blueprint.EntityData blockEntity) {
 		if (blockEntity.nbt().get().isPresent()) {
-			// FIXME Cut NBT string into multiple chat commands (< 256 Chars)
-			sendCommand("/data merge block " + UtilHelper.formatBlockPos(pos) + " " + blockEntity.nbt().get().get().toString());
+			List<CompoundTag> dataTags = UtilHelper.splitCompound(blockEntity.nbt().get().get(), 200);
+			dataTags.forEach((tag) -> sendCommand("/data merge block " + UtilHelper.formatBlockPos(pos) + " " + tag.toString()));
 		}
 		
 	}
@@ -173,10 +175,13 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public void addEntity(Vec3 pos, Blueprint.EntityData entity) {
 		if (entity.nbt().get().isPresent()) {
-			// FIXME Cut NBT string into multiple chat commands (< 256 Chars)
-			sendCommand("/summon " + entity.type() + " " + UtilHelper.formatVecPos(pos) + " " + entity.nbt().get().get().toString());	
+			List<CompoundTag> dataTags = UtilHelper.splitCompound(entity.nbt().get().get(), 200);
+			sendCommand("/summon " + entity.type() + " " + UtilHelper.formatVecPos(pos) + " " + dataTags.get(0).toString());
+			if (dataTags.size() > 1) {
+				// TODO TEST
+				dataTags.forEach((tag) -> sendCommand("/execute positioned " + UtilHelper.formatVecPos(pos) + " run data merge entity @e[type=" + entity.type().toString() + ",distance=..0.1,sort=nearest,limit=1] " + tag.toString()));
+			}
 		}
-		
 	}
 	
 	@Override
