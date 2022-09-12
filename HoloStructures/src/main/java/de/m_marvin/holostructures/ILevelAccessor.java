@@ -28,7 +28,7 @@ public interface ILevelAccessor {
 	public boolean checkBlock(BlockPos pos, BlockState state);
 	
 	public Optional<Blueprint.EntityData> getBlockEntity(BlockPos pos);
-	public void setBlockEntity(BlockPos pos, Blueprint.EntityData nbt);
+	public void setBlockEntity(BlockPos pos, Blueprint.EntityData data);
 	
 	public Map<Vec3, EntityData> getEntities(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper);
 	public void addEntity(Vec3 pos, Blueprint.EntityData entity);

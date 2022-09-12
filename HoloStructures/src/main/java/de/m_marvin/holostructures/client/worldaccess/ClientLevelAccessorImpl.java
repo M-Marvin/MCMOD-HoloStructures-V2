@@ -129,7 +129,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 				}
 			}
 			
-			return false;
+			return this.level.get().getBlockState(pos).equals(state);
 		}
 		return true;
 	}
@@ -154,7 +154,8 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public void setBlockEntity(BlockPos pos, Blueprint.EntityData blockEntity) {
 		if (blockEntity.nbt().get().isPresent()) {
-			List<CompoundTag> dataTags = UtilHelper.splitCompound(blockEntity.nbt().get().get(), 200);
+			// FIXME /data merge does not work for lists (like inventories)
+			List<CompoundTag> dataTags = UtilHelper.sizeLimitedCompounds(blockEntity.nbt().get().get(), 200);
 			dataTags.forEach((tag) -> sendCommand("/data merge block " + UtilHelper.formatBlockPos(pos) + " " + tag.toString()));
 		}
 		
@@ -163,10 +164,14 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public Map<Vec3, Blueprint.EntityData> getEntities(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
 		AABB aabb = new AABB(corner1, corner2);
+		Function<CompoundTag, CompoundTag> nbtFilter = (nbt) -> {
+			nbt.remove("Pos");
+			return nbt;
+		};
 		Map<Vec3, Blueprint.EntityData> map = new HashMap<>();
 		this.level.get().getEntities(null, aabb).forEach((entity) -> {
 			Vec3 position = positionMapper.apply(entity.position());
-			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> Optional.of(entity.serializeNBT()));
+			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> Optional.of(nbtFilter.apply(entity.serializeNBT())));
 			map.put(position, data);
 		});
 		return map;
@@ -175,10 +180,10 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public void addEntity(Vec3 pos, Blueprint.EntityData entity) {
 		if (entity.nbt().get().isPresent()) {
-			List<CompoundTag> dataTags = UtilHelper.splitCompound(entity.nbt().get().get(), 200);
+			// FIXME /data merge does not work for lists (like inventories) and item frames
+			List<CompoundTag> dataTags = UtilHelper.sizeLimitedCompounds(entity.nbt().get().get(), 100);
 			sendCommand("/summon " + entity.type() + " " + UtilHelper.formatVecPos(pos) + " " + dataTags.get(0).toString());
 			if (dataTags.size() > 1) {
-				// TODO TEST
 				dataTags.forEach((tag) -> sendCommand("/execute positioned " + UtilHelper.formatVecPos(pos) + " run data merge entity @e[type=" + entity.type().toString() + ",distance=..0.1,sort=nearest,limit=1] " + tag.toString()));
 			}
 		}

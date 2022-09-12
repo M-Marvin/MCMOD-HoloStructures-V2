@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
-import de.m_marvin.holostructures.HoloStructures;
+import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.Formater;
 import de.m_marvin.holostructures.commandargs.DirectionArgumentType;
 import net.minecraft.client.Minecraft;
@@ -24,6 +24,7 @@ public class ClientProcessor implements ITaskProcessor {
 	public void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(commandSelectionBuild());
 		dispatcher.register(commandBlueprintBuild());
+		dispatcher.register(commandInfoBuild());
 	}
 	
 	@Override
@@ -44,7 +45,7 @@ public class ClientProcessor implements ITaskProcessor {
 			Formater.build().translate("commands.unaviable.noselection").commandErrorStyle().send(source);
 			return false;
 		}
-		if (requiresBlueprintManager && HoloStructures.getInstance().getBlueprints().isWorking()) {
+		if (requiresBlueprintManager && ClientHandler.getInstance().getBlueprints().isWorking()) {
 			Formater.build().translate("commands.unaviable.busyblueprintmanager").commandErrorStyle().send(source);
 			return false;
 		}
@@ -52,6 +53,24 @@ public class ClientProcessor implements ITaskProcessor {
 	}
 	
 	/* Commands */
+	
+	public LiteralArgumentBuilder<CommandSourceStack> commandInfoBuild() {
+		return Commands.literal("holostructures")
+			.then(Commands.literal("status").executes((ctx) -> 
+				commandInfo(ctx.getSource())
+				)
+			);
+	}
+	
+	public int commandInfo(CommandSourceStack source) {
+		if (checkRunnable(source, false, false, false)) {
+			Formater.build().translate("commands.info.title").commandInfoStyle().send(source);
+			Formater.build().translate("commands.info.serveraccess", this.getAccessor().get().hasServerAccess()).commandInfoStyle().send(source);
+			Formater.build().translate("commands.info.opaccess", this.getAccessor().get().hasOPAccess()).commandInfoStyle().send(source);
+			return 1;
+		}
+		return 0;
+	}
 	
 	public LiteralArgumentBuilder<CommandSourceStack> commandSelectionBuild() {
 		return Commands.literal("select")
@@ -170,8 +189,8 @@ public class ClientProcessor implements ITaskProcessor {
 		if (checkRunnable(source, true, false, true)) {
 			BlockPos copyOrigin = new BlockPos(Math.min(selectionCorner1.getX(), selectionCorner2.getX()), Math.min(selectionCorner1.getY(), selectionCorner2.getY()), Math.min(selectionCorner1.getZ(), selectionCorner2.getZ()));
 			BlockPos blueprintOrigin = origin.subtract(copyOrigin);
-			HoloStructures.getInstance().getBlueprints().copySelection(this.getAccessor().get(), this.selectionCorner1, this.selectionCorner2, copyEntities, () -> {
-				HoloStructures.getInstance().getBlueprints().getClipboard().setOrigin(blueprintOrigin);
+			ClientHandler.getInstance().getBlueprints().copySelection(this.getAccessor().get(), this.selectionCorner1, this.selectionCorner2, copyEntities, () -> {
+				ClientHandler.getInstance().getBlueprints().getClipboard().setOrigin(blueprintOrigin);
 				Formater.build().translate("commands.blueprint.copy.completed").commandInfoStyle().send(source);
 			});
 			Formater.build().translate("commands.blueprint.copy.started").commandInfoStyle().send(source);
@@ -183,8 +202,8 @@ public class ClientProcessor implements ITaskProcessor {
 	
 	public int commandPaste(CommandSourceStack source, boolean pasteEntities, BlockPos pasteOrigin) {
 		if (checkRunnable(source, false, true, true)) {
-			boolean started = HoloStructures.getInstance().getBlueprints().pasteClipboard(getAccessor().get(), pasteOrigin, pasteEntities, () -> {
-				if (!HoloStructures.getInstance().getBlueprints().getResult()) {
+			boolean started = ClientHandler.getInstance().getBlueprints().pasteClipboard(getAccessor().get(), pasteOrigin, pasteEntities, () -> {
+				if (!ClientHandler.getInstance().getBlueprints().getResult()) {
 					Formater.build().translate("commands.blueprint.paste.incomplete").commandWarnStyle().send(source); // TODO 
 				} else {
 					Formater.build().translate("commands.blueprint.paste.completed").commandInfoStyle().send(source);
@@ -203,8 +222,8 @@ public class ClientProcessor implements ITaskProcessor {
 	}
 	
 	public int commandAbbort(CommandSourceStack source) {
-		if (HoloStructures.getInstance().getBlueprints().isWorking()) {
-			HoloStructures.getInstance().getBlueprints().abbortTask();
+		if (ClientHandler.getInstance().getBlueprints().isWorking()) {
+			ClientHandler.getInstance().getBlueprints().abbortTask();
 			Formater.build().translate("commands.blueprint.abborted").commandWarnStyle().send(source); // TODO
 			return 1;
 		}

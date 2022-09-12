@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import de.m_marvin.holostructures.HoloStructures;
+import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.worldaccess.ClientProcessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -11,12 +12,13 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
 public class SelectionRenderer {
 	
 	@SubscribeEvent
@@ -40,7 +42,7 @@ public class SelectionRenderer {
 	
 	public static void renderSelctionBoundingBox(PoseStack matrixStack, MultiBufferSource bufferSource) {
 		
-		ClientProcessor clientProcessor = HoloStructures.getInstance().getClientOnlyProcessor();
+		ClientProcessor clientProcessor = ClientHandler.getInstance().getClientOnlyProcessor();
 		if (clientProcessor.selectionCorner1 != null && clientProcessor.selectionCorner2 != null) {
 			
 			Vec3i pos1 = clientProcessor.selectionCorner1;

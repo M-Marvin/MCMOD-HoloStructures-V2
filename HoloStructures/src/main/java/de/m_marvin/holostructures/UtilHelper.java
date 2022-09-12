@@ -4,13 +4,9 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.Random;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Queues;
@@ -62,17 +58,14 @@ public class UtilHelper {
 		}
 		public static TagContainer<ListTag> fromList(ListTag list) {
 			return new TagContainer<ListTag>(list, 
-					() -> (list.size() > 0) ? Optional.of(String.valueOf(new Random().nextInt(list.size()))) : Optional.empty(), 
+					() -> (list.size() > 0) ? Optional.of("0") : Optional.empty(), 
 					(key) -> list.get(Integer.parseInt(key)),
 					(key, value) -> list.add(value),
 					(key) -> list.remove(Integer.parseInt(key)));
 		}
 	}
-	
-	
-	public static List<CompoundTag> splitCompound(CompoundTag compoundTag, int maxStringLength) {
-
-		System.out.println("Split " + compoundTag);
+		
+	public static List<CompoundTag> sizeLimitedCompounds(CompoundTag compoundTag, int maxStringLength) {
 		
 		List<CompoundTag> splitCompounds = new ArrayList<>();
 				
@@ -81,7 +74,6 @@ public class UtilHelper {
 			Deque<String> readTagKey = Queues.newArrayDeque();
 			Deque<TagContainer<?>> readTag = Queues.newArrayDeque();
 			Deque<TagContainer<?>> writeTag = Queues.newArrayDeque();
-			
 			CompoundTag compound = new CompoundTag();
 			
 			writeTag.offerFirst(TagContainer.fromCompound(compound));
@@ -92,22 +84,22 @@ public class UtilHelper {
 				if (key.isPresent()) {
 					Tag tag = readTag.peek().tagGetter().apply(key.get());
 					if (tag instanceof ListTag readList) {
-						readTag.offerLast(TagContainer.fromList(readList));
-						readTagKey.offerLast(key.get());
+						readTag.offerFirst(TagContainer.fromList(readList));
+						readTagKey.offerFirst(key.get());
 						ListTag writeList = new ListTag();
 						writeTag.peek().tagPutter().accept(key.get(), writeList);
-						writeTag.offerLast(TagContainer.fromList(writeList));
+						writeTag.offerFirst(TagContainer.fromList(writeList));
 						continue;
 					} else if (tag instanceof CompoundTag readComp) {
-						readTag.offerLast(TagContainer.fromCompound(readComp));
-						readTagKey.offerLast(key.get());
+						readTag.offerFirst(TagContainer.fromCompound(readComp));
+						readTagKey.offerFirst(key.get());
 						CompoundTag writeComp = new CompoundTag();
 						writeTag.peek().tagPutter().accept(key.get(), writeComp);
 						writeTag.offerFirst(TagContainer.fromCompound(writeComp));
 						continue;
 					} else {
 						writeTag.peek().tagPutter().accept(key.get(), readTag.peek().tagGetter().apply(key.get()));
-						if (writeTag.peek().toString().length() <= maxStringLength) {
+						if (compound.toString().length() <= maxStringLength) {
 							readTag.peek().tagRemover().accept(key.get());
 						} else {
 							writeTag.peek().tagRemover().accept(key.get());
@@ -121,73 +113,40 @@ public class UtilHelper {
 				}
 			}
 			
-			System.out.println("-> " + compound);
 			splitCompounds.add(compound);
 			
 		}
 		
-		System.out.println("=> " + compoundTag);
-		
-		// TODO
-		return new ArrayList<>();
-		
+		return splitCompounds;
 	}
 	
+	public static void forEachEntry(String path, CompoundTag nbt, BiConsumer<String, Tag> task) {
+		nbt.getAllKeys().forEach((key) -> {
+			Tag tag = nbt.get(key);
+			String path2 = (path.isEmpty() ? "" : path + ".") + key;
+			if (tag instanceof CompoundTag compound) {
+				forEachEntry(path2, compound, task);
+			} else if (tag instanceof ListTag list) {
+				forEachEntry(path2, list, task);
+			} else {
+				task.accept(path2, tag);
+			}
+		});
+	}
 
-//	System.out.println("Split " + compoundTag);
-//	
-//	List<CompoundTag> splitCompounds = new ArrayList<>();
-//			
-//	while (!compoundTag.isEmpty()) {
-//		
-//		Deque<String> readTagKey = Queues.newArrayDeque();
-//		Deque<CompoundTag> readTag = Queues.newArrayDeque();
-//		Deque<CompoundTag> writeTag = Queues.newArrayDeque();
-//		
-//		CompoundTag compound = new CompoundTag();
-//		
-//		writeTag.offerFirst(compound);
-//		readTag.offerLast(compoundTag);
-//		
-//		while (readTag.size() > 0) {
-//			Optional<String> key = readTag.peek().getAllKeys().stream().findAny();
-//			if (key.isPresent()) {
-//				Tag tag = readTag.peek().get(key.get());
-//				if (tag instanceof ListTag readList) {
-//					
-//				} else if (tag instanceof CompoundTag readComp) {
-//					readTag.offerLast(readComp);
-//					readTagKey.offerLast(key.get());
-//					CompoundTag writeComp = new CompoundTag();
-//					writeTag.peek().put(key.get(), writeComp);
-//					writeTag.offerFirst(writeComp);
-//					continue;
-//				} else {
-//					writeTag.peek().put(key.get(), readTag.peek().get(key.get()));
-//					if (writeTag.peek().toString().length() <= maxStringLength) {
-//						readTag.peek().remove(key.get());
-//					} else {
-//						writeTag.peek().remove(key.get());
-//						break;
-//					}
-//				}
-//			} else {
-//				readTag.poll();
-//				if (readTagKey.size() > 0) readTag.peek().remove(readTagKey.poll());
-//				writeTag.poll();
-//			}
-//		}
-//		
-//		System.out.println("-> " + compound);
-//		splitCompounds.add(compound);
-//		
-//	}
-//	
-//	System.out.println("=> " + compoundTag);
-//	
-//	// TODO
-//	return new ArrayList<>();
-	
+	public static void forEachEntry(String path, ListTag nbt, BiConsumer<String, Tag> task) {
+		for (int i = 0; i < nbt.size(); i++) {
+			Tag tag = nbt.get(i);
+			String path2 = (path.isEmpty() ? "" : path + ".") + "[" + i + "]";
+			if (tag instanceof CompoundTag compound) {
+				forEachEntry(path2, compound, task);
+			} else if (tag instanceof ListTag list) {
+				forEachEntry(path2, list, task);
+			} else {
+				task.accept(path2, tag);
+			}
+		}
+	}
 	
 }
  

@@ -11,11 +11,12 @@ import java.util.function.Supplier;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
-import de.m_marvin.holostructures.HoloStructures;
 import de.m_marvin.holostructures.ILevelAccessor;
+import de.m_marvin.holostructures.client.ClientHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,7 +32,20 @@ public class Blueprint {
 	protected Map<BlockPos, EntityData> blockentities;
 	protected MultiValuedMap<Vec3, EntityData> entities;
 	
-	public static record EntityData(ResourceLocation type, Supplier<Optional<CompoundTag>> nbt) {}
+	public static record EntityData(ResourceLocation type, Supplier<Optional<CompoundTag>> nbt) {
+		public void writeBytes(FriendlyByteBuf buff) {
+			buff.writeResourceLocation(type);if (nbt.get().isPresent()) {
+				buff.writeNbt(nbt.get().get());
+			} else {
+				buff.writeNbt(new CompoundTag());
+			}
+		}
+		public static EntityData readBytes(FriendlyByteBuf buff) {
+			ResourceLocation type = buff.readResourceLocation();
+			CompoundTag nbt = buff.readNbt();
+			return new EntityData(type, () -> Optional.of(nbt));
+		}
+	}
 	
 	public Blueprint() {
 		this.name = "";
@@ -119,7 +133,7 @@ public class Blueprint {
 		
 		boolean validStates = false;
 		boolean validated = false;
-		while (!validStates && HoloStructures.getInstance().getBlueprints().isWorking()) {
+		while (!validStates && ClientHandler.getInstance().getBlueprints().isWorking()) {
 			validStates = validated;
 			validated = true;
 			Random random = new Random();
@@ -139,7 +153,7 @@ public class Blueprint {
 		
 		if (pasteEntities && this.entities.size() > 0) {
 			this.entities.keySet().forEach((position) -> {
-				this.entities.get(position).forEach((entity) -> accessor.addEntity(position, entity));
+				this.entities.get(position).forEach((entity) -> accessor.addEntity(position.add(from.getX(), from.getY(), from.getZ()), entity));
 			});
 		}
 		

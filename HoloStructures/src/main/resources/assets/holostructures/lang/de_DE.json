@@ -17,5 +17,9 @@
 "commands.blueprint.paste.unable": "Konnte Einfüg-Befehl nicht starten!",
 "commands.blueprint.paste.started": "Einfügvorgang gestartet",
 "commands.blueprint.paste.completed": "Einfügvorgang abgeschlossen, Bereich eingefügt",
-"commands.blueprint.paste.incomplete": "Einfügen unvolständig!"
+"commands.blueprint.paste.incomplete": "Einfügen unvolständig!",
+"commands.info.title": "Holostructures Status:",
+"commands.info.serveraccess": "Server-Zugriff: %1$s",
+"commands.info.opaccess": "Admin-Zugriff: %1$s"
+
 }
