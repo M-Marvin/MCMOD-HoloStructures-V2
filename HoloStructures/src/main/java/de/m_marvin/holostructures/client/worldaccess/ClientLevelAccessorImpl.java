@@ -1,7 +1,6 @@
 package de.m_marvin.holostructures.client.worldaccess;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -11,8 +10,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.Queues;
 
 import de.m_marvin.holostructures.HoloStructures;
-import de.m_marvin.holostructures.ILevelAccessor;
 import de.m_marvin.holostructures.UtilHelper;
+import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -56,9 +55,13 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	
 	@SubscribeEvent
 	public static void onChatMessage(ClientChatReceivedEvent event) {
-		if (event.getSenderUUID().equals(Util.NIL_UUID) && pendingCommands.size() > 0) {
-			event.setCanceled(true);
-			pendingCommands.poll().setResponse(event.getMessage());
+		if (event.getSenderUUID().equals(Util.NIL_UUID)) {
+			if (ClientHandler.getInstance().getBlueprints().isWorking() || pendingCommands.size() > 0) {
+				event.setCanceled(true);
+			}
+			if (pendingCommands.size() > 0) {
+				pendingCommands.poll().setResponse(event.getMessage());
+			}
 		}
 	}
 	
@@ -154,16 +157,19 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public void setBlockEntity(BlockPos pos, Blueprint.EntityData blockEntity) {
 		if (blockEntity.nbt().get().isPresent()) {
-			// FIXME /data merge does not work for lists (like inventories)
-			List<CompoundTag> dataTags = UtilHelper.sizeLimitedCompounds(blockEntity.nbt().get().get(), 200);
-			dataTags.forEach((tag) -> sendCommand("/data merge block " + UtilHelper.formatBlockPos(pos) + " " + tag.toString()));
+			String posString = UtilHelper.formatBlockPos(pos);
+			UtilHelper.sequentialCopy(
+					blockEntity.nbt().get().get(), 
+					(path, value) -> sendCommand("/data modify block " + posString + " " + path + " set value " + value.toString()),
+					(path, value) -> sendCommand("/data modify block " + posString + " " + path + " append value " + value.toString()),
+					"");
 		}
 		
 	}
 	
 	@Override
 	public Map<Vec3, Blueprint.EntityData> getEntities(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
-		AABB aabb = new AABB(corner1, corner2);
+		AABB aabb = new AABB(corner1, corner2).inflate(1);
 		Function<CompoundTag, CompoundTag> nbtFilter = (nbt) -> {
 			nbt.remove("Pos");
 			return nbt;
@@ -171,7 +177,8 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 		Map<Vec3, Blueprint.EntityData> map = new HashMap<>();
 		this.level.get().getEntities(null, aabb).forEach((entity) -> {
 			Vec3 position = positionMapper.apply(entity.position());
-			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> Optional.of(nbtFilter.apply(entity.serializeNBT())));
+			CommandResponse response = sendCommand("/data get entity " + entity.getUUID().toString());
+			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> response.isPresent() ? Optional.of(nbtFilter.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			map.put(position, data);
 		});
 		return map;
@@ -180,12 +187,17 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	@Override
 	public void addEntity(Vec3 pos, Blueprint.EntityData entity) {
 		if (entity.nbt().get().isPresent()) {
-			// FIXME /data merge does not work for lists (like inventories) and item frames
-			List<CompoundTag> dataTags = UtilHelper.sizeLimitedCompounds(entity.nbt().get().get(), 100);
-			sendCommand("/summon " + entity.type() + " " + UtilHelper.formatVecPos(pos) + " " + dataTags.get(0).toString());
-			if (dataTags.size() > 1) {
-				dataTags.forEach((tag) -> sendCommand("/execute positioned " + UtilHelper.formatVecPos(pos) + " run data merge entity @e[type=" + entity.type().toString() + ",distance=..0.1,sort=nearest,limit=1] " + tag.toString()));
-			}
+			String pasteTag = "paste_" + entity.hashCode();
+			sendCommand("/summon " + entity.type().toString() + " " + UtilHelper.formatVecPos(pos) + " {Tags:[\"" + pasteTag + "\"]}");
+			UtilHelper.sequentialCopy(
+					entity.nbt().get().get(),
+					(path, value) -> {
+						sendCommand("/data modify entity @e[tag=" + pasteTag + ",limit=1] " + path + " set value " + value.toString());
+					},
+					(path, value) -> {
+						sendCommand("/data modify entity @e[tag=" + pasteTag + ",limit=1] " + path + " append value " + value.toString());
+					},
+					"");
 		}
 	}
 	

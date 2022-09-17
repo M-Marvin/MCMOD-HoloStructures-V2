@@ -11,8 +11,8 @@ import java.util.function.Supplier;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
-import de.m_marvin.holostructures.ILevelAccessor;
 import de.m_marvin.holostructures.client.ClientHandler;
+import de.m_marvin.holostructures.client.worldaccess.ILevelAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
@@ -57,6 +57,9 @@ public class Blueprint {
 	}
 	
 	public static Blueprint createBlueprint(ILevelAccessor accessor, BlockPos corner1, BlockPos corner2, boolean includeEntities) {
+		
+		if (!accessor.isDoneAccessing()) accessor.abbortWaiting();
+		
 		Vec3i from = new Vec3i(Math.min(corner1.getX(), corner2.getX()), Math.min(corner1.getY(), corner2.getY()), Math.min(corner1.getZ(), corner2.getZ()));
 		Vec3i to = new Vec3i(Math.max(corner1.getX(), corner2.getX()), Math.max(corner1.getY(), corner2.getY()), Math.max(corner1.getZ(), corner2.getZ()));
 		Blueprint blueprint = new Blueprint();
@@ -87,6 +90,9 @@ public class Blueprint {
 	}
 	
 	public boolean pasteBlueprint(ILevelAccessor accessor, BlockPos originPosition, boolean pasteEntities) {
+
+		if (!accessor.isDoneAccessing()) accessor.abbortWaiting();
+		
 		Vec3i from = originPosition.subtract(this.origin);
 		Vec3i to = from.offset(this.size);
 		
@@ -133,7 +139,8 @@ public class Blueprint {
 		
 		boolean validStates = false;
 		boolean validated = false;
-		while (!validStates && ClientHandler.getInstance().getBlueprints().isWorking()) {
+		int fixTries = invalidStates.size();
+		while (!validStates && ClientHandler.getInstance().getBlueprints().isWorking() && fixTries > 0) {
 			validStates = validated;
 			validated = true;
 			Random random = new Random();
@@ -145,6 +152,7 @@ public class Blueprint {
 				BlockState state = this.resolveState(this.getState(position.subtract(from)));
 				if (!accessor.checkBlock(position, state)) validated = false;
 			}
+			fixTries -= 1;
 		}
 		
 		/* End of validation section */
@@ -153,11 +161,12 @@ public class Blueprint {
 		
 		if (pasteEntities && this.entities.size() > 0) {
 			this.entities.keySet().forEach((position) -> {
-				this.entities.get(position).forEach((entity) -> accessor.addEntity(position.add(from.getX(), from.getY(), from.getZ()), entity));
+				this.entities.get(position).forEach((entity) -> 
+				accessor.addEntity(position.add(from.getX(), from.getY(), from.getZ()), entity));
 			});
 		}
 		
-		return validated;
+		return true;
 	}
 	
 	public int mapState(BlockState state) {

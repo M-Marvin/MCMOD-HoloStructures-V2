@@ -29,12 +29,12 @@ public class SelectionRenderer {
 			MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
 			PoseStack matrixStack = event.getPoseStack();
 			
-			// FIXME Bug with cloud rendering
 			@SuppressWarnings("resource")
 			Vec3 offset = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+			matrixStack.pushPose();
 			matrixStack.translate(-offset.x, -offset.y, -offset.z);
 			renderSelctionBoundingBox(matrixStack, source);
-			source.endBatch();
+			matrixStack.popPose();
 
 		}
 		

@@ -1,4 +1,4 @@
-package de.m_marvin.holostructures;
+package de.m_marvin.holostructures.client.worldaccess;
 
 import java.util.Map;
 import java.util.Optional;

@@ -1,12 +1,22 @@
 package de.m_marvin.holostructures.client.worldaccess;
 
+import java.io.File;
+import java.io.IOException;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import de.m_marvin.holostructures.UtilHelper;
 import de.m_marvin.holostructures.client.ClientHandler;
+import de.m_marvin.holostructures.client.Config;
 import de.m_marvin.holostructures.client.Formater;
+import de.m_marvin.holostructures.client.blueprints.Blueprint;
+import de.m_marvin.holostructures.client.holograms.Hologram;
+import de.m_marvin.holostructures.commandargs.BlueprintPathArgument;
 import de.m_marvin.holostructures.commandargs.DirectionArgumentType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
@@ -82,7 +92,6 @@ public class ClientProcessor implements ITaskProcessor {
 					)
 				)
 			)
-			
 			.then(Commands.literal("corner2").executes(
 				(ctx) -> commandSelectionPos(ctx.getSource(), new BlockPos(ctx.getSource().getPosition()), 2)
 				)
@@ -91,7 +100,6 @@ public class ClientProcessor implements ITaskProcessor {
 					)
 				)
 			)
-			
 			.then(Commands.literal("expand").executes(
 				(ctx) -> commandExpand(ctx.getSource(), Direction.orderedByNearest(Minecraft.getInstance().player)[0], 1)
 				)
@@ -104,7 +112,6 @@ public class ClientProcessor implements ITaskProcessor {
 					)
 				)
 			)
-			
 			.then(Commands.literal("clear").executes(
 				(ctx) -> commandDeselect(ctx.getSource()
 				)
@@ -182,7 +189,80 @@ public class ClientProcessor implements ITaskProcessor {
 				.then(Commands.literal("abbort").executes((ctx) ->
 						commandAbbort(ctx.getSource())
 						)
+				)
+				.then(Commands.literal("save")
+						.then(Commands.argument("path", BlueprintPathArgument.save()).executes((ctx) -> 
+								commandSave(ctx.getSource(), BlueprintPathArgument.getPath(ctx, "path"), false)
+								)
+								.then(Commands.literal("override").executes((ctx) -> 
+										commandSave(ctx.getSource(), BlueprintPathArgument.getPath(ctx, "path"), true)
+										)
+								)
+						)
+				)
+				.then(Commands.literal("load")
+						.then(Commands.argument("path", BlueprintPathArgument.loadOnlyExisting()).executes((ctx) ->
+								commandLoad(ctx.getSource(), BlueprintPathArgument.getPath(ctx, "path"))
+								)
+						)
+				)
+				.then(Commands.literal("folder").executes((ctx) -> 
+						commandFolder(ctx.getSource(), Config.getDefaultFolder())
+						)
+						.then(Commands.argument("folder", BlueprintPathArgument.loadOnlyExisting()).executes((ctx) -> 
+								commandFolder(ctx.getSource(), BlueprintPathArgument.getPath(ctx, "folder"))
+								)
+						)
 				);
+	}
+	
+	@SuppressWarnings("deprecation")
+	public int commandFolder(CommandSourceStack source, String folder) {
+		if (checkRunnable(source, false, false, false)) {
+			File folderPath = UtilHelper.resolvePath(folder);
+			if (folderPath.isFile()) folderPath = folderPath.getParentFile();
+			try {
+				Runtime.getRuntime().exec("explorer " + folderPath.toString());
+			} catch (IOException e) {
+				Formater.build().translate("commands.blueprint.folder.ioexception").commandErrorStyle().send(source);
+				return 0;
+			}
+			return 1;
+		}
+		return 0;
+	}
+	
+	public int commandSave(CommandSourceStack source, String path, boolean overrideExisting) throws CommandSyntaxException {
+		if (checkRunnable(source, false, false, true)) {
+			if (ClientHandler.getInstance().getBlueprints().getClipboard() == null)  {
+				Formater.build().translate("commands.blueprint.save.noclipboard").commandErrorStyle().send(source);
+				return 0;
+			}
+			boolean success;
+			success = ClientHandler.getInstance().getBlueprints().saveClipboard(path, overrideExisting);
+			if (!success) {
+				Formater.build().translate("commands.blueprint.save.failed", path).commandErrorStyle().send(source);
+				return 0;
+			} else {
+				Formater.build().translate("commands.blueprint.save.success", path).commandInfoStyle().send(source);
+				return 1;
+			}
+		}
+		return 0;
+	}
+	
+	public int commandLoad(CommandSourceStack source, String path) throws CommandSyntaxException {
+		if (checkRunnable(source, false, false, false)) {
+			boolean success = ClientHandler.getInstance().getBlueprints().loadClipboard(path);
+			if (!success) {
+				Formater.build().translate("commands.blueprint.load.failed", path).commandErrorStyle().send(source);
+				return 0;
+			} else {
+				Formater.build().translate("commands.blueprint.load.success", path).commandInfoStyle().send(source);
+				return 1;
+			}
+		}
+		return 0;
 	}
 	
 	public int commandCopy(CommandSourceStack source, boolean copyEntities, BlockPos origin) {
@@ -222,10 +302,59 @@ public class ClientProcessor implements ITaskProcessor {
 	}
 	
 	public int commandAbbort(CommandSourceStack source) {
-		if (ClientHandler.getInstance().getBlueprints().isWorking()) {
+		if (checkRunnable(source, false, false, false) && ClientHandler.getInstance().getBlueprints().isWorking()) {
 			ClientHandler.getInstance().getBlueprints().abbortTask();
+			getAccessor().get().abbortWaiting();
 			Formater.build().translate("commands.blueprint.abborted").commandWarnStyle().send(source); // TODO
 			return 1;
+		}
+		return 0;
+	}
+	
+	public LiteralArgumentBuilder<CommandSourceStack> commandHologramBuild() {
+		return Commands.literal("hologram")
+				.then(Commands.literal("create")
+						.then(Commands.argument("name", StringArgumentType.word()).executes((ctx) ->
+								commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), Minecraft.getInstance().player.blockPosition())
+								)
+								.then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ctx) ->
+										commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "pos"))
+										)
+								)
+						)
+				)
+				.then(Commands.literal("remove")
+						.then(Commands.argument("name", StringArgumentType.)));
+	}
+	
+	public int commandRemove(CommandSourceStack source, String name) {
+		if (checkRunnable(source, false, false, false)) {
+			if (ClientHandler.getInstance().getHolograms().removeHologram(name)) {
+				Formater.build().translate("commands.hologram.remove.success").commandInfoStyle().send(source);
+				return 1;
+			} else {
+				Formater.build().translate("commands.hologram.remove.noholgram").commandErrorStyle().send(source);
+				return 0;
+			}
+		}
+		return 0;
+	}
+	
+	public int commandCreate(CommandSourceStack source, String name, BlockPos position) {
+		if (checkRunnable(source, false, false, false)) {
+			if (ClientHandler.getInstance().getBlueprints().getClipboard() == null) {
+				Formater.build().translate("commands.hologram.create.noclipboard").commandErrorStyle().send(source);
+				return 0;
+			}
+			Blueprint blueprint = ClientHandler.getInstance().getBlueprints().getClipboard();
+			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(blueprint, position, name);
+			if (hologram != null) {
+				Formater.build().translate("commands.hologram.create.success").commandInfoStyle().send(source);
+				return 1;
+			} else {
+				Formater.build().translate("commands.hologram.create.failed").commandErrorStyle().send(source);
+				return 0;
+			}
 		}
 		return 0;
 	}

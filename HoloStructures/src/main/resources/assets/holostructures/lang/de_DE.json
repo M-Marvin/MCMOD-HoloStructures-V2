@@ -18,8 +18,21 @@
 "commands.blueprint.paste.started": "Einfügvorgang gestartet",
 "commands.blueprint.paste.completed": "Einfügvorgang abgeschlossen, Bereich eingefügt",
 "commands.blueprint.paste.incomplete": "Einfügen unvolständig!",
+"commands.blueprint.abborted": "Itteration abgebrochen, beende Einfügevorgang im aktuellen Zustand",
+"commands.blueprint.save.failed": "Speichern fehlgeschlagen!",
+"commands.blueprint.save.success": "Blaupause gespeichert",
+"commands.blueprint.load.failed": "Laden fehlgeschlagen!",
+"commands.blueprint.load.success": "Blaupause in Zwischenablage geladen",
+"commands.blueprint.folder.ioexception": "Ordner konnte nicht geöffnet werden",
+
+"commands.blueprint.abborted": "Itteration abgebrochen, beende Einfügevorgang im aktuellen Zustand",
 "commands.info.title": "Holostructures Status:",
 "commands.info.serveraccess": "Server-Zugriff: %1$s",
-"commands.info.opaccess": "Admin-Zugriff: %1$s"
+"commands.info.opaccess": "Admin-Zugriff: %1$s",
+
+"loader.error.ioexception": "Zugriffehler auf Datei: %1$s",
+"loader.error.dataversion": "Incompatible Formatversion: %1$s",
+"loader.error.stateparser": "Ungültiger Block-State String: %1$s",
+"loader.error.cantoverride": "Datei existiert bereits, nutze die override flag um die Datei zu überschreiben."
 
 }

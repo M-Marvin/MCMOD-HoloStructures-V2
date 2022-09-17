@@ -3,12 +3,11 @@ package de.m_marvin.holostructures.client;
 import com.google.common.base.Optional;
 
 import de.m_marvin.holostructures.HoloStructures;
-import de.m_marvin.holostructures.ILevelAccessor;
 import de.m_marvin.holostructures.client.blueprints.BlueprintManager;
+import de.m_marvin.holostructures.client.holograms.HologramManager;
 import de.m_marvin.holostructures.client.worldaccess.ClientLevelAccessorImpl;
 import de.m_marvin.holostructures.client.worldaccess.ClientProcessor;
-import de.m_marvin.holostructures.client.worldaccess.ServerLevelAccessorImpl;
-import de.m_marvin.holostructures.server.worldaccess.ServerLevelAccessHandler;
+import de.m_marvin.holostructures.client.worldaccess.ILevelAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -20,8 +19,8 @@ import net.minecraftforge.fml.common.Mod;
 public class ClientHandler {
 	
 	public BlueprintManager blueprints = new BlueprintManager();
+	public HologramManager holograms = new HologramManager();
 	public ClientProcessor clientLevelProcessor = new ClientProcessor();
-	// TODO serverProcessor
 	public ILevelAccessor levelAccessor;
 	private static ClientHandler INSTANCE;
 	
@@ -31,12 +30,14 @@ public class ClientHandler {
 	
 	public ClientHandler() {
 		INSTANCE = this;
-		ServerLevelAccessHandler.registerPackages(HoloStructures.NETWORK_WORLD_ACCESS);
+		Config.register();
 	}
 	
 	public static ClientHandler getInstance() {
 		return INSTANCE;
 	}
+	
+	/* Event handling */
 
 	@SubscribeEvent
 	public static final void onCommandsRegister(RegisterClientCommandsEvent event) {
@@ -53,17 +54,10 @@ public class ClientHandler {
 		getInstance().clearAccessor();
 	}
 	
-	public boolean runsOnServerSide() {
-		// TODO Does not work
-		return HoloStructures.NETWORK_WORLD_ACCESS.isRemotePresent(Minecraft.getInstance().getConnection().getConnection());
-	}
+	/* End of event handling */
 	
 	public void createAccessor() {
-		if (runsOnServerSide()) {
-			this.levelAccessor = new ClientLevelAccessorImpl(() -> Minecraft.getInstance().level, () -> Minecraft.getInstance().player);
-		} else {
-			this.levelAccessor = new ServerLevelAccessorImpl(HoloStructures.NETWORK_WORLD_ACCESS, () -> Minecraft.getInstance().level, () -> Minecraft.getInstance().player);
-		}
+		this.levelAccessor = new ClientLevelAccessorImpl(() -> Minecraft.getInstance().level, () -> Minecraft.getInstance().player);
 	}
 	
 	public void clearAccessor() {
@@ -80,6 +74,10 @@ public class ClientHandler {
 	
 	public BlueprintManager getBlueprints() {
 		return blueprints;
+	}
+	
+	public HologramManager getHolograms() {
+		return holograms;
 	}
 	
 }

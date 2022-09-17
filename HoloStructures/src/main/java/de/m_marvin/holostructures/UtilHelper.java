@@ -1,27 +1,56 @@
 package de.m_marvin.holostructures;
 
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Optional;
+import java.io.File;
+import java.io.IOException;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-import com.google.common.collect.Queues;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.Vec3;
 
 public class UtilHelper {
+
+	public static BlockPos loadBlockPos(CompoundTag nbt, String name) {
+		ListTag posArr = nbt.getList(name, 3);
+		if (posArr.size() != 3) {
+			throw new IllegalArgumentException("Tag " + name + " (length=" + posArr.size() + ") is not a valid BlockPos!");
+		}
+		return new BlockPos(posArr.getInt(0), posArr.getInt(1), posArr.getInt(2));
+	}
+
+	public static ListTag saveBlockPos(Vec3i pos) {
+		ListTag tag = new ListTag();
+		tag.add(IntTag.valueOf(pos.getX()));
+		tag.add(IntTag.valueOf(pos.getY()));
+		tag.add(IntTag.valueOf(pos.getZ()));
+		return tag;
+	}
+
+	public static Vec3 loadVecPos(CompoundTag nbt, String name) {
+		ListTag posArr = nbt.getList(name, 6);
+		if (posArr.size() != 3) throw new IllegalArgumentException("Tag " + name + " (length=" + posArr.size() + ") is not a valid BlockPos!");
+		return new Vec3(posArr.getDouble(0), posArr.getDouble(1), posArr.getDouble(2));
+	}
+
+	public static ListTag saveVecPos(Vec3 pos) {
+		ListTag nbt = new ListTag();
+		nbt.add(DoubleTag.valueOf(pos.x()));
+		nbt.add(DoubleTag.valueOf(pos.y()));
+		nbt.add(DoubleTag.valueOf(pos.z()));
+		return nbt;
+	}
 
 	public static String formatBlockPos(BlockPos pos) {
 		return pos.getX() + " " + pos.getY() + " " + pos.getZ();
@@ -48,103 +77,37 @@ public class UtilHelper {
 		}
 	}
 	
-	private static record TagContainer<T extends Tag>(T tag, Supplier<Optional<String>> keyGetter, Function<String, Tag> tagGetter, BiConsumer<String, Tag> tagPutter, Consumer<String> tagRemover) {
-		public static TagContainer<CompoundTag> fromCompound(CompoundTag compound) {
-			return new TagContainer<CompoundTag>(compound, 
-					() -> compound.getAllKeys().stream().findAny(), 
-					(key) -> compound.get(key),
-					(key, value) -> compound.put(key, value),
-					(key) -> compound.remove(key));
-		}
-		public static TagContainer<ListTag> fromList(ListTag list) {
-			return new TagContainer<ListTag>(list, 
-					() -> (list.size() > 0) ? Optional.of("0") : Optional.empty(), 
-					(key) -> list.get(Integer.parseInt(key)),
-					(key, value) -> list.add(value),
-					(key) -> list.remove(Integer.parseInt(key)));
-		}
-	}
-		
-	public static List<CompoundTag> sizeLimitedCompounds(CompoundTag compoundTag, int maxStringLength) {
-		
-		List<CompoundTag> splitCompounds = new ArrayList<>();
-				
-		while (!compoundTag.isEmpty()) {
-			
-			Deque<String> readTagKey = Queues.newArrayDeque();
-			Deque<TagContainer<?>> readTag = Queues.newArrayDeque();
-			Deque<TagContainer<?>> writeTag = Queues.newArrayDeque();
-			CompoundTag compound = new CompoundTag();
-			
-			writeTag.offerFirst(TagContainer.fromCompound(compound));
-			readTag.offerLast(TagContainer.fromCompound(compoundTag));
-			
-			while (readTag.size() > 0) {
-				Optional<String> key = readTag.peek().keyGetter().get();
-				if (key.isPresent()) {
-					Tag tag = readTag.peek().tagGetter().apply(key.get());
-					if (tag instanceof ListTag readList) {
-						readTag.offerFirst(TagContainer.fromList(readList));
-						readTagKey.offerFirst(key.get());
-						ListTag writeList = new ListTag();
-						writeTag.peek().tagPutter().accept(key.get(), writeList);
-						writeTag.offerFirst(TagContainer.fromList(writeList));
-						continue;
-					} else if (tag instanceof CompoundTag readComp) {
-						readTag.offerFirst(TagContainer.fromCompound(readComp));
-						readTagKey.offerFirst(key.get());
-						CompoundTag writeComp = new CompoundTag();
-						writeTag.peek().tagPutter().accept(key.get(), writeComp);
-						writeTag.offerFirst(TagContainer.fromCompound(writeComp));
-						continue;
-					} else {
-						writeTag.peek().tagPutter().accept(key.get(), readTag.peek().tagGetter().apply(key.get()));
-						if (compound.toString().length() <= maxStringLength) {
-							readTag.peek().tagRemover().accept(key.get());
-						} else {
-							writeTag.peek().tagRemover().accept(key.get());
-							break;
-						}
-					}
-				} else {
-					readTag.poll();
-					if (readTagKey.size() > 0) readTag.peek().tagRemover().accept(readTagKey.poll());
-					writeTag.poll();
-				}
+	public static void sequentialCopy(CompoundTag sourceTag, BiConsumer<String, Tag> tagTarget, BiConsumer<String, Tag> listTarget, String targetPath) {
+		sourceTag.getAllKeys().forEach((key) -> {
+			Tag value = sourceTag.get(key);
+			if (value instanceof CompoundTag subSource) {
+				sequentialCopy(subSource, tagTarget, listTarget, appandTagPath(targetPath, key));
+			} else if (value instanceof ListTag subSource) {
+				tagTarget.accept(appandTagPath(targetPath, key), new ListTag());
+				subSource.forEach((entryTag) -> {
+					listTarget.accept(appandTagPath(targetPath, key) ,entryTag);
+				});
+			} else {
+				tagTarget.accept(appandTagPath(targetPath, key), value);
 			}
-			
-			splitCompounds.add(compound);
-			
-		}
-		
-		return splitCompounds;
+		});		
 	}
 	
-	public static void forEachEntry(String path, CompoundTag nbt, BiConsumer<String, Tag> task) {
-		nbt.getAllKeys().forEach((key) -> {
-			Tag tag = nbt.get(key);
-			String path2 = (path.isEmpty() ? "" : path + ".") + key;
-			if (tag instanceof CompoundTag compound) {
-				forEachEntry(path2, compound, task);
-			} else if (tag instanceof ListTag list) {
-				forEachEntry(path2, list, task);
-			} else {
-				task.accept(path2, tag);
-			}
-		});
+	public static String appandTagPath(String path, String s) {
+		return path + (path.isEmpty() ? "" : ".") + s;
 	}
-
-	public static void forEachEntry(String path, ListTag nbt, BiConsumer<String, Tag> task) {
-		for (int i = 0; i < nbt.size(); i++) {
-			Tag tag = nbt.get(i);
-			String path2 = (path.isEmpty() ? "" : path + ".") + "[" + i + "]";
-			if (tag instanceof CompoundTag compound) {
-				forEachEntry(path2, compound, task);
-			} else if (tag instanceof ListTag list) {
-				forEachEntry(path2, list, task);
-			} else {
-				task.accept(path2, tag);
-			}
+	
+	@SuppressWarnings("resource")
+	public static File resolvePath(String path) {
+		try {
+			if (path.contains("{$worldname$}") && !Minecraft.getInstance().hasSingleplayerServer()) return null;
+			String gameDir = Minecraft.getInstance().gameDirectory.getCanonicalPath();
+			String levelName = Minecraft.getInstance().getSingleplayerServer().getWorldPath(LevelResource.ROOT).getParent().getFileName().toString();
+			String resolvedPath = path.replace("{$worldname$}", levelName);
+			return new File(gameDir, resolvedPath);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 	
