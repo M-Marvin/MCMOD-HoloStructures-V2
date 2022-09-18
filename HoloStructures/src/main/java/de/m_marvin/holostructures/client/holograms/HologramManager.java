@@ -1,5 +1,6 @@
 package de.m_marvin.holostructures.client.holograms;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,14 @@ public class HologramManager {
 	
 	public Hologram getHologram(String name) {
 		return this.holograms.get(name);
+	}
+
+	public String[] getHologramNames() {
+		return this.holograms.keySet().toArray((l) -> new String[l]);
+	}
+	
+	public Collection<Hologram> getHolograms() {
+		return holograms.values();
 	}
 	
 }

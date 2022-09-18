@@ -23,7 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerGamePacketListener;
 import net.minecraft.network.protocol.game.ServerboundChatPacket;
-import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -108,12 +108,14 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	}
 	
 	public void setBlock(BlockPos pos, BlockState state) {
+		if (!hasOPAccess()) return;
 		sendCommand("/setblock " + UtilHelper.formatBlockPos(pos) + " " + UtilHelper.formatBlockState(state));
 	}
 	
 	@Override
 	public boolean checkBlock(BlockPos pos, BlockState state) {
-		if (!this.level.get().getBlockState(pos).equals(state)) {
+		if (!hasOPAccess()) return true;
+		if (!UtilHelper.checkBlockState(this.level.get().getBlockState(pos), state)) {
 			sendCommand("/setblock " + UtilHelper.formatBlockPos(pos) + " " + UtilHelper.formatBlockState(state));
 			
 			// Wait for response of the command to prevent a "overload" of the server with commands
@@ -132,7 +134,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 				}
 			}
 			
-			return this.level.get().getBlockState(pos).equals(state);
+			return UtilHelper.checkBlockState(this.level.get().getBlockState(pos), state);
 		}
 		return true;
 	}
@@ -144,11 +146,19 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	
 	@Override
 	public Optional<Blueprint.EntityData> getBlockEntity(BlockPos pos) {
+		if (!hasOPAccess()) return Optional.empty();
 		Optional<BlockEntity> blockEntity = Optional.ofNullable(this.level.get().getBlockEntity(pos));
+		Function<CompoundTag, CompoundTag> nbtFilter = (nbt) -> {
+			nbt.remove("x");
+			nbt.remove("y");
+			nbt.remove("z");
+			nbt.remove("id");
+			return nbt;
+		};
 		if (blockEntity.isPresent()) {
 			CommandResponse response = sendCommand("/data get block " + UtilHelper.formatBlockPos(pos));
 			Blueprint.EntityData blockEntityData = new Blueprint.EntityData(blockEntity.get().getType().getRegistryName(), 
-					() -> response.isPresent() ? Optional.of(UtilHelper.encryptNBTFromResponse(response.getResponse())) : Optional.empty());
+					() -> response.isPresent() ? Optional.of(nbtFilter.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			return Optional.of(blockEntityData);
 		}
 		return Optional.empty();
@@ -156,6 +166,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	
 	@Override
 	public void setBlockEntity(BlockPos pos, Blueprint.EntityData blockEntity) {
+		if (!hasOPAccess()) return;
 		if (blockEntity.nbt().get().isPresent()) {
 			String posString = UtilHelper.formatBlockPos(pos);
 			UtilHelper.sequentialCopy(
@@ -177,7 +188,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 		Map<Vec3, Blueprint.EntityData> map = new HashMap<>();
 		this.level.get().getEntities(null, aabb).forEach((entity) -> {
 			Vec3 position = positionMapper.apply(entity.position());
-			CommandResponse response = sendCommand("/data get entity " + entity.getUUID().toString());
+			CommandResponse response = hasOPAccess() ? sendCommand("/data get entity " + entity.getUUID().toString()) : new CommandResponse();
 			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> response.isPresent() ? Optional.of(nbtFilter.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			map.put(position, data);
 		});
@@ -186,6 +197,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	
 	@Override
 	public void addEntity(Vec3 pos, Blueprint.EntityData entity) {
+		if (!hasOPAccess()) return;
 		if (entity.nbt().get().isPresent()) {
 			String pasteTag = "paste_" + entity.hashCode();
 			sendCommand("/summon " + entity.type().toString() + " " + UtilHelper.formatVecPos(pos) + " {Tags:[\"" + pasteTag + "\"]}");
@@ -202,7 +214,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	}
 	
 	@Override
-	public BlockGetter getLevelGetter() {
+	public BlockAndTintGetter getLevelGetter() {
 		return this.level.get();
 	}
 	

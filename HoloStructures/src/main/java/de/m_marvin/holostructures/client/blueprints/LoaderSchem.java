@@ -40,7 +40,7 @@ public class LoaderSchem implements IFormatLoader {
 			
 			blueprint.size = new BlockPos(nbt.getInt("Width") - 1, nbt.getInt("Height") - 1, nbt.getInt("Length") - 1);
 			CompoundTag weoffset = nbt.getCompound("Metadata");
-			blueprint.origin = new BlockPos(weoffset.getInt("WEOffsetX"), weoffset.getInt("WEOffsetY"), weoffset.getInt("WEOffsetZ"));
+			blueprint.origin = new BlockPos(-weoffset.getInt("WEOffsetX"), -weoffset.getInt("WEOffsetY"), -weoffset.getInt("WEOffsetZ"));
 			
 			CompoundTag palette = nbt.getCompound("Palette");
 			Map<Integer, BlockState> stateCache = new HashMap<>();
@@ -55,7 +55,8 @@ public class LoaderSchem implements IFormatLoader {
 				stateCache.put(id, parser.getState());
 			}
 			for (int i = 0; i < nbt.getInt("PaletteMax"); i++) {
-				blueprint.states.add(stateCache.get(i));
+				BlockState state = stateCache.get(i);
+				blueprint.states.add(state);
 			}
 			
 			byte[] blocks = nbt.getByteArray("BlockData");
@@ -127,6 +128,7 @@ public class LoaderSchem implements IFormatLoader {
 			if (blockentitie.nbt().get().isPresent()) {
 				CompoundTag tag = blockentitie.nbt().get().get();
 				tag.putIntArray("Pos", new int[] {pos.getX(), pos.getY(), pos.getZ()});
+				tag.putString("Id", blockentitie.type().toString());
 				blockentities.add(tag);
 			}
 		});
@@ -151,15 +153,16 @@ public class LoaderSchem implements IFormatLoader {
 		nbt.putIntArray("Offset", new int[] {0, 0, 0});
 		
 		CompoundTag weoffset = new CompoundTag();
-		weoffset.putInt("WEOffsetX", blueprint.origin.getX());
-		weoffset.putInt("WEOffsetY", blueprint.origin.getY());
-		weoffset.putInt("WEOffsetZ", blueprint.origin.getZ());
+		weoffset.putInt("WEOffsetX", -blueprint.origin.getX());
+		weoffset.putInt("WEOffsetY", -blueprint.origin.getY());
+		weoffset.putInt("WEOffsetZ", -blueprint.origin.getZ());
 		nbt.put("Metadata", weoffset);
 		
-		nbt.putInt("Width", blueprint.size.getX() + 1);
-		nbt.putInt("Height", blueprint.size.getY() + 1);
-		nbt.putInt("Length", blueprint.size.getZ() + 1);
+		nbt.putShort("Width", (short) (blueprint.size.getX() + 1));
+		nbt.putShort("Height", (short) (blueprint.size.getY() + 1));
+		nbt.putShort("Length", (short) (blueprint.size.getZ() + 1));
 		
+		nbt.putInt("Version", 2);
 		nbt.putInt("DataVersion", DATA_VERSION);
 		
 		try {

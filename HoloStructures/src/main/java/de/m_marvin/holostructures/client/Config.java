@@ -17,6 +17,7 @@ public class Config {
 	
 	public static final String CATAGORY_BLUEPRINTS = "blueprints";
 	public static ForgeConfigSpec.IntValue PLACEMENT_STATE_FIX_ITERATIONS;
+	public static ForgeConfigSpec.ConfigValue<String> FIX_IGNORED_BLOCK_STATE_PROPS;
 	
 	public static final String CATEGORY_FILES = "files";
 	public static ForgeConfigSpec.ConfigValue<String> DEFAULT_BLUEPRINT_FOLDER;
@@ -26,7 +27,8 @@ public class Config {
 	static {
 		BUILDER.comment("Settings of the blueprints (copy paste selection etc)");
 		BUILDER.push(CATAGORY_BLUEPRINTS);
-		PLACEMENT_STATE_FIX_ITERATIONS = BUILDER.comment("Ammount of itterations to try fixing misconnected blocks after pasting a blueprint. Used as multiplier of the ammount of blocks to fix.").defineInRange("placement_state_fix_iterations", 1, 1, 64);
+		PLACEMENT_STATE_FIX_ITERATIONS = BUILDER.comment("Ammount of itterations to try fixing misconnected blocks after pasting a blueprint.").defineInRange("placement_state_fix_iterations", 4, 1, 64);
+		FIX_IGNORED_BLOCK_STATE_PROPS = BUILDER.comment("Blockstate properties ignored by the validation algorithm.").define("fix_ignored_block_state_props", "power,powered");
 		BUILDER.pop();
 		BUILDER.comment("Settings of the files loaded and created by the mod");
 		BUILDER.push(CATEGORY_FILES);

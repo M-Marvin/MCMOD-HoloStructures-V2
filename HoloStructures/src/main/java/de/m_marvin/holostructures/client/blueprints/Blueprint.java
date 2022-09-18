@@ -12,6 +12,7 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import de.m_marvin.holostructures.client.ClientHandler;
+import de.m_marvin.holostructures.client.Config;
 import de.m_marvin.holostructures.client.worldaccess.ILevelAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -126,23 +127,24 @@ public class Blueprint {
 		
 		/* State validation section, trys to fix misconnected blockstates */
 		
-		List<BlockPos> invalidStates = new ArrayList<BlockPos>();
-		for (int x = from.getX(); x <= to.getX(); x++) {
-			for (int z = from.getZ(); z <= to.getZ(); z++) {
-				for (int y = from.getY(); y <= to.getY(); y++) {
-					BlockPos position = new BlockPos(x, y, z);
-					BlockState state = this.resolveState(this.getState(position.subtract(from)));
-					if (!accessor.checkBlock(position, state)) invalidStates.add(position);
-				}
-			}
-		}
-		
 		boolean validStates = false;
 		boolean validated = false;
-		int fixTries = invalidStates.size();
+		int fixTries = Config.PLACEMENT_STATE_FIX_ITERATIONS.get();
 		while (!validStates && ClientHandler.getInstance().getBlueprints().isWorking() && fixTries > 0) {
 			validStates = validated;
 			validated = true;
+			
+			List<BlockPos> invalidStates = new ArrayList<BlockPos>();
+			for (int x = from.getX(); x <= to.getX(); x++) {
+				for (int z = from.getZ(); z <= to.getZ(); z++) {
+					for (int y = from.getY(); y <= to.getY(); y++) {
+						BlockPos position = new BlockPos(x, y, z);
+						BlockState state = this.resolveState(this.getState(position.subtract(from)));
+						if (!accessor.checkBlock(position, state)) invalidStates.add(position);
+					}
+				}
+			}
+
 			Random random = new Random();
 			List<BlockPos> list = new ArrayList<>();
 			list.addAll(invalidStates);
@@ -152,6 +154,7 @@ public class Blueprint {
 				BlockState state = this.resolveState(this.getState(position.subtract(from)));
 				if (!accessor.checkBlock(position, state)) validated = false;
 			}
+
 			fixTries -= 1;
 		}
 		
@@ -187,7 +190,7 @@ public class Blueprint {
 	}
 	
 	public BlockState resolveState(int stateId) {
-		if (stateId > this.states.size() - 1) return Blocks.AIR.defaultBlockState();
+		if (stateId >= this.states.size() - 1) return Blocks.AIR.defaultBlockState();
 		return this.states.get(stateId);
 	}
 	
@@ -214,5 +217,17 @@ public class Blueprint {
 	public BlockPos getOrigin() {
 		return origin;
 	}
-		
+	
+	public Vec3i getSize() {
+		return size;
+	}
+	
+	public Optional<EntityData> getBlockEntity(BlockPos pos) {
+		return Optional.ofNullable(this.blockentities.get(pos));
+	}
+	
+	public BlockState getBlock(BlockPos pos) {
+		return resolveState(getState(pos));
+	}
+	
 }

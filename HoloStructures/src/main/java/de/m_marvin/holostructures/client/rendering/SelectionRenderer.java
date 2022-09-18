@@ -35,6 +35,7 @@ public class SelectionRenderer {
 			matrixStack.translate(-offset.x, -offset.y, -offset.z);
 			renderSelctionBoundingBox(matrixStack, source);
 			matrixStack.popPose();
+			source.endBatch();
 
 		}
 		

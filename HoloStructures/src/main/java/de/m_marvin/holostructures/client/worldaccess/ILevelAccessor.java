@@ -9,14 +9,14 @@ import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import de.m_marvin.holostructures.client.blueprints.Blueprint.EntityData;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public interface ILevelAccessor {
 	
 	public CommandSourceStack getChatTarget();
-	public BlockGetter getLevelGetter();
+	public BlockAndTintGetter getLevelGetter();
 	
 	public boolean hasServerAccess();
 	public boolean hasOPAccess();

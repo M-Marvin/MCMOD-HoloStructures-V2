@@ -24,8 +24,19 @@
 "commands.blueprint.load.failed": "Laden fehlgeschlagen!",
 "commands.blueprint.load.success": "Blaupause in Zwischenablage geladen",
 "commands.blueprint.folder.ioexception": "Ordner konnte nicht geöffnet werden",
-
 "commands.blueprint.abborted": "Itteration abgebrochen, beende Einfügevorgang im aktuellen Zustand",
+
+"commands.hologram.remove.success": "Hologram %1$s wurde entfernt",
+"commands.hologram.remove.invalidhologram": "Hologram %1$s existiert nicht!",
+"commands.hologram.create.noclipboard": "Keine Blaupause in der Zwischenablage geladen!",
+"commands.hologram.create.success": "Hologram %1$s wurde erstellt",
+"commands.hologram.create.failed": "Hologram konnte nicht erstellt werden, ist der Name bereits vergeben?",
+"commands.hologram.list.title": "Aktuell aktive Holograme:",
+"commands.hologram.list.entry": "> %1$s bei %2$s [BxHxL %3$s]",
+"commands.hologram.list.noholograms": "Es sind zur Zeit keine Holograme aktiv",
+"commands.hologram.position.invalidhologram": "Hologram %1$s existiert nicht!",
+"commands.hologram.position.success": "Hologram %1$s wurde nach %2$s verschoben",
+
 "commands.info.title": "Holostructures Status:",
 "commands.info.serveraccess": "Server-Zugriff: %1$s",
 "commands.info.opaccess": "Admin-Zugriff: %1$s",

@@ -62,6 +62,7 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 		String input = reader.readString();
 		String[] inputSplit = input.split(":");
 		String path;
+		System.out.println("TEST");
 		if (inputSplit.length > 1) {
 			String folderPath = Config.getFolder(inputSplit[0]);
 			String filePath = input.substring(inputSplit[0].length() + 1, input.length());
@@ -101,22 +102,22 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 		} else {
 			Set<String> pathList = new HashSet<>();
 			Config.getAdditionalFolders().forEach((folderName, path) -> {
-				listPaths(UtilHelper.resolvePath(path), folderName + ":", pathList, suggestExistingFiles, true);
+				listPaths(UtilHelper.resolvePath(path), folderName + ":", pathList, suggestExistingFiles);
 			});
-			listPaths(UtilHelper.resolvePath(Config.getDefaultFolder()), "", pathList, suggestExistingFiles, true);
+			listPaths(UtilHelper.resolvePath(Config.getDefaultFolder()), "", pathList, suggestExistingFiles);
 			return SharedSuggestionProvider.suggest(Stream.of(pathList.toArray()).map((s) -> "\"" + s + "\""), p_118251_);
 		}
 	}
 	
-	protected void listPaths(File f, String path, Set<String> paths, boolean listFiles, boolean root) {
+	protected void listPaths(File f, String path, Set<String> paths, boolean listFiles) {
 		if (!f.isDirectory()) return;
+		if (!listFiles && !path.isEmpty()) paths.add(path);
 		for (String entry : f.list()) {
 			File filepath = new File(f, entry);
-			if (filepath.isFile() && listFiles) {
-				paths.add((root ? path : path + "/") + entry);
+			if (filepath.isFile()) {
+				if (listFiles) paths.add(path + entry);
 			} else if (filepath.isDirectory()) {
-				if (!listFiles) paths.add((root ? path : path + "/") + entry + "/");
-				listPaths(filepath, (root ? path : path + "/") + entry, paths, listFiles, false);
+				listPaths(filepath, path + entry + "/", paths, listFiles);
 			}
 		}
 	}

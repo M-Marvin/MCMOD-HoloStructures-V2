@@ -2,6 +2,7 @@ package de.m_marvin.holostructures.client.worldaccess;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -16,8 +17,11 @@ import de.m_marvin.holostructures.client.Config;
 import de.m_marvin.holostructures.client.Formater;
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import de.m_marvin.holostructures.client.holograms.Hologram;
+import de.m_marvin.holostructures.client.holograms.Hologram.Corner;
 import de.m_marvin.holostructures.commandargs.BlueprintPathArgument;
 import de.m_marvin.holostructures.commandargs.DirectionArgumentType;
+import de.m_marvin.holostructures.commandargs.SuggestingStringArgument;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -25,6 +29,7 @@ import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraftforge.server.command.EnumArgument;
 
 public class ClientProcessor implements ITaskProcessor {
 	
@@ -35,6 +40,7 @@ public class ClientProcessor implements ITaskProcessor {
 		dispatcher.register(commandSelectionBuild());
 		dispatcher.register(commandBlueprintBuild());
 		dispatcher.register(commandInfoBuild());
+		dispatcher.register(commandHologramBuild());
 	}
 	
 	@Override
@@ -209,7 +215,7 @@ public class ClientProcessor implements ITaskProcessor {
 				.then(Commands.literal("folder").executes((ctx) -> 
 						commandFolder(ctx.getSource(), Config.getDefaultFolder())
 						)
-						.then(Commands.argument("folder", BlueprintPathArgument.loadOnlyExisting()).executes((ctx) -> 
+						.then(Commands.argument("folder", BlueprintPathArgument.save()).executes((ctx) -> 
 								commandFolder(ctx.getSource(), BlueprintPathArgument.getPath(ctx, "folder"))
 								)
 						)
@@ -284,7 +290,7 @@ public class ClientProcessor implements ITaskProcessor {
 		if (checkRunnable(source, false, true, true)) {
 			boolean started = ClientHandler.getInstance().getBlueprints().pasteClipboard(getAccessor().get(), pasteOrigin, pasteEntities, () -> {
 				if (!ClientHandler.getInstance().getBlueprints().getResult()) {
-					Formater.build().translate("commands.blueprint.paste.incomplete").commandWarnStyle().send(source); // TODO 
+					Formater.build().translate("commands.blueprint.paste.incomplete").commandWarnStyle().send(source);
 				} else {
 					Formater.build().translate("commands.blueprint.paste.completed").commandInfoStyle().send(source);
 				}
@@ -305,7 +311,7 @@ public class ClientProcessor implements ITaskProcessor {
 		if (checkRunnable(source, false, false, false) && ClientHandler.getInstance().getBlueprints().isWorking()) {
 			ClientHandler.getInstance().getBlueprints().abbortTask();
 			getAccessor().get().abbortWaiting();
-			Formater.build().translate("commands.blueprint.abborted").commandWarnStyle().send(source); // TODO
+			Formater.build().translate("commands.blueprint.abborted").commandWarnStyle().send(source);
 			return 1;
 		}
 		return 0;
@@ -324,16 +330,38 @@ public class ClientProcessor implements ITaskProcessor {
 						)
 				)
 				.then(Commands.literal("remove")
-						.then(Commands.argument("name", StringArgumentType.)));
+						.then(Commands.argument("name", SuggestingStringArgument.wordSuggesting(() -> ClientHandler.getInstance().getHolograms().getHologramNames())).executes((ctx) ->
+								commandRemove(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"))
+								)
+						)
+				)
+				.then(Commands.literal("position")
+						.then(Commands.argument("name", SuggestingStringArgument.wordSuggesting(() -> ClientHandler.getInstance().getHolograms().getHologramNames())).executes((ctx) -> 
+								commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), Minecraft.getInstance().player.blockPosition(), Corner.ORIGIN)
+								)
+								.then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ctx) -> 
+										commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "position"), Corner.ORIGIN)
+										)
+										.then(Commands.argument("corner", EnumArgument.enumArgument(Corner.class)).executes((ctx) -> 
+												commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "position"), ctx.getArgument("corner", Corner.class))
+												)
+										)
+								)
+						)
+				)
+				.then(Commands.literal("list").executes((ctx) ->
+						commandList(ctx.getSource())
+						)
+				);
 	}
 	
 	public int commandRemove(CommandSourceStack source, String name) {
 		if (checkRunnable(source, false, false, false)) {
 			if (ClientHandler.getInstance().getHolograms().removeHologram(name)) {
-				Formater.build().translate("commands.hologram.remove.success").commandInfoStyle().send(source);
+				Formater.build().translate("commands.hologram.remove.success", name).commandInfoStyle().send(source);
 				return 1;
 			} else {
-				Formater.build().translate("commands.hologram.remove.noholgram").commandErrorStyle().send(source);
+				Formater.build().translate("commands.hologram.remove.invalidhologram", name).commandErrorStyle().send(source);
 				return 0;
 			}
 		}
@@ -349,12 +377,46 @@ public class ClientProcessor implements ITaskProcessor {
 			Blueprint blueprint = ClientHandler.getInstance().getBlueprints().getClipboard();
 			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(blueprint, position, name);
 			if (hologram != null) {
-				Formater.build().translate("commands.hologram.create.success").commandInfoStyle().send(source);
+				Formater.build().translate("commands.hologram.create.success", name).commandInfoStyle().send(source);
 				return 1;
 			} else {
 				Formater.build().translate("commands.hologram.create.failed").commandErrorStyle().send(source);
 				return 0;
 			}
+		}
+		return 0;
+	}
+	
+	public int commandList(CommandSourceStack source) {
+		if (checkRunnable(source, false, false, false)) {
+			Collection<Hologram> holograms = ClientHandler.getInstance().getHolograms().getHolograms();
+			if (holograms.size() > 0) {
+				Formater.build().translate("commands.hologram.list.title").commandInfoStyle().send(source);
+				boolean line = false;
+				for (Hologram hologram : holograms) {
+					line = !line;
+					Formater.build().translate("commands.hologram.list.entry", hologram.getName(), UtilHelper.formatBlockPos(hologram.getPosition()), UtilHelper.formatBlockPos(hologram.getBlueprint().getSize().offset(1, 1, 1))).withStyle(line ? ChatFormatting.GRAY : ChatFormatting.DARK_GRAY).send(source);
+				}
+				return 1;
+			} else {
+				Formater.build().translate("commands.hologram.list.noholograms").commandInfoStyle().send(source);
+				return 1;
+			}
+		}
+		return 0;
+	}
+	
+	public int commandPosition(CommandSourceStack source, String name, BlockPos position, Hologram.Corner corner) {
+		if (checkRunnable(source, false, false, false)) {
+			Hologram hologram = ClientHandler.getInstance().getHolograms().getHologram(name);
+			if (hologram == null) {
+				Formater.build().translate("commands.hologram.position.invalidhologram", name).commandErrorStyle().send(source);
+				return 0;
+			}
+			BlockPos offsetPosition = position.subtract(hologram.getInternPosition(corner, BlockPos.ZERO));
+			hologram.setPosition(offsetPosition);
+			Formater.build().translate("commands.hologram.position.success", name, UtilHelper.formatBlockPos(position)).commandInfoStyle().send(source);
+			return 1;
 		}
 		return 0;
 	}

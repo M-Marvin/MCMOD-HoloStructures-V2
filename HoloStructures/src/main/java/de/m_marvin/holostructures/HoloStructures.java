@@ -21,4 +21,9 @@ public class HoloStructures {
 		return INSTANCE;
 	}
 	
+	/* TODO */
+	// Schem format mit Mod-Blöcken die fehlen
+	// Fehlende-Mods liste beim laden einer Blaupause
+	// Blaupausen rotieren/spiegeln
+	
 }
