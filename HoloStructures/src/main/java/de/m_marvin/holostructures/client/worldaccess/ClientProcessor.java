@@ -413,7 +413,7 @@ public class ClientProcessor implements ITaskProcessor {
 				Formater.build().translate("commands.hologram.position.invalidhologram", name).commandErrorStyle().send(source);
 				return 0;
 			}
-			BlockPos offsetPosition = position.subtract(hologram.getInternPosition(corner, BlockPos.ZERO));
+			BlockPos offsetPosition = position.subtract(hologram.getCornerpositionInWorld(corner, BlockPos.ZERO));
 			hologram.setPosition(offsetPosition);
 			Formater.build().translate("commands.hologram.position.success", name, UtilHelper.formatBlockPos(position)).commandInfoStyle().send(source);
 			return 1;

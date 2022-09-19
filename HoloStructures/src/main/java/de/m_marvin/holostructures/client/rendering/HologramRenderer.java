@@ -13,12 +13,14 @@ import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.blueprints.Blueprint.EntityData;
 import de.m_marvin.holostructures.client.holograms.Hologram;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -61,6 +63,25 @@ public class HologramRenderer {
 		
 		if (ClientHandler.getInstance().getLevelAccessor().isPresent()) {
 			
+			
+			
+			Vec3i size = hologram.getBlueprint().getSize().offset(1, 1, 1);
+			int chunkCountX = Math.ceilDiv(size.getX(), 16);
+			int chunkCountY = Math.ceilDiv(size.getY(), 16);
+			int chunkCountZ = Math.ceilDiv(size.getZ(), 16);
+			
+			for (int cx = 0; cx < chunkCountX; cx++) {
+				for (int cz = 0; cz < chunkCountZ; cz++) {
+					for (int cy = 0; cy < chunkCountY; cy++) {
+						Vec3i holoChunk = new Vec3i(cx, cy, cz);
+						
+						
+						
+					}
+				}
+			}
+			
+			
 			Collection<Hologram> holograms = ClientHandler.getInstance().getHolograms().getHolograms();
 			BlockAndTintGetter blockAndTintGetter = ClientHandler.getInstance().getLevelAccessor().get().getLevelGetter();
 					
@@ -79,20 +100,11 @@ public class HologramRenderer {
 	}
 	
 	public static void renderHologram(PoseStack matrixStack, MultiBufferSource buffer, float partialTick, BlockAndTintGetter blockAndTintGetter, Hologram hologram) {
-		for (int x = 0; x <= hologram.getBlueprint().getSize().getX(); x++) {
-			for (int z = 0; z <= hologram.getBlueprint().getSize().getZ(); z++) {
-				for (int y = 0; y <= hologram.getBlueprint().getSize().getY(); y++) {
-					BlockPos hologramBlockPos = new BlockPos(x, y, z);
-					BlockPos worldPosition = hologram.getPosition().offset(hologramBlockPos);
-					BlockState hologramState = hologram.getBlueprint().getBlock(hologramBlockPos);
-					Optional<EntityData> hologramBlockEntity = hologram.getBlueprint().getBlockEntity(hologramBlockPos);
-					matrixStack.pushPose();
-					matrixStack.translate(x, y, z);
-					renderBlock(matrixStack, buffer, partialTick, blockAndTintGetter, worldPosition, hologramState, hologramBlockEntity);
-					matrixStack.popPose();
-				}
-			}
-		}
+		
+	}
+	
+	public static void renderHologramChunk(PoseStack matrixStack, MultiBufferSource buffer, float partialTick, BlockAndTintGetter blockAndTintGetter) {
+		
 	}
 	
 	@SuppressWarnings("resource")
@@ -108,6 +120,34 @@ public class HologramRenderer {
 			if (blockentity.get().nbt().get().isPresent()) blockEntityInstance.load(blockentity.get().nbt().get().get());
 			BLOCK_ENTITY_RENDER_DISPATCHER.get().render(blockEntityInstance, partialTick, matrixStack, buffer);
 		}
+		
+		
+//		if (!this.hasChanged && this.activateRenderBuffer) {
+//			// TODO RBO not working
+//			matrixStackIn.push();
+//			matrixStackIn.translate(posX, posY, posZ);
+//			GL11.glCallList(this.listId);
+//			matrixStackIn.pop();
+//		} else {
+//			
+//			if (this.activateRenderBuffer) {
+//				// TODO: RBO not working
+//				if (this.listId != 0) GL11.glDeleteLists(this.listId, 1);
+//				this.listId = GL11.glGenLists(1);
+//				matrixStackIn.push();
+//				GL11.glNewList(this.listId, GL11.GL_COMPILE);
+//				renderBlockObjects(matrixStackIn, bufferIn, partialTicks);
+//				GL11.glEndList();
+//				matrixStackIn.pop();
+//				this.hasChanged = false;
+//			} else {
+//				matrixStackIn.push();
+//				matrixStackIn.translate(posX, posY, posZ);
+//				renderBlockObjects(matrixStackIn, bufferIn, partialTicks);
+//				matrixStackIn.pop();
+//			}
+//			
+//		}
 		
 	}
 	

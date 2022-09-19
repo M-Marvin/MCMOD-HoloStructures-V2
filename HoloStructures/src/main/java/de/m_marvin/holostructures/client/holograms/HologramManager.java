@@ -6,6 +6,7 @@ import java.util.Map;
 
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class HologramManager {
 	
@@ -32,6 +33,14 @@ public class HologramManager {
 	
 	public Collection<Hologram> getHolograms() {
 		return holograms.values();
+	}
+	
+	public Collection<Hologram> getHologramsWithBlockAt(BlockPos pos) {
+		return this.holograms.values().stream().filter((hologram) -> !hologram.getBlueprint().getBlock(hologram.getBlueprintPositionFromWorld(pos)).isAir()).toList();
+	}
+	
+	public Collection<BlockState> getHologramBlocksAt(BlockPos pos) {
+		return getHologramsWithBlockAt(pos).stream().map((hologram) -> hologram.getBlueprint().getBlock(hologram.getBlueprintPositionFromWorld(pos))).toList();
 	}
 	
 }

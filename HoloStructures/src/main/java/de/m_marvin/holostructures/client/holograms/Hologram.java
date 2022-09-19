@@ -43,12 +43,24 @@ public class Hologram {
 		return name;
 	}
 	
-	public BlockPos getInternPosition(Corner corner, BlockPos pos) {
-		return corner.mapPosition(pos, this.blueprint);
+	public BlockPos getCornerpositionInWorld(Corner corner, BlockPos originPos) {
+		return corner.mapPosition(originPos, this.blueprint);
 	}
 
+	public BlockPos getBlueprintPositionInWorld(BlockPos pos) {
+		return pos.offset(position);
+	}
+	
+	public BlockPos getBlueprintPositionFromWorld(BlockPos pos) {
+		return pos.subtract(position);
+	}
+	
 	public void setPosition(BlockPos position) {
 		this.position = position;
+	}
+
+	public boolean containsBlockPos(BlockPos pos) {
+		return !this.blueprint.getBlock(pos).isAir();
 	}
 	
 }
