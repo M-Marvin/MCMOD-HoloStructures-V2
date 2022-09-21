@@ -2,9 +2,12 @@ package de.m_marvin.holostructures.client.holograms;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
+import de.m_marvin.holostructures.client.blueprints.Blueprint.EntityData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -39,8 +42,12 @@ public class HologramManager {
 		return this.holograms.values().stream().filter((hologram) -> !hologram.getBlueprint().getBlock(hologram.getBlueprintPositionFromWorld(pos)).isAir()).toList();
 	}
 	
-	public Collection<BlockState> getHologramBlocksAt(BlockPos pos) {
+	public List<BlockState> getHologramBlocksAt(BlockPos pos) {
 		return getHologramsWithBlockAt(pos).stream().map((hologram) -> hologram.getBlueprint().getBlock(hologram.getBlueprintPositionFromWorld(pos))).toList();
+	}
+
+	public List<Optional<EntityData>> getHologramBlockentitesAt(BlockPos pos) {
+		return getHologramsWithBlockAt(pos).stream().map((hologram) -> hologram.getBlueprint().getBlockEntity(hologram.getBlueprintPositionFromWorld(pos))).toList();
 	}
 	
 }
