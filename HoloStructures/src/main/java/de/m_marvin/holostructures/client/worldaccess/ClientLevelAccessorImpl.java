@@ -83,12 +83,12 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	}
 	
 	@Override
-	public boolean hasServerAccess() {
-		return false;
+	public boolean isMutable() {
+		return true;
 	}
 	
 	@Override
-	public boolean hasOPAccess() {
+	public boolean hasWriteAccess() {
 		return this.player.get().getPermissionLevel() >= 4;
 	}
 	
@@ -98,23 +98,18 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	}
 	
 	@Override
-	public void abbortWaiting() {
+	public void abbortAccessing() {
 		pendingCommands.clear();
 	}
 	
-	@Override
-	public CommandSourceStack getChatTarget() {
-		return this.player.get().createCommandSourceStack();
-	}
-	
 	public void setBlock(BlockPos pos, BlockState state) {
-		if (!hasOPAccess()) return;
+		if (!hasWriteAccess()) return;
 		sendCommand("/setblock " + UtilHelper.formatBlockPos(pos) + " " + UtilHelper.formatBlockState(state));
 	}
 	
 	@Override
 	public boolean checkBlock(BlockPos pos, BlockState state) {
-		if (!hasOPAccess()) return true;
+		if (!hasWriteAccess()) return true;
 		if (!UtilHelper.checkBlockState(this.level.get().getBlockState(pos), state)) {
 			sendCommand("/setblock " + UtilHelper.formatBlockPos(pos) + " " + UtilHelper.formatBlockState(state));
 			
@@ -129,7 +124,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 					break;
 				}
 				if (waitingTime > 2000) {
-					abbortWaiting();
+					abbortAccessing();
 					return false;
 				}
 			}
@@ -145,28 +140,21 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	}
 	
 	@Override
-	public Optional<Blueprint.EntityData> getBlockEntity(BlockPos pos) {
-		if (!hasOPAccess()) return Optional.empty();
+	public Optional<Blueprint.EntityData> getBlockEntityData(BlockPos pos) {
+		if (!hasWriteAccess()) return Optional.empty();
 		Optional<BlockEntity> blockEntity = Optional.ofNullable(this.level.get().getBlockEntity(pos));
-		Function<CompoundTag, CompoundTag> nbtFilter = (nbt) -> {
-			nbt.remove("x");
-			nbt.remove("y");
-			nbt.remove("z");
-			nbt.remove("id");
-			return nbt;
-		};
 		if (blockEntity.isPresent()) {
 			CommandResponse response = sendCommand("/data get block " + UtilHelper.formatBlockPos(pos));
 			Blueprint.EntityData blockEntityData = new Blueprint.EntityData(blockEntity.get().getType().getRegistryName(), 
-					() -> response.isPresent() ? Optional.of(nbtFilter.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
+					() -> response.isPresent() ? Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			return Optional.of(blockEntityData);
 		}
 		return Optional.empty();
 	}
 	
 	@Override
-	public void setBlockEntity(BlockPos pos, Blueprint.EntityData blockEntity) {
-		if (!hasOPAccess()) return;
+	public void setBlockEntityData(BlockPos pos, Blueprint.EntityData blockEntity) {
+		if (!hasWriteAccess()) return;
 		if (blockEntity.nbt().get().isPresent()) {
 			String posString = UtilHelper.formatBlockPos(pos);
 			UtilHelper.sequentialCopy(
@@ -179,25 +167,22 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	}
 	
 	@Override
-	public Map<Vec3, Blueprint.EntityData> getEntities(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
+	public Map<Vec3, Blueprint.EntityData> getEntitiesData(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
 		AABB aabb = new AABB(corner1, corner2).inflate(1);
-		Function<CompoundTag, CompoundTag> nbtFilter = (nbt) -> {
-			nbt.remove("Pos");
-			return nbt;
-		};
+		
 		Map<Vec3, Blueprint.EntityData> map = new HashMap<>();
 		this.level.get().getEntities(null, aabb).forEach((entity) -> {
 			Vec3 position = positionMapper.apply(entity.position());
-			CommandResponse response = hasOPAccess() ? sendCommand("/data get entity " + entity.getUUID().toString()) : new CommandResponse();
-			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> response.isPresent() ? Optional.of(nbtFilter.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
+			CommandResponse response = hasWriteAccess() ? sendCommand("/data get entity " + entity.getUUID().toString()) : new CommandResponse();
+			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> response.isPresent() ? Optional.of(Blueprint.ENTITY_DATA_FILTER.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			map.put(position, data);
 		});
 		return map;
 	}
 	
 	@Override
-	public void addEntity(Vec3 pos, Blueprint.EntityData entity) {
-		if (!hasOPAccess()) return;
+	public void addEntityData(Vec3 pos, Blueprint.EntityData entity) {
+		if (!hasWriteAccess()) return;
 		if (entity.nbt().get().isPresent()) {
 			String pasteTag = "paste_" + entity.hashCode();
 			sendCommand("/summon " + entity.type().toString() + " " + UtilHelper.formatVecPos(pos) + " {Tags:[\"" + pasteTag + "\"]}");

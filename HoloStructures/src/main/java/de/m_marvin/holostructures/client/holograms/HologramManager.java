@@ -47,7 +47,7 @@ public class HologramManager {
 	}
 
 	public List<Optional<EntityData>> getHologramBlockentitesAt(BlockPos pos) {
-		return getHologramsWithBlockAt(pos).stream().map((hologram) -> hologram.getBlueprint().getBlockEntity(hologram.getBlueprintPositionFromWorld(pos))).toList();
+		return getHologramsWithBlockAt(pos).stream().map((hologram) -> hologram.getBlueprint().getBlockEntityData(hologram.getBlueprintPositionFromWorld(pos))).toList();
 	}
 	
 }

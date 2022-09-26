@@ -16,8 +16,8 @@ import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.Config;
 import de.m_marvin.holostructures.client.Formater;
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
+import de.m_marvin.holostructures.client.holograms.Corner;
 import de.m_marvin.holostructures.client.holograms.Hologram;
-import de.m_marvin.holostructures.client.holograms.Hologram.Corner;
 import de.m_marvin.holostructures.commandargs.BlueprintPathArgument;
 import de.m_marvin.holostructures.commandargs.DirectionArgumentType;
 import de.m_marvin.holostructures.commandargs.SuggestingStringArgument;
@@ -81,8 +81,7 @@ public class ClientProcessor implements ITaskProcessor {
 	public int commandInfo(CommandSourceStack source) {
 		if (checkRunnable(source, false, false, false)) {
 			Formater.build().translate("commands.info.title").commandInfoStyle().send(source);
-			Formater.build().translate("commands.info.serveraccess", this.getAccessor().get().hasServerAccess()).commandInfoStyle().send(source);
-			Formater.build().translate("commands.info.opaccess", this.getAccessor().get().hasOPAccess()).commandInfoStyle().send(source);
+			Formater.build().translate("commands.info.opaccess", this.getAccessor().get().hasWriteAccess()).commandInfoStyle().send(source);
 			return 1;
 		}
 		return 0;
@@ -310,7 +309,7 @@ public class ClientProcessor implements ITaskProcessor {
 	public int commandAbbort(CommandSourceStack source) {
 		if (checkRunnable(source, false, false, false) && ClientHandler.getInstance().getBlueprints().isWorking()) {
 			ClientHandler.getInstance().getBlueprints().abbortTask();
-			getAccessor().get().abbortWaiting();
+			getAccessor().get().abbortAccessing();
 			Formater.build().translate("commands.blueprint.abborted").commandWarnStyle().send(source);
 			return 1;
 		}
@@ -337,10 +336,10 @@ public class ClientProcessor implements ITaskProcessor {
 				)
 				.then(Commands.literal("position")
 						.then(Commands.argument("name", SuggestingStringArgument.wordSuggesting(() -> ClientHandler.getInstance().getHolograms().getHologramNames())).executes((ctx) -> 
-								commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), Minecraft.getInstance().player.blockPosition(), Corner.ORIGIN)
+								commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), Minecraft.getInstance().player.blockPosition(), Corner.origin)
 								)
 								.then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ctx) -> 
-										commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "position"), Corner.ORIGIN)
+										commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "position"), Corner.origin)
 										)
 										.then(Commands.argument("corner", EnumArgument.enumArgument(Corner.class)).executes((ctx) -> 
 												commandPosition(ctx.getSource(), SuggestingStringArgument.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "position"), ctx.getArgument("corner", Corner.class))
@@ -406,7 +405,7 @@ public class ClientProcessor implements ITaskProcessor {
 		return 0;
 	}
 	
-	public int commandPosition(CommandSourceStack source, String name, BlockPos position, Hologram.Corner corner) {
+	public int commandPosition(CommandSourceStack source, String name, BlockPos position, Corner corner) {
 		if (checkRunnable(source, false, false, false)) {
 			Hologram hologram = ClientHandler.getInstance().getHolograms().getHologram(name);
 			if (hologram == null) {

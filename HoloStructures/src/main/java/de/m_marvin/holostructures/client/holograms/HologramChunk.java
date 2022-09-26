@@ -4,17 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class HologramChunk implements LevelHeightAccessor {
 	
 	protected LevelHeightAccessor levelHeightAccessor;
-	protected Map<BlockPos, Blueprint.EntityData> blockentities;
+	protected Map<BlockPos, BlockEntity> blockentities;
 	protected HologramSection[] sections;
 	protected ChunkPos position;
 	
@@ -64,12 +64,12 @@ public class HologramChunk implements LevelHeightAccessor {
 		section.setState(position.getX() & 15, position.getY() & 15, position.getZ() & 15, state);
 	}
 	
-	public Optional<Blueprint.EntityData> getBlockEntitie(BlockPos position) {
+	public Optional<BlockEntity> getBlockEntity(BlockPos position) {
 		return Optional.ofNullable(this.blockentities.get(new BlockPos(position.getX() & 15, position.getY() & 15, position.getZ() & 15)));
 	}
 	
-	public void setBlockEntity(BlockPos position, Blueprint.EntityData blockentitie) {
-		this.blockentities.put(new BlockPos(position.getX() & 15, position.getY() & 15, position.getZ() & 15), blockentitie);
+	public void setBlockEntity(BlockPos position, BlockEntity blockentity) {
+		this.blockentities.put(new BlockPos(position.getX() & 15, position.getY() & 15, position.getZ() & 15), blockentity);
 	}
 	
 }

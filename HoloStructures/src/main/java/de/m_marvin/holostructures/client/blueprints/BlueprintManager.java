@@ -35,7 +35,7 @@ public class BlueprintManager {
 	}
 	
 	public boolean pasteClipboard(ILevelAccessor accessor, BlockPos originPosition, boolean pasteEntities, @Nullable Runnable onCompleted) {
-		if (!accessor.hasOPAccess()) return false;
+		if (!accessor.hasWriteAccess()) return false;
 		if (this.clipboard == null) return false;
 		createWorkerThread(() -> this.clipboard.pasteBlueprint(accessor, originPosition, pasteEntities), onCompleted);
 		return true;

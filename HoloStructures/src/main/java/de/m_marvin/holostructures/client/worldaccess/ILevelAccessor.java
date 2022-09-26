@@ -15,22 +15,21 @@ import net.minecraft.world.phys.Vec3;
 
 public interface ILevelAccessor {
 	
-	public CommandSourceStack getChatTarget();
 	public BlockAndTintGetter getLevelGetter();
 	
-	public boolean hasServerAccess();
-	public boolean hasOPAccess();
+	public boolean isMutable();
+	public boolean hasWriteAccess();
 	public boolean isDoneAccessing();
-	public void abbortWaiting();
+	public void abbortAccessing();
 	
 	public void setBlock(BlockPos pos, BlockState state);
 	public BlockState getBlock(BlockPos pos);
 	public boolean checkBlock(BlockPos pos, BlockState state);
 	
-	public Optional<Blueprint.EntityData> getBlockEntity(BlockPos pos);
-	public void setBlockEntity(BlockPos pos, Blueprint.EntityData data);
+	public Optional<Blueprint.EntityData> getBlockEntityData(BlockPos pos);
+	public void setBlockEntityData(BlockPos pos, Blueprint.EntityData data);
 	
-	public Map<Vec3, EntityData> getEntities(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper);
-	public void addEntity(Vec3 pos, Blueprint.EntityData entity);
+	public Map<Vec3, EntityData> getEntitiesData(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper);
+	public void addEntityData(Vec3 pos, Blueprint.EntityData entity);
 	
 }
