@@ -237,20 +237,26 @@ public class HolographicRenderer {
 			Optional<HologramChunk> holoChunk = hologram.hologram.getChunk(chunk.pos);
 			if (holoChunk.isPresent()) {
 				
-				for (int x = 0; x < 16; x++) {
-					for (int z = 0; z < 16; z++) {
-						for (int y = 0; y < 16; y++) {
-							BlockPos chunkPos = new BlockPos((chunk.pos.x << 4) + x, y, (chunk.pos.z << 4) + z);
-							BlockState state = holoChunk.get().getBlock(chunkPos);
-							if (!state.isAir()) {
-								poseStack.pushPose();
-								poseStack.translate(x, y, z);
-								BLOCK_RENDERER.get().renderBatched(state, chunkPos.offset(chunkPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
-								poseStack.popPose();
+				holoChunk.get().getSections().forEach((yi, section) -> {
+					
+					int posY = yi << 4;
+					
+					for (int x = 0; x < 16; x++) {
+						for (int z = 0; z < 16; z++) {
+							for (int y = 0; y < 16; y++) {
+								BlockPos chunkPos = new BlockPos((chunk.pos.x << 4) + x, posY + y, (chunk.pos.z << 4) + z);
+								BlockState state = holoChunk.get().getBlock(chunkPos);
+								if (!state.isAir()) {
+									poseStack.pushPose();
+									poseStack.translate(x, posY + y, z);
+									BLOCK_RENDERER.get().renderBatched(state, chunkPos.offset(chunkPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
+									poseStack.popPose();
+								}
 							}
 						}
 					}
-				}
+					
+				});
 				
 			}
 			
@@ -275,18 +281,18 @@ public class HolographicRenderer {
 			
 			BlockPos position = hologram.hologram.getPosition();
 			Vec3i bounds = hologram.hologram.getBoundingSize();
-						
+			
 			poseStack.pushPose();
 			poseStack.translate(position.getX(), position.getY(), position.getZ());
-
+			
 			VertexConsumer buffer = source.getBuffer(RenderType.lineStrip());
 			
-			int lx = position.getX();
-			int ly = position.getY();
-			int lz = position.getZ();
-			int hx = bounds.getX() + 2;
-			int hy = bounds.getY() + 2;
-			int hz = bounds.getZ() + 2;
+			int lx = 0;
+			int ly = 0;
+			int lz = 0;
+			int hx = bounds.getX();
+			int hy = bounds.getY();
+			int hz = bounds.getZ();
 			
 			renderHologramLine(poseStack, buffer, lx, ly, lz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, hx, ly, lz, 1, 1, 1, 1);

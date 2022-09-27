@@ -29,6 +29,8 @@ public class HoloStructures {
 	// Layer-Ansicht der Hologramme
 	// Entities und BlockEntities in Hologrammen
 	// GUI-Version der Befehle
-	// Mod-API für mod-specifische Dinge (z.B. Industria Conduits, Create Klebstoff)
+	// Mod-API fï¿½r mod-specifische Dinge (z.B. Industria Conduits, Create Klebstoff)
+	// Hologram shader: https://gist.github.com/gigaherz/b8756ff463541f07a644ef8f14cb10f5
+	// https://github.com/XFactHD/FramedBlocks/blob/1.19.x/src/main/java/xfacthd/framedblocks/api/util/client/OutlineRender.java#L74-L87
 	
 }
