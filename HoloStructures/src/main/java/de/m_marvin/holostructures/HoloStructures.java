@@ -25,5 +25,10 @@ public class HoloStructures {
 	// Schem format mit Mod-BlÃ¶cken die fehlen
 	// Fehlende-Mods liste beim laden einer Blaupause
 	// Blaupausen rotieren/spiegeln
+	// In-Game editieren von Hologrammen
+	// Layer-Ansicht der Hologramme
+	// Entities und BlockEntities in Hologrammen
+	// GUI-Version der Befehle
+	// Mod-API für mod-specifische Dinge (z.B. Industria Conduits, Create Klebstoff)
 	
 }

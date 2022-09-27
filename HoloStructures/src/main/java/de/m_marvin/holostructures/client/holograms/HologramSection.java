@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class HologramSection {
@@ -26,13 +27,13 @@ public class HologramSection {
 	}
 	
 	public BlockState getState(int x, int y, int z) {
-		return this.states.get(BlockPos.asLong(x, y, z));
+		return this.states.getOrDefault(BlockPos.asLong(x, y, z), Blocks.AIR.defaultBlockState());
 	}
 	
 	public void setState(int x, int y, int z, BlockState state) {
 		BlockState replaced = this.states.put(BlockPos.asLong(x, y, z),  state);
-		if (replaced.isAir() != state.isAir()) {
-			if (state.isAir()) {
+		if (replaced == null || replaced.isAir() != state.isAir()) {
+			if (state.isAir() && replaced != null) {
 				nonEmptyBlockCount--;
 			} else {
 				nonEmptyBlockCount++;

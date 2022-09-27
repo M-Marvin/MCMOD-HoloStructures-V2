@@ -23,6 +23,7 @@ public class HologramChunk implements LevelHeightAccessor {
 		this.levelHeightAccessor = levelHeightAccessor;
 		this.blockentities = new HashMap<>();
 		this.sections = new HologramSection[getSectionsCount()];
+		for (int i = 0; i < this.sections.length; i++) this.sections[i] = new HologramSection();
 		this.position = position;
 	}
 
