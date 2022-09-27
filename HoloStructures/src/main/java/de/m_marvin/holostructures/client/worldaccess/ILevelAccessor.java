@@ -7,7 +7,6 @@ import com.google.common.base.Function;
 
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import de.m_marvin.holostructures.client.blueprints.Blueprint.EntityData;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;

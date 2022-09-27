@@ -3,12 +3,15 @@ package de.m_marvin.holostructures.client.holograms;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Function;
 
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import de.m_marvin.holostructures.client.blueprints.Blueprint.EntityData;
+import de.m_marvin.holostructures.client.rendering.HolographicRenderer;
 import de.m_marvin.holostructures.client.worldaccess.ILevelAccessor;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -17,6 +20,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -33,6 +37,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class Hologram implements ILevelAccessor {
 	
 	public BlockPos position;
+	public BlockPos origin;
 	public String name;
 	public Long2ObjectMap<HologramChunk> chunks;
 	public Int2ObjectMap<Entity> entities;
@@ -40,34 +45,56 @@ public class Hologram implements ILevelAccessor {
 	
 	public Hologram(Level level, BlockPos position, String name) {
 		this.level = level;
-		this.position = position;
+		this.origin = this.position = position;
 		this.name = name;
 		this.chunks = new Long2ObjectArrayMap<HologramChunk>();
 		this.entities = new Int2ObjectArrayMap<>();
 	}
 	
 	public void setCornerWorldPosition(Corner corner, BlockPos position) {
-		
+		setPosition(position.subtract(corner.map(this)));
 	}
 	
 	public BlockPos getCornerWorldPosition(Corner corner) {
-		
+		return getPosition().offset(corner.map(this));
 	}
 	
 	public BlockPos holoToWorldPosition(BlockPos holoPosition) {
-		
+		return holoPosition.subtract(getPosition());
 	}
 	
 	public BlockPos worldToHoloPosition(BlockPos worldPosition) {
-		
+		return worldPosition.offset(getPosition());
 	}
 	
-	public BlockPos getBoundingSize() {
-		
+	public Vec3i getBoundingSize() {
+		if (this.chunks.isEmpty()) {
+			return Vec3i.ZERO;
+		} else {
+			OptionalInt outerChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getPosition().x).max();
+			OptionalInt outerChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getPosition().z).max();
+			if (!outerChunkX.isPresent() || !outerChunkZ.isPresent()) return BlockPos.ZERO;
+			int outerBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((chunk) -> chunk.getPosition().x == outerChunkX.getAsInt()).mapToInt(HologramChunk::getHighestBlockX).max().getAsInt();
+			int outerBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((chunk) -> chunk.getPosition().z == outerChunkZ.getAsInt()).mapToInt(HologramChunk::getHighestBlockZ).max().getAsInt();
+			int upperBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt(HologramChunk::getHighestBlockY).max().getAsInt();
+			return new Vec3i(outerBlockX, upperBlockY, outerBlockZ);
+		}
+	}
+
+	public BlockPos getOrigin() {
+		return origin;
+	}
+	
+	public void setOrigin(BlockPos origin) {
+		this.origin = origin;
 	}
 	
 	public BlockPos getPosition() {
 		return position;
+	}
+	
+	public void setPosition(BlockPos position) {
+		this.position = position;
 	}
 	
 	public Level getLevel() {
@@ -221,6 +248,16 @@ public class Hologram implements ILevelAccessor {
 			if (data.nbt().get().isPresent()) entity.deserializeNBT(data.nbt().get().get());
 			addEntity(entity);
 		}
+	}
+
+	public void refreshChunk(ChunkPos chunk) {
+		HolographicRenderer.markDirty(this, chunk);
+	}
+	
+	public void refreshAllChunks() {
+		this.chunks.forEach((lp, chunk) -> {
+			HolographicRenderer.markDirty(this, new ChunkPos(lp));
+		});
 	}
 	
 }

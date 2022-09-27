@@ -3,6 +3,7 @@ package de.m_marvin.holostructures.client.holograms;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
@@ -23,6 +24,20 @@ public class HologramChunk implements LevelHeightAccessor {
 		this.blockentities = new HashMap<>();
 		this.sections = new HologramSection[getSectionsCount()];
 		this.position = position;
+	}
+
+	public int getHighestBlockX() {
+		return Stream.of(getSections()).mapToInt((s) -> s.getHighest(BlockPos::getX)).max().getAsInt();
+	}
+	
+	public int getHighestBlockZ() {
+		return Stream.of(getSections()).mapToInt((s) -> s.getHighest(BlockPos::getZ)).max().getAsInt();
+	}
+
+	public int getHighestBlockY() {
+		HologramSection highestSection = null;
+		for (HologramSection section : getSections()) if (!section.isEmpty()) highestSection = section;
+		return highestSection == null ? 0 : highestSection.getHighest(BlockPos::getY);
 	}
 	
 	@Override

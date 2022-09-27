@@ -319,11 +319,23 @@ public class ClientProcessor implements ITaskProcessor {
 	public LiteralArgumentBuilder<CommandSourceStack> commandHologramBuild() {
 		return Commands.literal("hologram")
 				.then(Commands.literal("create")
-						.then(Commands.argument("name", StringArgumentType.word()).executes((ctx) ->
-								commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), Minecraft.getInstance().player.blockPosition())
+						.then(Commands.literal("empty")
+								.then(Commands.argument("name", StringArgumentType.word()).executes((ctx) ->
+										commandCreateEmpty(ctx.getSource(), StringArgumentType.getString(ctx, "name"), Minecraft.getInstance().player.blockPosition())
+										)
+										.then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ctx) ->
+												commandCreateEmpty(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "pos"))
+												)
+										)
 								)
-								.then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ctx) ->
-										commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "pos"))
+						)
+						.then(Commands.literal("blueprint")
+								.then(Commands.argument("name", StringArgumentType.word()).executes((ctx) ->
+										commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), false, Minecraft.getInstance().player.blockPosition())
+										)
+										.then(Commands.argument("includeEntities", BoolArgumentType.bool()).executes((ctx) -> 
+												commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BoolArgumentType.getBool(ctx, "includeEntities"), BlockPosArgument.getLoadedBlockPos(ctx, "pos"))
+												)
 										)
 								)
 						)
@@ -367,19 +379,33 @@ public class ClientProcessor implements ITaskProcessor {
 		return 0;
 	}
 	
-	public int commandCreate(CommandSourceStack source, String name, BlockPos position) {
+	public int commandCreateEmpty(CommandSourceStack source, String name, BlockPos position) {
 		if (checkRunnable(source, false, false, false)) {
-			if (ClientHandler.getInstance().getBlueprints().getClipboard() == null) {
-				Formater.build().translate("commands.hologram.create.noclipboard").commandErrorStyle().send(source);
-				return 0;
-			}
-			Blueprint blueprint = ClientHandler.getInstance().getBlueprints().getClipboard();
-			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(blueprint, position, name);
+			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(null, position, name, false);
 			if (hologram != null) {
-				Formater.build().translate("commands.hologram.create.success", name).commandInfoStyle().send(source);
+				Formater.build().translate("commands.hologram.create.empty.success", name).commandInfoStyle().send(source);
 				return 1;
 			} else {
-				Formater.build().translate("commands.hologram.create.failed").commandErrorStyle().send(source);
+				Formater.build().translate("commands.hologram.create.empty.doubledname", name).commandErrorStyle().send(source);
+				return 0;
+			}
+		}
+		return 0;
+	}
+	
+	public int commandCreate(CommandSourceStack source, String name, boolean includeEntities, BlockPos position) {
+		if (checkRunnable(source, false, false, false)) {
+			Blueprint blueprint = ClientHandler.getInstance().getBlueprints().getClipboard();
+			if (blueprint == null) {
+				Formater.build().translate("commands.hologram.create.blueprint.noclipboard").commandErrorStyle().send(source);
+				return 0;
+			}
+			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(blueprint, position, name, includeEntities);
+			if (hologram != null) {
+				Formater.build().translate("commands.hologram.create.blueprint.success", name).commandInfoStyle().send(source);
+				return 1;
+			} else {
+				Formater.build().translate("commands.hologram.create.blueprint.doublename", name).commandErrorStyle().send(source);
 				return 0;
 			}
 		}
@@ -394,7 +420,7 @@ public class ClientProcessor implements ITaskProcessor {
 				boolean line = false;
 				for (Hologram hologram : holograms) {
 					line = !line;
-					Formater.build().translate("commands.hologram.list.entry", hologram.getName(), UtilHelper.formatBlockPos(hologram.getPosition()), UtilHelper.formatBlockPos(hologram.getBlueprint().getSize().offset(1, 1, 1))).withStyle(line ? ChatFormatting.GRAY : ChatFormatting.DARK_GRAY).send(source);
+					Formater.build().translate("commands.hologram.list.entry", hologram.getName(), UtilHelper.formatBlockPos(hologram.getPosition()), UtilHelper.formatBlockPos(hologram.getBoundingSize())).withStyle(line ? ChatFormatting.GRAY : ChatFormatting.DARK_GRAY).send(source);
 				}
 				return 1;
 			} else {
@@ -412,8 +438,7 @@ public class ClientProcessor implements ITaskProcessor {
 				Formater.build().translate("commands.hologram.position.invalidhologram", name).commandErrorStyle().send(source);
 				return 0;
 			}
-			BlockPos offsetPosition = position.subtract(hologram.getCornerpositionInWorld(corner, BlockPos.ZERO));
-			hologram.setPosition(offsetPosition);
+			hologram.setCornerWorldPosition(corner, position);
 			Formater.build().translate("commands.hologram.position.success", name, UtilHelper.formatBlockPos(position)).commandInfoStyle().send(source);
 			return 1;
 		}
