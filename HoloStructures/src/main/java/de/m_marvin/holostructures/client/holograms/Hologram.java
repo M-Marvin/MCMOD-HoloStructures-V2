@@ -211,11 +211,11 @@ public class Hologram implements ILevelAccessor {
 		Optional<BlockEntity> blockentity = getBlockEntity(pos);
 		if (blockentity.isPresent()) {
 			return Optional.of(
-					new Blueprint.EntityData(
-							blockentity.get().getType().getRegistryName(), 
-							() -> Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(blockentity.get().serializeNBT()))
-						)
-					);
+				new Blueprint.EntityData(
+						blockentity.get().getType().getRegistryName(), 
+						() -> Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(blockentity.get().serializeNBT()))
+					)
+				);
 		}
 		return Optional.empty();
 	}

@@ -63,7 +63,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-//@Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
+@Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
 public class HologramRenderer {
 	
 	public static final Supplier<BlockRenderDispatcher> BLOCK_RENDER_DISPATCHER = () -> Minecraft.getInstance().getBlockRenderer();
@@ -133,19 +133,19 @@ public class HologramRenderer {
 	
 	@SubscribeEvent
 	public static void onLevelRenderLast(RenderLevelStageEvent event) {
-		if (event.getStage() == Stage.AFTER_SKY) {
-			manageBuffers();
-		} else if (event.getStage() == Stage.AFTER_SOLID_BLOCKS) {
-			render(event.getPoseStack(), RenderType.solid(), event.getPartialTick());
-		} else if (event.getStage() == Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS) {
-			render(event.getPoseStack(), RenderType.cutoutMipped(), event.getPartialTick());
-		} else if (event.getStage() == Stage.AFTER_CUTOUT_BLOCKS) {
-			render(event.getPoseStack(), RenderType.cutout(), event.getPartialTick());
-		} else if (event.getStage() == Stage.AFTER_TRANSLUCENT_BLOCKS) {
-			render(event.getPoseStack(), RenderType.translucent(), event.getPartialTick());
-		} else if (event.getStage() == Stage.AFTER_TRIPWIRE_BLOCKS) {
-			render(event.getPoseStack(), RenderType.tripwire(), event.getPartialTick());
-		}
+//		if (event.getStage() == Stage.AFTER_SKY) {
+//			manageBuffers();
+//		} else if (event.getStage() == Stage.AFTER_SOLID_BLOCKS) {
+//			render(event.getPoseStack(), RenderType.solid(), event.getPartialTick());
+//		} else if (event.getStage() == Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS) {
+//			render(event.getPoseStack(), RenderType.cutoutMipped(), event.getPartialTick());
+//		} else if (event.getStage() == Stage.AFTER_CUTOUT_BLOCKS) {
+//			render(event.getPoseStack(), RenderType.cutout(), event.getPartialTick());
+//		} else if (event.getStage() == Stage.AFTER_TRANSLUCENT_BLOCKS) {
+//			render(event.getPoseStack(), RenderType.translucent(), event.getPartialTick());
+//		} else if (event.getStage() == Stage.AFTER_TRIPWIRE_BLOCKS) {
+//			render(event.getPoseStack(), RenderType.tripwire(), event.getPartialTick());
+//		}
 	}
 	
 	@SubscribeEvent
@@ -282,56 +282,57 @@ public class HologramRenderer {
 			matrixStack.translate(-offset.x, -offset.y, -offset.z);
 			matrixStack.translate(chunkPos.x * 16, 0, chunkPos.z * 16);
 			
-//			 ShaderInstance shaderinstance = RenderSystem.getShader();
-//			 shaderinstance.apply();
+			 ShaderInstance shaderinstance = RenderSystem.getShader();
+			 shaderinstance.apply();
 			
 
-//		      if (shaderinstance.MODEL_VIEW_MATRIX != null) {
-//		          shaderinstance.MODEL_VIEW_MATRIX.set(matrixStack.last().pose());
-//		       }
-//		      
-////		      if (shaderinstance.PROJECTION_MATRIX != null) {
-////		         shaderinstance.PROJECTION_MATRIX.set(RenderRystem);
-////		      }
-//
-//		      if (shaderinstance.COLOR_MODULATOR != null) {
-//		        shaderinstance.COLOR_MODULATOR.set(new float[] {1, 1, 1, 1});
-//		      }
-//
-//		      if (shaderinstance.FOG_START != null) {
-//		         shaderinstance.FOG_START.set(RenderSystem.getShaderFogStart());
-//		      }
-//
-//		      if (shaderinstance.FOG_END != null) {
-//		    	  //System.out.println(RenderSystem.getShaderFogEnd());
-//		         shaderinstance.FOG_END.set(RenderSystem.getShaderFogEnd());
-//		      }
-//
-//		      if (shaderinstance.FOG_COLOR != null) {
-//		        shaderinstance.FOG_COLOR.set(RenderSystem.getShaderFogColor());
-//		      }
-//
-//		      if (shaderinstance.FOG_SHAPE != null) {
-//		         shaderinstance.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
-//		      }
-//
-//		      if (shaderinstance.TEXTURE_MATRIX != null) {
-//		         shaderinstance.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
-//		      }
-//		      
-//		      if (shaderinstance.GAME_TIME != null) {
-//		          shaderinstance.GAME_TIME.set(RenderSystem.getShaderGameTime());
-//		       }
+		      if (shaderinstance.MODEL_VIEW_MATRIX != null) {
+		    	  //System.out.println(matrixStack.last().pose());
+		         // shaderinstance.MODEL_VIEW_MATRIX.set(matrixStack.last().pose());
+		       }
 		      
-		     // RenderSystem.setupShaderLights(shaderinstance);
+//		      if (shaderinstance.PROJECTION_MATRIX != null) {
+//		         shaderinstance.PROJECTION_MATRIX.set(RenderRystem);
+//		      }
+
+		      if (shaderinstance.COLOR_MODULATOR != null) {
+		        shaderinstance.COLOR_MODULATOR.set(new float[] {1, 1, 1, 1});
+		      }
+
+		      if (shaderinstance.FOG_START != null) {
+		         shaderinstance.FOG_START.set(RenderSystem.getShaderFogStart());
+		      }
+
+		      if (shaderinstance.FOG_END != null) {
+		    	  //System.out.println(RenderSystem.getShaderFogEnd());
+		         shaderinstance.FOG_END.set(RenderSystem.getShaderFogEnd());
+		      }
+
+		      if (shaderinstance.FOG_COLOR != null) {
+		        shaderinstance.FOG_COLOR.set(RenderSystem.getShaderFogColor());
+		      }
+
+		      if (shaderinstance.FOG_SHAPE != null) {
+		         shaderinstance.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
+		      }
+
+		      if (shaderinstance.TEXTURE_MATRIX != null) {
+		         shaderinstance.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
+		      }
 		      
-//		      Uniform uniform = shaderinstance.CHUNK_OFFSET;
+		      if (shaderinstance.GAME_TIME != null) {
+		          shaderinstance.GAME_TIME.set(RenderSystem.getShaderGameTime());
+		       }
+		      
+		      RenderSystem.setupShaderLights(shaderinstance);
+		      
+		      Uniform uniform = shaderinstance.CHUNK_OFFSET;
 			     
-//	            if (uniform != null) {
+	            if (uniform != null) {
 	            	//System.out.println(blockpos);
-	                //uniform.set((float)(0), (float)(0), (float)(0));
-	                //uniform.upload();
-//	             }
+	                uniform.set((float)(0), (float)(0), (float)(0));
+	                uniform.upload();
+	             }
 		      
 		      //Uniform uniform = shaderinstance.CHUNK_OFFSET;
 				  // uniform.upload();
@@ -343,7 +344,7 @@ public class HologramRenderer {
 				
 			}
 
-//			shaderinstance.clear();
+			shaderinstance.clear();
 			
 			matrixStack.popPose();
 			

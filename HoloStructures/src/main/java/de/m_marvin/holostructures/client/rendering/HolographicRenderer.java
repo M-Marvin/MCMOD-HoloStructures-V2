@@ -138,23 +138,30 @@ public class HolographicRenderer {
 	@SubscribeEvent
 	public static void onRenderLevelLast(RenderLevelStageEvent event) {
 		if (event.getStage() == Stage.AFTER_SKY) {
+			PoseStack poseStack = new PoseStack();
+			translateToWorld(poseStack);
+			
 			processUpdateQueue();
 			recompileDirtyChunks();
+
+			poseStack.popPose();
+			
 		} else {
 			PoseStack poseStack = event.getPoseStack();
 			translateToWorld(poseStack);
 			
+			// WORK INPROGRESS: seprating diffrent render layers
 			if (event.getStage() == Stage.AFTER_SOLID_BLOCKS) {
 				renderHologramBounds(poseStack, BUFFER_SOURCE.get());
-				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.solid());
+				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.solid());
 			} else if (event.getStage() == Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS) {
-				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType. cutoutMipped());
+				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType. cutoutMipped());
 			} else if (event.getStage() == Stage.AFTER_CUTOUT_BLOCKS) {
-				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.cutout());
+				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.cutout());
 			} else if (event.getStage() == Stage.AFTER_TRANSLUCENT_BLOCKS) {
 				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.translucent());
 			} else if (event.getStage() == Stage.AFTER_TRIPWIRE_BLOCKS) {
-				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.tripwire());
+				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.tripwire());
 			}
 			
 			poseStack.popPose();
@@ -233,12 +240,14 @@ public class HolographicRenderer {
 				for (int x = 0; x < 16; x++) {
 					for (int z = 0; z < 16; z++) {
 						for (int y = 0; y < 16; y++) {
-							BlockPos chunkPos = new BlockPos(chunk.pos.x << 4 +  x, y, chunk.pos.z << 4 + z);
+							BlockPos chunkPos = new BlockPos((chunk.pos.x << 4) + x, y, (chunk.pos.z << 4) + z);
 							BlockState state = holoChunk.get().getBlock(chunkPos);
-							poseStack.pushPose();
-							poseStack.translate(x, y, z);
-							BLOCK_RENDERER.get().renderBatched(state, chunkPos.offset(chunkPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
-							poseStack.popPose();
+							if (!state.isAir()) {
+								poseStack.pushPose();
+								poseStack.translate(x, y, z);
+								BLOCK_RENDERER.get().renderBatched(state, chunkPos.offset(chunkPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
+								poseStack.popPose();
+							}
 						}
 					}
 				}
@@ -275,19 +284,32 @@ public class HolographicRenderer {
 			int lx = position.getX();
 			int ly = position.getY();
 			int lz = position.getZ();
-			int hx = bounds.getX();
-			int hy = bounds.getY();
-			int hz = bounds.getZ();
+			int hx = bounds.getX() + 2;
+			int hy = bounds.getY() + 2;
+			int hz = bounds.getZ() + 2;
 			
 			renderHologramLine(poseStack, buffer, lx, ly, lz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, hx, ly, lz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, hx, ly, hz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, lx, ly, hz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, lx, ly, lz, 1, 1, 1, 1);
+			
 			renderHologramLine(poseStack, buffer, lx, hy, lz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, lx, ly, lz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, lx, hy, lz, 1, 1, 1, 1);
+			
 			renderHologramLine(poseStack, buffer, hx, hy, lz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, hx, ly, lz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, hx, hy, lz, 1, 1, 1, 1);
+			
 			renderHologramLine(poseStack, buffer, hx, hy, hz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, hx, ly, hz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, hx, hy, hz, 1, 1, 1, 1);
+			
 			renderHologramLine(poseStack, buffer, lx, hy, hz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, lx, ly, hz, 1, 1, 1, 1);
+			renderHologramLine(poseStack, buffer, lx, hy, hz, 1, 1, 1, 1);
+			
 			renderHologramLine(poseStack, buffer, lx, hy, lz, 1, 1, 1, 1);
 			
 			poseStack.popPose();
@@ -332,15 +354,42 @@ public class HolographicRenderer {
 	protected static ShaderInstance initChunkRenderShader(PoseStack poseStack, Matrix4f projectionMatrix) {
 		ShaderInstance shader = RenderSystem.getShader();
 		shader.apply();
-		if (shader.MODEL_VIEW_MATRIX != null) shader.MODEL_VIEW_MATRIX.set(poseStack.last().pose());
-		if (shader.PROJECTION_MATRIX != null) shader.PROJECTION_MATRIX.set(projectionMatrix);
-		if (shader.COLOR_MODULATOR != null) shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
-		if (shader.FOG_START != null) shader.FOG_START.set(RenderSystem.getShaderFogStart());
-		if (shader.FOG_END != null) shader.FOG_END.set(RenderSystem.getShaderFogEnd());
- 		if (shader.FOG_COLOR != null) shader.FOG_COLOR.set(RenderSystem.getShaderFogColor());
- 		if (shader.FOG_SHAPE != null) shader.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
- 		if (shader.TEXTURE_MATRIX != null) shader.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
- 		if (shader.GAME_TIME != null) shader.GAME_TIME.set(RenderSystem.getShaderGameTime());
+		if (shader.MODEL_VIEW_MATRIX != null) {
+			shader.MODEL_VIEW_MATRIX.set(poseStack.last().pose());
+			shader.MODEL_VIEW_MATRIX.upload();
+		}
+		if (shader.PROJECTION_MATRIX != null) {
+			shader.PROJECTION_MATRIX.set(projectionMatrix);
+			shader.PROJECTION_MATRIX.upload();
+		}
+		if (shader.COLOR_MODULATOR != null) {
+			shader.COLOR_MODULATOR.set(new float[] {1, 1, 1, 0.2F});
+			shader.COLOR_MODULATOR.upload();
+		}
+		if (shader.FOG_START != null) {
+			shader.FOG_START.set(RenderSystem.getShaderFogStart());
+			shader.FOG_START.upload();
+		}
+		if (shader.FOG_END != null) {
+			shader.FOG_END.set(RenderSystem.getShaderFogEnd());
+			shader.FOG_END.upload();
+		}
+ 		if (shader.FOG_COLOR != null) {
+ 			shader.FOG_COLOR.set(RenderSystem.getShaderFogColor());
+			shader.FOG_COLOR.upload();
+ 		}
+ 		if (shader.FOG_SHAPE != null) {
+ 			shader.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
+			shader.FOG_SHAPE.upload();
+ 		}
+ 		if (shader.TEXTURE_MATRIX != null) {
+ 			shader.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
+			shader.TEXTURE_MATRIX.upload();
+ 		}
+ 		if (shader.GAME_TIME != null) {
+ 			shader.GAME_TIME.set(RenderSystem.getShaderGameTime());
+			shader.GAME_TIME.upload();
+ 		}
  		RenderSystem.setupShaderLights(shader);
  		return shader;	
 	}

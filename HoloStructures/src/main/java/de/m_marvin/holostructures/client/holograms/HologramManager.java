@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import de.m_marvin.holostructures.client.rendering.HolographicRenderer;
 import net.minecraft.client.Minecraft;
@@ -25,7 +24,7 @@ public class HologramManager {
 		if (holograms.containsKey(name)) return null;
 		Hologram hologram = new Hologram(CLIENT_LEVEL.get(), position, name);
 		if (blueprint != null) {
-			ClientHandler.getInstance().getBlueprints().pasteClipboard(hologram, BlockPos.ZERO, includeEntities, null);
+			blueprint.pasteBlueprint(hologram, BlockPos.ZERO.subtract(blueprint.getOrigin()), includeEntities);
 		} else {
 			hologram.setBlock(BlockPos.ZERO, Blocks.STONE.defaultBlockState());
 		}

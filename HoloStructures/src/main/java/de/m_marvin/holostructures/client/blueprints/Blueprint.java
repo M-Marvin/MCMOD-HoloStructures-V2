@@ -104,11 +104,11 @@ public class Blueprint {
 		return blueprint;
 	}
 	
-	public boolean pasteBlueprint(ILevelAccessor accessor, BlockPos originPosition, boolean pasteEntities) {
+	public boolean pasteBlueprint(ILevelAccessor accessor, BlockPos pastPosition, boolean pasteEntities) {
 
 		if (!accessor.isDoneAccessing()) accessor.abbortAccessing();
 		
-		Vec3i from = originPosition.subtract(this.origin);
+		Vec3i from = pastPosition;
 		Vec3i to = from.offset(this.size);
 		
 		for (int placeInstable = 0; placeInstable <= 1; placeInstable++) {
