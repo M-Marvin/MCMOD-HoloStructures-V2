@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Function;
 
@@ -18,7 +19,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -66,21 +67,26 @@ public class Hologram implements ILevelAccessor {
 		return worldPosition.offset(getPosition());
 	}
 	
-	public Vec3i getBoundingSize() {
-		return new BlockPos(1, 1, 1);
-//		if (this.chunks.isEmpty()) {
-//			return Vec3i.ZERO;
-//		} else {
-//			OptionalInt outerChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getPosition().x).max();
-//			OptionalInt outerChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getPosition().z).max();
-//			if (!outerChunkX.isPresent() || !outerChunkZ.isPresent()) return BlockPos.ZERO;
-//			int outerBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((chunk) -> chunk.getPosition().x == outerChunkX.getAsInt()).mapToInt(HologramChunk::getHighestBlockX).max().getAsInt();
-//			int outerBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((chunk) -> chunk.getPosition().z == outerChunkZ.getAsInt()).mapToInt(HologramChunk::getHighestBlockZ).max().getAsInt();
-//			int upperBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt(HologramChunk::getHighestBlockY).max().getAsInt();
-//			return new Vec3i(outerBlockX, upperBlockY, outerBlockZ);
-//		}
+	public AABB getBoundingBox() {
+		if (this.chunks.isEmpty()) {
+			return new AABB(-1, -1, -1, 1, 1, 1); 
+		} else {
+			int maxChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().x).max().getAsInt();
+			int maxChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().z).max().getAsInt();
+			int minChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().x).min().getAsInt();
+			int minChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().z).min().getAsInt();
+			
+			int minBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().x == minChunkX).mapToInt((chunk) -> chunk.getLowestAxis(Axis.X)).min().getAsInt();
+			int maxBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().x == maxChunkX).mapToInt((chunk) -> chunk.getHighestAxis(Axis.X)).max().getAsInt();
+			int minBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().z == minChunkZ).mapToInt((chunk) -> chunk.getLowestAxis(Axis.Z)).min().getAsInt();
+			int maxBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().z == maxChunkZ).mapToInt((chunk) -> chunk.getHighestAxis(Axis.Z)).max().getAsInt();
+			int minBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getLowestAxis(Axis.Y)).min().getAsInt();
+			int maxBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getHighestAxis(Axis.Y)).max().getAsInt();
+			
+			return new AABB(minBlockX, minBlockY, minBlockZ, maxBlockX + 1, maxBlockY + 1, maxBlockZ + 1);
+		}
 	}
-
+	
 	public BlockPos getOrigin() {
 		return origin;
 	}
@@ -113,14 +119,6 @@ public class Hologram implements ILevelAccessor {
 		return chunks.values();
 	}
 	
-	public HologramChunk getOrCreateChunk(ChunkPos pos) {
-		HologramChunk chunk = this.chunks.get(pos.toLong());
-		if (chunk != null) return chunk;
-		HologramChunk freshChunk = new HologramChunk(pos);
-		this.chunks.put(pos.toLong(), freshChunk);
-		return freshChunk;
-	}
-	
 	public Optional<HologramChunk> getChunk(ChunkPos pos) {
 		HologramChunk chunk = this.chunks.get(pos.toLong());
 		if (chunk != null && chunk.isEmpty()) {
@@ -133,10 +131,19 @@ public class Hologram implements ILevelAccessor {
 	public Optional<HologramChunk> getChunkAt(BlockPos position) {
 		return getChunk(new ChunkPos(position));
 	}
+
+	public Optional<HologramChunk> getOrCreateChunk(ChunkPos pos, boolean createIfEmpty) {
+		HologramChunk chunk = this.chunks.get(pos.toLong());
+		if (chunk == null && createIfEmpty) {
+			chunk = new HologramChunk(pos);
+			this.chunks.put(pos.toLong(), chunk);
+		}
+		return Optional.ofNullable(chunk);
+	}
 	
-	public HologramChunk getOrCreateChunkAt(BlockPos position) {
+	public Optional<HologramChunk> getOrCreateChunkAt(BlockPos position, boolean createIfEmpty) {
 		ChunkPos pos = new ChunkPos(position);
-		return getOrCreateChunk(pos);
+		return getOrCreateChunk(pos, createIfEmpty);
 	}
 	
 	public void discardChunk(HologramChunk chunk) {
@@ -144,7 +151,10 @@ public class Hologram implements ILevelAccessor {
 	}
 	
 	public void setBlock(BlockPos position, BlockState state) {
-		getOrCreateChunkAt(position).setBlock(position, state);
+		Optional<HologramChunk> chunk = getOrCreateChunkAt(position, !state.isAir());
+		if (chunk.isEmpty()) return;
+		chunk.get().setBlock(position, state);
+		if (chunk.get().isEmpty()) discardChunk(chunk.get());
 	}
 	
 	public BlockState getBlock(BlockPos position) {

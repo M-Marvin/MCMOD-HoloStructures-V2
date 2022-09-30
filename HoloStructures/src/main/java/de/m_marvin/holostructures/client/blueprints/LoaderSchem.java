@@ -88,7 +88,6 @@ public class LoaderSchem implements IFormatLoader {
 				Vec3 pos = UtilHelper.loadVecPos(enbt, "Pos").subtract(offset[0], offset[1], offset[2]);
 				enbt.remove("Pos");
 				ResourceLocation id = new ResourceLocation(enbt.getString("Id"));
-				System.out.println("DDD " + pos + " " + enbt);
 				blueprint.addEntity(pos, new Blueprint.EntityData(id, () -> Optional.of(enbt)));
 			}
 			

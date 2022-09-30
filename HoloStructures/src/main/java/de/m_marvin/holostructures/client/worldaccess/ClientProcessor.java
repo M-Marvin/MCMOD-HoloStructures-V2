@@ -420,7 +420,7 @@ public class ClientProcessor implements ITaskProcessor {
 				boolean line = false;
 				for (Hologram hologram : holograms) {
 					line = !line;
-					Formater.build().translate("commands.hologram.list.entry", hologram.getName(), UtilHelper.formatBlockPos(hologram.getPosition()), UtilHelper.formatBlockPos(hologram.getBoundingSize())).withStyle(line ? ChatFormatting.GRAY : ChatFormatting.DARK_GRAY).send(source);
+					Formater.build().translate("commands.hologram.list.entry", hologram.getName(), UtilHelper.formatBlockPos(hologram.getPosition()), UtilHelper.formatAABB(hologram.getBoundingBox())).withStyle(line ? ChatFormatting.GRAY : ChatFormatting.DARK_GRAY).send(source);
 				}
 				return 1;
 			} else {

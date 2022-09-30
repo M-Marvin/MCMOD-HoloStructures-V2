@@ -3,11 +3,13 @@ package de.m_marvin.holostructures.client.holograms;
 
 import java.util.OptionalInt;
 import java.util.function.ToIntFunction;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -47,6 +49,14 @@ public class HologramSection {
 	
 	public boolean isEmpty() {
 		return this.nonEmptyBlockCount == 0;
+	}
+
+	public int getLowestAxis(Axis axis) {
+		return LongStream.of(this.states.keySet().toLongArray()).mapToInt((p) -> BlockPos.of(p).get(axis)).min().getAsInt();
+	}
+
+	public int getHighestAxis(Axis axis) {
+		return LongStream.of(this.states.keySet().toLongArray()).mapToInt((p) -> BlockPos.of(p).get(axis)).max().getAsInt();
 	}
 	
 }

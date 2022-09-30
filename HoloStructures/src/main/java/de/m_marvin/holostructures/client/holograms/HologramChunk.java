@@ -3,14 +3,14 @@ package de.m_marvin.holostructures.client.holograms;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,46 +26,54 @@ public class HologramChunk {
 		this.sections = new Int2ObjectArrayMap<>();
 		this.position = position;
 	}
-
-//	public int getHighestBlockX() {
-//		return Stream.of(getSections()).mapToInt((s) -> s.getHighest(BlockPos::getX)).max().getAsInt();
-//	}
-//
-//	public int getHighestBlockZ() {
-//		return Stream.of(getSections()).mapToInt((s) -> s.getHighest(BlockPos::getZ)).max().getAsInt();
-//	}
-//
-//	public int getHighestBlockY() {
-//		HologramSection highestSection = null;
-//		for (HologramSection section : getSections()) if (!section.isEmpty()) highestSection = section;
-//		return highestSection == null ? 0 : highestSection.getHighest(BlockPos::getY);
-//	}
+	
+	public int getLowestAxis(Axis axis) {
+		if (axis == Axis.Y) {
+			int minSection = IntStream.of(this.sections.keySet().toIntArray()).min().getAsInt();
+			return getSections().get(minSection).getLowestAxis(axis) | minSection << 4;
+		} else {
+			return Stream.of(getSections().values().toArray((l) -> new HologramSection[l])).mapToInt((h) -> h.getLowestAxis(axis)).min().getAsInt() | (axis == Axis.X ? position.x : position.z) << 4;
+		}
+	}
+	
+	public int getHighestAxis(Axis axis) {
+		if (axis == Axis.Y) {
+			int maxSection = IntStream.of(this.sections.keySet().toIntArray()).max().getAsInt();
+			return getSections().get(maxSection).getHighestAxis(axis) | maxSection << 4;
+		} else {
+			return Stream.of(getSections().values().toArray((l) -> new HologramSection[l])).mapToInt((h) -> h.getHighestAxis(axis)).max().getAsInt() | (axis == Axis.X ? position.x : position.z) << 4;
+		}
+	}
 	
 	public ChunkPos getPosition() {
 		return position;
 	}
 	
 	public boolean isEmpty() {
-		return this.sections.values().stream().map(HologramSection::isEmpty).reduce((a, b) -> a && b).get();
+		return this.sections.values().stream().map(HologramSection::isEmpty).reduce((a, b) -> a && b).orElseGet(() -> true);
 	}
 	
 	public Int2ObjectMap<HologramSection> getSections() {
 		return sections;
 	}
 	
-	public HologramSection getOrCreateSection(int y) {
+	public void removeSection(int y) {
+		this.sections.remove(y >> 4);
+	}
+	
+	public Optional<HologramSection> getOrCreateSection(int y, boolean createIfEmpty) {
 		HologramSection section = this.sections.get(y >> 4);
-		if (section == null) {
+		if (section == null && createIfEmpty) {
 			section = new HologramSection();
 			this.sections.put(y >> 4, section);
 		}
-		return section;
+		return Optional.ofNullable(section);
 	}
 	
 	public Optional<HologramSection> getAvailableSection(int y) {
 		HologramSection section = this.sections.get(y >> 4);
 		if (section != null && section.isEmpty()) {
-			this.sections.remove(y >> 4);
+			removeSection(y);
 			return Optional.empty();
 		}
 		return Optional.ofNullable(section);
@@ -78,9 +86,10 @@ public class HologramChunk {
 	}
 	
 	public void setBlock(BlockPos position, BlockState state) {
-		HologramSection section = getOrCreateSection(position.getY());
-		if (section == null) return;
-		section.setState(position.getX() & 15, position.getY() & 15, position.getZ() & 15, state);
+		Optional<HologramSection> section = getOrCreateSection(position.getY(), !state.isAir());
+		if (!section.isPresent()) return;
+		section.get().setState(position.getX() & 15, position.getY() & 15, position.getZ() & 15, state);
+		if (section.get().isEmpty()) removeSection(position.getY());
 	}
 	
 	public Optional<BlockEntity> getBlockEntity(BlockPos position) {

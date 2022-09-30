@@ -62,7 +62,6 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 		String input = reader.readString();
 		String[] inputSplit = input.split(":");
 		String path;
-		System.out.println("TEST");
 		if (inputSplit.length > 1) {
 			String folderPath = Config.getFolder(inputSplit[0]);
 			String filePath = input.substring(inputSplit[0].length() + 1, input.length());

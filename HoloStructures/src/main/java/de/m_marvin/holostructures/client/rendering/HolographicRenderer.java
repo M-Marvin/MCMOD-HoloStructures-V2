@@ -15,11 +15,11 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix4f;
 
 import de.m_marvin.holostructures.HoloStructures;
+import de.m_marvin.holostructures.client.holograms.Corner;
 import de.m_marvin.holostructures.client.holograms.Hologram;
 import de.m_marvin.holostructures.client.holograms.HologramChunk;
 import de.m_marvin.holostructures.client.rendering.HolographicRenderer.HologramRender.HolographicChunk;
@@ -34,8 +34,8 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.StructureBlockRenderer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -279,20 +279,19 @@ public class HolographicRenderer {
 		
 		hologramRenders.forEach((hid, hologram) -> {
 			
-			BlockPos position = hologram.hologram.getPosition();
-			Vec3i bounds = hologram.hologram.getBoundingSize();
+			BlockPos position0 = hologram.hologram.getCornerWorldPosition(Corner.lowest_corner);
+			BlockPos position1 = hologram.hologram.getCornerWorldPosition(Corner.highest_corner);
 			
 			poseStack.pushPose();
-			poseStack.translate(position.getX(), position.getY(), position.getZ());
 			
 			VertexConsumer buffer = source.getBuffer(RenderType.lineStrip());
 			
-			int lx = 0;
-			int ly = 0;
-			int lz = 0;
-			int hx = bounds.getX();
-			int hy = bounds.getY();
-			int hz = bounds.getZ();
+			int lx = position0.getX();
+			int ly = position0.getY();
+			int lz = position0.getZ();
+			int hx = position1.getX();
+			int hy = position1.getY();
+			int hz = position1.getZ();
 			
 			renderHologramLine(poseStack, buffer, lx, ly, lz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, hx, ly, lz, 1, 1, 1, 1);

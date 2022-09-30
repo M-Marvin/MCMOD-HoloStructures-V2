@@ -23,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class UtilHelper {
@@ -67,6 +68,10 @@ public class UtilHelper {
 	
 	public static String formatBlockState(BlockState state) {
 		return state.toString().replace("Block{", "").replace("}", "");
+	}
+
+	public static Object formatAABB(AABB boundingBox) {
+		return (boundingBox.maxX - boundingBox.minX) + "x" + (boundingBox.maxY - boundingBox.minY) + "x" + (boundingBox.maxZ - boundingBox.minZ);
 	}
 	
 	public static CompoundTag encryptNBTFromResponse(Component commandResponse) {
