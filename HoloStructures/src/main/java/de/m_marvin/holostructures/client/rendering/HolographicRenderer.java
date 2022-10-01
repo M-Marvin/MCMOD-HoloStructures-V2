@@ -11,11 +11,9 @@ import com.google.common.collect.Queues;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix4f;
 
 import de.m_marvin.holostructures.HoloStructures;
@@ -30,11 +28,11 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.blockentity.StructureBlockRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -115,7 +113,7 @@ public class HolographicRenderer {
 					return emptyBuffers.poll();
 				} else {
 					return RenderType.chunkBufferLayers().stream().collect(Collectors.toMap((renderType) -> renderType, (renderType) -> {
-						return new BufferBuilder(renderType.bufferSize());
+						return new BufferBuilder(ModRenderType.hologramBlocks().bufferSize());
 					}));
 				}
 			}
@@ -125,7 +123,7 @@ public class HolographicRenderer {
 				emptyBuffers.add(renderBuilders);
 				renderBuilders = null;
 			}
-			
+						
 			public BufferBuilder builder(RenderType renderLayer) {
 				return this.renderBuilders.get(renderLayer);
 			}
@@ -134,34 +132,27 @@ public class HolographicRenderer {
 		
 	}
 	
-	
 	@SubscribeEvent
 	public static void onRenderLevelLast(RenderLevelStageEvent event) {
 		if (event.getStage() == Stage.AFTER_SKY) {
-			PoseStack poseStack = new PoseStack();
-			translateToWorld(poseStack);
-			
 			processUpdateQueue();
 			recompileDirtyChunks();
-
-			poseStack.popPose();
-			
 		} else {
 			PoseStack poseStack = event.getPoseStack();
 			translateToWorld(poseStack);
 			
-			// WORK INPROGRESS: seprating diffrent render layers
 			if (event.getStage() == Stage.AFTER_SOLID_BLOCKS) {
-				renderHologramBounds(poseStack, BUFFER_SOURCE.get());
-				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.solid());
+				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.solid());
 			} else if (event.getStage() == Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS) {
-				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType. cutoutMipped());
+				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.cutoutMipped());
 			} else if (event.getStage() == Stage.AFTER_CUTOUT_BLOCKS) {
-				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.cutout());
+				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.cutout());
 			} else if (event.getStage() == Stage.AFTER_TRANSLUCENT_BLOCKS) {
 				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.translucent());
 			} else if (event.getStage() == Stage.AFTER_TRIPWIRE_BLOCKS) {
-				//renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.tripwire());
+				renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.tripwire());
+			} else if (event.getStage() == Stage.AFTER_PARTICLES) {
+				renderHologramBounds(poseStack, BUFFER_SOURCE.get());
 			}
 			
 			poseStack.popPose();
@@ -232,8 +223,7 @@ public class HolographicRenderer {
 		
 		RenderType.chunkBufferLayers().forEach((renderLayer) -> {
 			BufferBuilder builder = chunk.builder(renderLayer);
-			builder.begin(Mode.QUADS, DefaultVertexFormat.BLOCK);
-			
+			builder.begin(ModRenderType.hologramBlocks().mode(), ModRenderType.hologramBlocks().format());
 			Optional<HologramChunk> holoChunk = hologram.hologram.getChunk(chunk.pos);
 			if (holoChunk.isPresent()) {
 				
@@ -246,7 +236,7 @@ public class HolographicRenderer {
 							for (int y = 0; y < 16; y++) {
 								BlockPos chunkPos = new BlockPos((chunk.pos.x << 4) + x, posY + y, (chunk.pos.z << 4) + z);
 								BlockState state = holoChunk.get().getBlock(chunkPos);
-								if (!state.isAir()) {
+								if (!state.isAir() && ItemBlockRenderTypes.canRenderInLayer(state, renderLayer)) {
 									poseStack.pushPose();
 									poseStack.translate(x, posY + y, z);
 									BLOCK_RENDERER.get().renderBatched(state, chunkPos.offset(chunkPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
@@ -329,6 +319,7 @@ public class HolographicRenderer {
 	
 	protected static void renderHolograms(PoseStack poseStack, Matrix4f projectionMatrix, RenderType renderLayer) {
 		
+		ModRenderType.hologramBlocks().setupRenderState();
 		ShaderInstance shader = initChunkRenderShader(poseStack, projectionMatrix);
 		Uniform chunkOffset = shader.CHUNK_OFFSET;
 		
@@ -368,7 +359,7 @@ public class HolographicRenderer {
 			shader.PROJECTION_MATRIX.upload();
 		}
 		if (shader.COLOR_MODULATOR != null) {
-			shader.COLOR_MODULATOR.set(new float[] {1, 1, 1, 0.2F});
+			shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
 			shader.COLOR_MODULATOR.upload();
 		}
 		if (shader.FOG_START != null) {

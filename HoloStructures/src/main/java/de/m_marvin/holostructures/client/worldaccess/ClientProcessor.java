@@ -326,6 +326,10 @@ public class ClientProcessor implements ITaskProcessor {
 										.then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ctx) ->
 												commandCreateEmpty(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BlockPosArgument.getLoadedBlockPos(ctx, "pos"))
 												)
+												.then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ctx) -> 
+														commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BoolArgumentType.getBool(ctx, "includeEntities"), BlockPosArgument.getLoadedBlockPos(ctx, "position"))
+														)
+												)
 										)
 								)
 						)
@@ -334,7 +338,11 @@ public class ClientProcessor implements ITaskProcessor {
 										commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), false, Minecraft.getInstance().player.blockPosition())
 										)
 										.then(Commands.argument("includeEntities", BoolArgumentType.bool()).executes((ctx) -> 
-												commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BoolArgumentType.getBool(ctx, "includeEntities"), BlockPosArgument.getLoadedBlockPos(ctx, "pos"))
+												commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BoolArgumentType.getBool(ctx, "includeEntities"), Minecraft.getInstance().player.blockPosition())
+												)
+												.then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ctx) -> 
+														commandCreate(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BoolArgumentType.getBool(ctx, "includeEntities"), BlockPosArgument.getLoadedBlockPos(ctx, "position"))
+														)
 												)
 										)
 								)
