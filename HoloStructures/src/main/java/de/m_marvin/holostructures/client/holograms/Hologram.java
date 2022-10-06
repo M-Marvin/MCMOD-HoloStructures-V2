@@ -60,11 +60,11 @@ public class Hologram implements ILevelAccessor {
 	}
 	
 	public BlockPos holoToWorldPosition(BlockPos holoPosition) {
-		return holoPosition.subtract(getPosition());
+		return holoPosition.offset(getPosition());
 	}
 	
 	public BlockPos worldToHoloPosition(BlockPos worldPosition) {
-		return worldPosition.offset(getPosition());
+		return worldPosition.subtract(getPosition());
 	}
 	
 	public AABB getBoundingBox() {
@@ -273,6 +273,34 @@ public class Hologram implements ILevelAccessor {
 		this.chunks.forEach((lp, chunk) -> {
 			HolographicRenderer.markDirty(this, new ChunkPos(lp));
 		});
+	}
+
+	public void updateAllHoloBlockStates() {
+		this.chunks.keySet().forEach((chunkLong) -> {
+			updateChunkHoloBlockStates(new ChunkPos(chunkLong));
+		});
+	}
+	
+	public void updateChunkHoloBlockStates(ChunkPos chunkPos) {
+		Optional<HologramChunk> chunk = getChunk(chunkPos);
+		if (chunk.isPresent()) {
+			BlockPos chunkPosition = this.position.offset(chunkPos.x << 4, 0, chunkPos.z << 4);
+			chunk.get().getSections().forEach((positionIndex, section) -> {
+				BlockPos sectionPosition = chunkPosition.offset(0, positionIndex << 4, 0);
+				section.getStates().forEach((positionLong, holoBlockState) -> {
+					BlockHoloState holoState = null;
+					if (!holoBlockState.isAir()) {
+						BlockPos worldPosition = sectionPosition.offset(BlockPos.getX(positionLong), BlockPos.getY(positionLong), BlockPos.getZ(positionLong));
+						BlockState realBlockState = this.level.getBlockState(worldPosition);
+						Optional<BlockEntity> holoBlockEntity = chunk.get().getBlockEntity(worldPosition);
+						Optional<BlockEntity> realBlockEntity = Optional.ofNullable(this.level.getBlockEntity(worldPosition));
+						holoState = BlockHoloState.getHoloState(holoBlockState, holoBlockEntity, realBlockState, realBlockEntity);
+					}
+					section.setHoloState(BlockPos.getX(positionLong), BlockPos.getY(positionLong), BlockPos.getZ(positionLong), holoState);
+				});
+			});
+			refreshChunk(chunkPos);
+		}
 	}
 	
 }

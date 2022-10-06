@@ -21,8 +21,8 @@ void main() {
 	
 	bool line = mod(gl_FragCoord.y + (GameTime * -20000), 10) >= 5;
 	
-	vec4 lineColor = vec4(1, 1, 1, 0.9);
-	if (line) lineColor = vec4(1, 0, 1, 0.6);
+	vec4 lineColor = vec4(1, 1, 1, 1);
+	if (line) lineColor = vec4(0.5F, 0.5F, 0.5F, 1);
 	
     vec4 color = texture(Sampler0, texCoord0) * vertexColor * ColorModulator * lineColor;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);

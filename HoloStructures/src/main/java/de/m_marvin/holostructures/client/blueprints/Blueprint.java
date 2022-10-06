@@ -208,7 +208,7 @@ public class Blueprint {
 	}
 	
 	public BlockState resolveState(int stateId) {
-		if (stateId >= this.states.size() - 1) return Blocks.AIR.defaultBlockState();
+		if (stateId >= this.states.size()) return Blocks.AIR.defaultBlockState();
 		return this.states.get(stateId);
 	}
 	

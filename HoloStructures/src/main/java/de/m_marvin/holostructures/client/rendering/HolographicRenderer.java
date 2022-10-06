@@ -1,8 +1,11 @@
 package de.m_marvin.holostructures.client.rendering;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -17,6 +20,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 
 import de.m_marvin.holostructures.HoloStructures;
+import de.m_marvin.holostructures.client.holograms.BlockHoloState;
 import de.m_marvin.holostructures.client.holograms.Corner;
 import de.m_marvin.holostructures.client.holograms.Hologram;
 import de.m_marvin.holostructures.client.holograms.HologramChunk;
@@ -50,7 +54,7 @@ public class HolographicRenderer {
 	public static final Supplier<Camera> CAMERA = () -> Minecraft.getInstance().gameRenderer.getMainCamera();
 	public static final Supplier<BlockRenderDispatcher> BLOCK_RENDERER = () -> Minecraft.getInstance().getBlockRenderer();
 	
-	protected static Queue<Map<RenderType, BufferBuilder>> emptyBuffers = Queues.newArrayDeque();
+	protected static Queue<Map<BlockHoloState, Map<RenderType, BufferBuilder>>> emptyBuffers = Queues.newArrayDeque();
 	protected static Int2ObjectMap<HologramRender> hologramRenders = new Int2ObjectArrayMap<>();
 	protected static Queue<HologramUpdate> updateQueue = Queues.newArrayDeque();
 	
@@ -71,7 +75,7 @@ public class HolographicRenderer {
 			
 			boolean dirty;
 			public ChunkPos pos;
-			public Map<RenderType, BufferBuilder> renderBuilders;
+			public Map<BlockHoloState, Map<RenderType, BufferBuilder>> renderBuilders;
 			
 			public HolographicChunk(ChunkPos pos) {
 				this.pos = pos;
@@ -85,35 +89,39 @@ public class HolographicRenderer {
 				
 				public static final HolographicChunkCompiled UNCOMPILED = new HolographicChunkCompiled();
 				
-				public Map<RenderType, VertexBuffer> renderBuffers;
+				public Map<BlockHoloState, Map<RenderType, VertexBuffer>> renderBuffers;
 				
 				public void discardBuffers() {
-					this.renderBuffers.values().forEach(VertexBuffer::close);
+					this.renderBuffers.values().forEach((map) -> map.values().forEach(VertexBuffer::close));
 					this.renderBuffers.clear();
 				}
 				
-				public VertexBuffer buffer(RenderType renderLayer) {
-					return this.renderBuffers.get(renderLayer);
+				public VertexBuffer buffer(BlockHoloState holoState, RenderType renderLayer) {
+					return this.renderBuffers.get(holoState).get(renderLayer);
 				}
 				
 				public void genBuffers() {
-					this.renderBuffers = RenderType.chunkBufferLayers().stream().collect(Collectors.toMap((renderType) -> renderType, (renderType) -> {
-						return new VertexBuffer();
+					this.renderBuffers = BlockHoloState.renderedStates().stream().collect(Collectors.toMap((holoState) -> holoState, (holoState) -> {
+						return RenderType.chunkBufferLayers().stream().collect(Collectors.toMap((renderType) -> renderType, (renderType) -> {
+							return new VertexBuffer();
+						}));
 					}));
 				}
 				
 			}
 			
 			public void discardBuilders() {
-				this.renderBuilders.values().forEach(BufferBuilder::discard);
+				this.renderBuilders.values().forEach((map) -> map.values().forEach(BufferBuilder::discard));
 			}
 			
-			private Map<RenderType, BufferBuilder> getFreshBuffers() {
+			private Map<BlockHoloState, Map<RenderType, BufferBuilder>> getFreshBuffers() {
 				if (emptyBuffers.size() > 0) {
 					return emptyBuffers.poll();
 				} else {
-					return RenderType.chunkBufferLayers().stream().collect(Collectors.toMap((renderType) -> renderType, (renderType) -> {
-						return new BufferBuilder(ModRenderType.hologramBlocks().bufferSize());
+					return BlockHoloState.renderedStates().stream().collect(Collectors.toMap((holoState) -> holoState, (holoState) -> {
+						return RenderType.chunkBufferLayers().stream().collect(Collectors.toMap((renderLayer) -> renderLayer, (renderLayer) -> {
+							return new BufferBuilder(ModRenderType.hologramBlocks().bufferSize());
+						}));
 					}));
 				}
 			}
@@ -124,8 +132,8 @@ public class HolographicRenderer {
 				renderBuilders = null;
 			}
 						
-			public BufferBuilder builder(RenderType renderLayer) {
-				return this.renderBuilders.get(renderLayer);
+			public BufferBuilder builder(BlockHoloState holoState, RenderType renderLayer) {
+				return this.renderBuilders.get(holoState).get(renderLayer);
 			}
 			
 		}
@@ -202,66 +210,83 @@ public class HolographicRenderer {
 	}
 	
 	protected static void recompileDirtyChunks() {
-		
 		hologramRenders.forEach((hid, hologram) -> {
 			hologram.renderChunks.forEach((pos, chunk) -> {
 				if (chunk.dirty) {
 					chunk.dirty = false;
 					compileHolographicChunk(hologram, chunk);
+					return;
 				}
 			});
 		});
-		
 	}
 	
 	@SuppressWarnings("deprecation")
 	protected static void compileHolographicChunk(HologramRender hologram, HolographicChunk chunk) {
 		
-		chunk.discardBuilders();
-		
-		PoseStack poseStack = new PoseStack();
-		
-		RenderType.chunkBufferLayers().forEach((renderLayer) -> {
-			BufferBuilder builder = chunk.builder(renderLayer);
-			builder.begin(ModRenderType.hologramBlocks().mode(), ModRenderType.hologramBlocks().format());
-			Optional<HologramChunk> holoChunk = hologram.hologram.getChunk(chunk.pos);
-			if (holoChunk.isPresent()) {
-				
-				holoChunk.get().getSections().forEach((yi, section) -> {
+		CompletableFuture.runAsync(() -> {
+			
+			PoseStack poseStack = new PoseStack();
+			
+			BlockHoloState.renderedStates().forEach((holoState) -> {
+				RenderType.chunkBufferLayers().forEach((renderLayer) -> {
 					
-					int posY = yi << 4;
+					BufferBuilder builder = chunk.builder(holoState, renderLayer);
+					builder.begin(ModRenderType.hologramBlocks().mode(), ModRenderType.hologramBlocks().format());
+					Optional<HologramChunk> holoChunk = hologram.hologram.getChunk(chunk.pos);
 					
-					for (int x = 0; x < 16; x++) {
-						for (int z = 0; z < 16; z++) {
-							for (int y = 0; y < 16; y++) {
-								BlockPos chunkPos = new BlockPos((chunk.pos.x << 4) + x, posY + y, (chunk.pos.z << 4) + z);
-								BlockState state = holoChunk.get().getBlock(chunkPos);
-								if (!state.isAir() && ItemBlockRenderTypes.canRenderInLayer(state, renderLayer)) {
-									poseStack.pushPose();
-									poseStack.translate(x, posY + y, z);
-									BLOCK_RENDERER.get().renderBatched(state, chunkPos.offset(chunkPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
-									poseStack.popPose();
+					if (holoChunk.isPresent()) {
+							holoChunk.get().getSections().forEach((yi, section) -> {
+							
+							int posY = yi << 4;
+							
+							for (int x = 0; x < 16; x++) {
+								for (int z = 0; z < 16; z++) {
+									for (int y = 0; y < 16; y++) {
+										BlockPos holoPos = new BlockPos((chunk.pos.x << 4) + x, posY + y, (chunk.pos.z << 4) + z);
+										BlockState state = section.getState(x, y, z);
+										if (holoState != BlockHoloState.NO_BLOCK) state = hologram.hologram.level.getBlockState(hologram.hologram.getPosition().offset(holoPos));
+										if (holoState == section.getHoloState(x, y, z)) {
+											if (!state.isAir() && ItemBlockRenderTypes.canRenderInLayer(state, renderLayer)) {
+												poseStack.pushPose();
+												poseStack.translate(x + 0.5F, posY + y + 0.5F, z + 0.5F);
+												if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.01F, 1.01F, 1.01F);
+												poseStack.translate(-0.5F, -0.5F, -0.5F);
+												BLOCK_RENDERER.get().renderBatched(state, hologram.hologram.getPosition().offset(holoPos), hologram.hologram.level, poseStack, builder, false, hologram.hologram.level.random);
+												poseStack.popPose();
+											}
+										}
+									}
 								}
 							}
-						}
+							
+						});
 					}
 					
+					builder.end();
+					
 				});
-				
-			}
+			});
+
+			HolographicChunkCompiled compiled = new HolographicChunkCompiled();
+			compiled.genBuffers();
 			
-			builder.end();
+			List<CompletableFuture<Void>> uploads = new ArrayList<>();
+			BlockHoloState.renderedStates().forEach((holoState) -> {
+				RenderType.chunkBufferLayers().forEach((renderLayer) -> {
+					uploads.add(compiled.buffer(holoState, renderLayer).uploadLater(chunk.builder(holoState, renderLayer)));
+				});
+			});
+			
+			uploads.forEach((upload) -> { while (!upload.isDone()); });
+			
+			chunk.discardBuilders();
+			
+			HolographicChunkCompiled old = chunk.compiled.get();
+			chunk.compiled.set(compiled);
+			if (old != HolographicChunkCompiled.UNCOMPILED) old.discardBuffers();
+			
 		});
-		
-		HolographicChunkCompiled compiled = new HolographicChunkCompiled();
-		compiled.genBuffers();
-		RenderType.chunkBufferLayers().forEach((renderLayer) -> {
-			compiled.buffer(renderLayer).upload(chunk.builder(renderLayer));
-		});
-		
-		HolographicChunkCompiled old = chunk.compiled.get();
-		chunk.compiled.set(compiled);
-		if (old != HolographicChunkCompiled.UNCOMPILED) old.discardBuffers();
 		
 	}
 	
@@ -322,6 +347,7 @@ public class HolographicRenderer {
 		ModRenderType.hologramBlocks().setupRenderState();
 		ShaderInstance shader = initChunkRenderShader(poseStack, projectionMatrix);
 		Uniform chunkOffset = shader.CHUNK_OFFSET;
+		Uniform holoStateColor = shader.COLOR_MODULATOR;
 		
 		for (HologramRender hologramRender : hologramRenders.values()) {
 			BlockPos origin = hologramRender.hologram.getPosition();
@@ -331,8 +357,14 @@ public class HolographicRenderer {
 						chunkOffset.set((float)(origin.getX() + chunkRender.pos.x * 16), (float)(origin.getY()), (float)(origin.getZ() + chunkRender.pos.z * 16));
 						chunkOffset.upload();
 					}
-					VertexBuffer buffer = chunkRender.compiled.get().buffer(renderLayer);
-					buffer.drawChunkLayer();
+					BlockHoloState.renderedStates().forEach((holoState) -> {
+						if (holoStateColor != null) {
+							holoStateColor.set(holoState.colorRed, holoState.colorGreen, holoState.colorBlue, holoState.colorAlpha);
+							holoStateColor.upload();
+						}
+						VertexBuffer buffer = chunkRender.compiled.get().buffer(holoState, renderLayer);
+						buffer.drawChunkLayer();
+					});
 				}
 			}
 		}

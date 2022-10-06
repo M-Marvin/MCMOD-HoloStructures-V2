@@ -391,6 +391,7 @@ public class ClientProcessor implements ITaskProcessor {
 		if (checkRunnable(source, false, false, false)) {
 			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(null, position, name, false);
 			if (hologram != null) {
+				ClientHandler.getInstance().getHolograms().updateAllHoloChunksOf(hologram);
 				Formater.build().translate("commands.hologram.create.empty.success", name).commandInfoStyle().send(source);
 				return 1;
 			} else {
@@ -410,6 +411,7 @@ public class ClientProcessor implements ITaskProcessor {
 			}
 			Hologram hologram = ClientHandler.getInstance().getHolograms().createHologram(blueprint, position, name, includeEntities);
 			if (hologram != null) {
+				ClientHandler.getInstance().getHolograms().updateAllHoloChunksOf(hologram);
 				Formater.build().translate("commands.hologram.create.blueprint.success", name).commandInfoStyle().send(source);
 				return 1;
 			} else {
@@ -447,6 +449,7 @@ public class ClientProcessor implements ITaskProcessor {
 				return 0;
 			}
 			hologram.setCornerWorldPosition(corner, position);
+			ClientHandler.getInstance().getHolograms().updateAllHoloChunksOf(hologram);
 			Formater.build().translate("commands.hologram.position.success", name, UtilHelper.formatBlockPos(position)).commandInfoStyle().send(source);
 			return 1;
 		}

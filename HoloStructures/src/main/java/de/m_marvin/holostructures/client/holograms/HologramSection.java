@@ -18,9 +18,11 @@ public class HologramSection {
 	protected int nonEmptyBlockCount = 0;
 	protected BlockPos highestPosition = BlockPos.ZERO;
 	protected final Long2ObjectMap<BlockState> states;
+	protected final Long2ObjectMap<BlockHoloState> holoState;
 	
 	public HologramSection() {
-		this.states = new Long2ObjectArrayMap<>();
+		this.states = new Long2ObjectArrayMap<BlockState>();
+		this.holoState = new Long2ObjectArrayMap<BlockHoloState>();
 	}
 	
 	public int getHighest(ToIntFunction<Long> coordReader) {
@@ -36,11 +38,24 @@ public class HologramSection {
 		BlockState replaced = this.states.put(BlockPos.asLong(x, y, z),  state);
 		if (replaced == null || replaced.isAir() != state.isAir()) {
 			if (state.isAir() && replaced != null) {
-				nonEmptyBlockCount--;
+				this.nonEmptyBlockCount--;
+				this.holoState.remove(BlockPos.asLong(x, y, z));
 			} else {
-				nonEmptyBlockCount++;
+				this.nonEmptyBlockCount++;
 			}
 		}
+	}
+
+	public BlockHoloState getHoloState(int x, int y, int z) {
+		return this.holoState.getOrDefault(BlockPos.asLong(x, y, z), BlockHoloState.NO_BLOCK);
+	}
+
+	public void setHoloState(int x, int y, int z, BlockHoloState state) {
+		this.holoState.put(BlockPos.asLong(x, y, z),  state);
+	}
+
+	public Long2ObjectMap<BlockState> getStates() {
+		return this.states;
 	}
 	
 	public int getNonEmptyBlockCount() {
