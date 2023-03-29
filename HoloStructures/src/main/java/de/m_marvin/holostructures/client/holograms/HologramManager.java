@@ -94,7 +94,7 @@ public class HologramManager {
 	
 	public void updateHoloChunksAt(BlockPos position) {
 		getHolograms().forEach((hologram) -> {
-			Optional<HologramChunk> chunk = hologram.getChunkAt(position);
+			Optional<HologramChunk> chunk = hologram.getChunkAt(position.subtract(hologram.getPosition()));
 			if (chunk.isPresent()) {
 				ChunkPos pos = chunk.get().getPosition();
 				hologram.updateChunkHoloBlockStates(pos);

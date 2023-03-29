@@ -58,6 +58,10 @@ public class HologramSection {
 		return this.states;
 	}
 	
+	public Long2ObjectMap<BlockHoloState> getHoloStates() {
+		return this.holoState;
+	}
+	
 	public int getNonEmptyBlockCount() {
 		return nonEmptyBlockCount;
 	}

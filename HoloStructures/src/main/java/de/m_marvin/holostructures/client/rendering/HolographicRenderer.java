@@ -286,6 +286,8 @@ public class HolographicRenderer {
 			chunk.compiled.set(compiled);
 			if (old != HolographicChunkCompiled.UNCOMPILED) old.discardBuffers();
 			
+			System.out.println("RECOMPILE"); // FIXME Chunks get not displayed correctly
+			
 		});
 		
 	}

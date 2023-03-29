@@ -29,6 +29,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.WaterFluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -131,7 +132,7 @@ public class Hologram implements ILevelAccessor {
 	public Optional<HologramChunk> getChunkAt(BlockPos position) {
 		return getChunk(new ChunkPos(position));
 	}
-
+	
 	public Optional<HologramChunk> getOrCreateChunk(ChunkPos pos, boolean createIfEmpty) {
 		HologramChunk chunk = this.chunks.get(pos.toLong());
 		if (chunk == null && createIfEmpty) {
@@ -296,7 +297,7 @@ public class Hologram implements ILevelAccessor {
 						Optional<BlockEntity> realBlockEntity = Optional.ofNullable(this.level.getBlockEntity(worldPosition));
 						holoState = BlockHoloState.getHoloState(holoBlockState, holoBlockEntity, realBlockState, realBlockEntity);
 					}
-					section.setHoloState(BlockPos.getX(positionLong), BlockPos.getY(positionLong), BlockPos.getZ(positionLong), holoState);
+					section.getHoloStates().put((long) positionLong, holoState);
 				});
 			});
 			refreshChunk(chunkPos);
