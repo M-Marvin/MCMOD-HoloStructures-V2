@@ -45,12 +45,12 @@ public class ClientHandler {
 	}
 	
 	@SubscribeEvent
-	public static void onConnectoToServer(ClientPlayerNetworkEvent.LoggedInEvent event) {
+	public static void onConnectoToServer(ClientPlayerNetworkEvent.LoggingIn event) {
 		getInstance().createAccessor();
 	}
 	
 	@SubscribeEvent
-	public static void onDisconnectServer(ClientPlayerNetworkEvent.LoggedOutEvent event) {
+	public static void onDisconnectServer(ClientPlayerNetworkEvent.LoggingOut event) {
 		getInstance().clearAccessor();
 	}
 	

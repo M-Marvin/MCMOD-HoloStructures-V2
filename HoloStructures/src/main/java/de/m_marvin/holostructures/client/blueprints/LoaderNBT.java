@@ -10,12 +10,15 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 
 import de.m_marvin.holostructures.UtilHelper;
 import de.m_marvin.holostructures.client.blueprints.BlueprintLoader.IFormatLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -29,16 +32,17 @@ public class LoaderNBT implements IFormatLoader {
 	public boolean loadFromStream(Blueprint blueprint, InputStream inputStream) throws CommandSyntaxException {
 		
 		try {
-			CompoundTag nbt = NbtIo.readCompressed(inputStream);
+			CompoundTag nbt = NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
 
-			if (!nbt.contains("DataVersion") || nbt.getInt("DataVersion") < DATA_VERSION_SUPPORTED) throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.dataversion",  + nbt.getInt("DataVersion"))).create();
+			if (!nbt.contains("DataVersion") || nbt.getInt("DataVersion") < DATA_VERSION_SUPPORTED) throw new SimpleCommandExceptionType(Component.translatable("loader.error.dataversion",  + nbt.getInt("DataVersion"))).create();
 			
 			blueprint.size = UtilHelper.loadBlockPos(nbt, "size").offset(-1, -1, -1);
 			blueprint.origin = UtilHelper.loadBlockPos(nbt, "origin");
 			
 			ListTag palette = nbt.getList("palette", 10);
 			for (int i = 0; i < palette.size(); i++) {
-				BlockState state = NbtUtils.readBlockState(palette.getCompound(i));
+				BlockState state = NbtUtils.readBlockState(Minecraft.getInstance().level.holderLookup(Registries.BLOCK), palette.getCompound(i));
+				// TODO holder lookup ?
 				blueprint.states.add(state);
 			}
 			
@@ -66,7 +70,7 @@ public class LoaderNBT implements IFormatLoader {
 			
 			return true;
 		} catch (IOException e) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.ioexception", e.getMessage())).create();
+			throw new SimpleCommandExceptionType(Component.translatable("loader.error.ioexception", e.getMessage())).create();
 		}
 		
 	}
@@ -119,7 +123,7 @@ public class LoaderNBT implements IFormatLoader {
 		try {
 			NbtIo.writeCompressed(nbt, outputStream);
 		} catch (IOException e) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.ioexception", e.getMessage())).create();
+			throw new SimpleCommandExceptionType(Component.translatable("loader.error.ioexception", e.getMessage())).create();
 		}
 		return true;
 		

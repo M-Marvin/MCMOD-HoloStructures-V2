@@ -27,7 +27,15 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class UtilHelper {
-
+	
+	public static BlockPos toBlockPos(Vec3 vec) {
+		return new BlockPos(
+				(int) Math.floor(vec.x),
+				(int) Math.floor(vec.x),
+				(int) Math.floor(vec.x)
+			);
+	}
+	
 	public static BlockPos loadBlockPos(CompoundTag nbt, String name) {
 		ListTag posArr = nbt.getList(name, 3);
 		if (posArr.size() != 3) {

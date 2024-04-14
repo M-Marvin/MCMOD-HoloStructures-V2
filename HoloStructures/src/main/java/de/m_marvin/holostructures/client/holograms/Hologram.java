@@ -29,7 +29,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.WaterFluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -228,7 +227,7 @@ public class Hologram implements ILevelAccessor {
 		if (blockentity.isPresent()) {
 			return Optional.of(
 				new Blueprint.EntityData(
-						blockentity.get().getType().getRegistryName(), 
+						ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(blockentity.get().getType()), 
 						() -> Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(blockentity.get().serializeNBT()))
 					)
 				);
@@ -238,10 +237,10 @@ public class Hologram implements ILevelAccessor {
 	
 	@Override
 	public void setBlockEntityData(BlockPos pos, EntityData data) {
-		BlockEntityType<?> type = ForgeRegistries.BLOCK_ENTITIES.getValue(data.type());
+		BlockEntityType<?> type = ForgeRegistries.BLOCK_ENTITY_TYPES.getValue(data.type());
 		if (type != null) {
 			BlockState state = getBlock(pos);
-			if (!type.isValid(state)) throw new IllegalStateException("BlockEntity of type " + type.getRegistryName() + " is invalid for state " + state.toString() + "!");
+			if (!type.isValid(state)) throw new IllegalStateException("BlockEntity of type " + data.type() + " is invalid for state " + state.toString() + "!");
 			BlockEntity blockentity = type.create(pos, state);
 			if (data.nbt().get().isPresent()) blockentity.deserializeNBT(data.nbt().get().get());
 			setBlockEntity(pos, blockentity);
@@ -250,15 +249,15 @@ public class Hologram implements ILevelAccessor {
 	
 	@Override
 	public Map<Vec3, EntityData> getEntitiesData(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
-		AABB aabb = new AABB(corner1, corner2);
+		AABB aabb = AABB.encapsulatingFullBlocks(corner1, corner2);
 		return getEntitiesInBounds(aabb).stream().collect(Collectors.toMap((entity) -> new Vec3(entity.xo, entity.yo, entity.zo), (entity) -> 
-				new Blueprint.EntityData(entity.getType().getRegistryName(), () -> Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(entity.serializeNBT())))
+				new Blueprint.EntityData(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()), () -> Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(entity.serializeNBT())))
 		));
 	}
 
 	@Override
 	public void addEntityData(Vec3 pos, EntityData data) {
-		EntityType<?> type = ForgeRegistries.ENTITIES.getValue(data.type());
+		EntityType<?> type = ForgeRegistries.ENTITY_TYPES.getValue(data.type());
 		if (type != null) {
 			Entity entity = type.create(this.level);
 			if (data.nbt().get().isPresent()) entity.deserializeNBT(data.nbt().get().get());

@@ -38,7 +38,7 @@ public class ModRenderType extends RenderType {
 	@SubscribeEvent
 	public static void onShaderRegister(RegisterShadersEvent event) throws IOException {
 		try {
-			event.registerShader(new ShaderInstance(event.getResourceManager(), new ResourceLocation("holostructures", "rendertype_hologram_blocks"), DefaultVertexFormat.BLOCK), shader -> {
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("holostructures", "rendertype_hologram_blocks"), DefaultVertexFormat.BLOCK), shader -> {
 				hologramBlocksShaderInstance = shader;
 			});
 		} catch (IOException e) {

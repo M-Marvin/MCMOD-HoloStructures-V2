@@ -19,7 +19,7 @@ import de.m_marvin.holostructures.client.Config;
 import de.m_marvin.holostructures.client.blueprints.BlueprintLoader.BlueprintFormat;
 import de.m_marvin.holostructures.client.worldaccess.ILevelAccessor;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 public class BlueprintManager {
 	
@@ -48,14 +48,14 @@ public class BlueprintManager {
 			BlueprintFormat format = BlueprintFormat.getFormat(fileExtension);
 			if (format == null) format = Config.DEFAULT_BLUEPRINT_FORMAT.get();
 			File file = UtilHelper.resolvePath(path.substring(0, fileExtensionSepperator) + "." + format.getFileExtension());
-			if (file.isFile() && !override) throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.cantoverride")).create();
+			if (file.isFile() && !override) throw new SimpleCommandExceptionType(Component.translatable("loader.error.cantoverride")).create();
 			File folder = file.getParentFile();
 			if (!folder.isDirectory()) folder.mkdirs();
 			OutputStream outputStream = new FileOutputStream(file);
 			BlueprintLoader.saveBlueprint(outputStream, format, this.clipboard);
 			outputStream.close();
 		} catch (IOException e) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.ioexception", e.getMessage())).create();
+			throw new SimpleCommandExceptionType(Component.translatable("loader.error.ioexception", e.getMessage())).create();
 		}
 		return true;
 	}
@@ -72,7 +72,7 @@ public class BlueprintManager {
 			this.clipboard = blueprint.get();
 			inputSteam.close();
 		} catch (IOException e) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.ioexception", e.getMessage())).create();
+			throw new SimpleCommandExceptionType(Component.translatable("loader.error.ioexception", e.getMessage())).create();
 		}
 		return true;
 	}

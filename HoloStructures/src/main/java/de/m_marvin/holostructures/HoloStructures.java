@@ -3,8 +3,6 @@ package de.m_marvin.holostructures;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.mojang.math.Quaternion;
-import com.mojang.math.Vector3f;
 
 import net.minecraftforge.fml.common.Mod;
 

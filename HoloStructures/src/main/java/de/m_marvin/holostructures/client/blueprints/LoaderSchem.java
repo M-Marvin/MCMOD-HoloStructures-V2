@@ -7,20 +7,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 
 import de.m_marvin.holostructures.UtilHelper;
 import de.m_marvin.holostructures.client.blueprints.Blueprint.EntityData;
 import de.m_marvin.holostructures.client.blueprints.BlueprintLoader.IFormatLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
+import net.minecraft.commands.arguments.blocks.BlockStateParser.BlockResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -32,11 +35,10 @@ public class LoaderSchem implements IFormatLoader {
 	
 	@Override
 	public boolean loadFromStream(Blueprint blueprint, InputStream inputStream) throws CommandSyntaxException {
-		
 		try {
-			CompoundTag nbt = NbtIo.readCompressed(inputStream);
+			CompoundTag nbt = NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
 			
-			if (!nbt.contains("DataVersion") || nbt.getInt("DataVersion") < DATA_VERSION_SUPPORTED) throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.dataversion",  + nbt.getInt("DataVersion"))).create();
+			if (!nbt.contains("DataVersion") || nbt.getInt("DataVersion") < DATA_VERSION_SUPPORTED) throw new SimpleCommandExceptionType(Component.translatable("loader.error.dataversion",  + nbt.getInt("DataVersion"))).create();
 			
 			blueprint.size = new BlockPos(nbt.getInt("Width") - 1, nbt.getInt("Height") - 1, nbt.getInt("Length") - 1);
 			CompoundTag weoffset = nbt.getCompound("Metadata");
@@ -46,13 +48,21 @@ public class LoaderSchem implements IFormatLoader {
 			Map<Integer, BlockState> stateCache = new HashMap<>();
 			for (String stateString : palette.getAllKeys()) {
 				int id = palette.getInt(stateString);
-				BlockStateParser parser = new BlockStateParser(new StringReader(stateString), false);
 				try {
-					parser.parse(false);
+					BlockResult result = BlockStateParser.parseForBlock(Minecraft.getInstance().level.holderLookup(Registries.BLOCK), stateString, false);
+					// TODO holder lookup ?
+					stateCache.put(id, result.blockState());
 				} catch (CommandSyntaxException e) {
-					throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.stateparser", stateString)).create();
+					throw new SimpleCommandExceptionType(Component.translatable("loader.error.stateparser", stateString)).create();
 				}
-				stateCache.put(id, parser.getState());
+				
+//				BlockStateParser parser = new BlockStateParser(new StringReader(stateString), false);
+//				try {
+//					parser.parse(false);
+//				} catch (CommandSyntaxException e) {
+//					throw new SimpleCommandExceptionType(Component.translatable("loader.error.stateparser", stateString)).create();
+//				}
+//				stateCache.put(id, parser.getState());
 			}
 			for (int i = 0; i < nbt.getInt("PaletteMax"); i++) {
 				BlockState state = stateCache.get(i);
@@ -93,7 +103,7 @@ public class LoaderSchem implements IFormatLoader {
 			
 			return true;
 		} catch (IOException e) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.ioexception", e.getMessage())).create();
+			throw new SimpleCommandExceptionType(Component.translatable("loader.error.ioexception", e.getMessage())).create();
 		}
 	}
 
@@ -167,7 +177,7 @@ public class LoaderSchem implements IFormatLoader {
 		try {
 			NbtIo.writeCompressed(nbt, outputStream);
 		} catch (IOException e) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("loader.error.ioexception", e.getMessage())).create();
+			throw new SimpleCommandExceptionType(Component.translatable("loader.error.ioexception", e.getMessage())).create();
 		}
 		
 		return true;

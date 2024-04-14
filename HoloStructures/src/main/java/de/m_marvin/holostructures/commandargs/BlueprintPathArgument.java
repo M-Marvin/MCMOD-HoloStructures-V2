@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -19,7 +20,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.m_marvin.holostructures.UtilHelper;
 import de.m_marvin.holostructures.client.Config;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 public class BlueprintPathArgument implements ArgumentType<String> {
 
@@ -72,7 +73,7 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 			path = folderPath + "/" + filePath;
 		}
 		if (allowOnlyExisting && !UtilHelper.resolvePath(path).isFile()) {
-			throw new SimpleCommandExceptionType(new TranslatableComponent("argument.blueprintpath.invalid")).create();
+			throw new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage("Could not parse invalid blueprint file!")), Component.translatable("argument.blueprintpath.invalid"));
 		}
 		return path;
 	}

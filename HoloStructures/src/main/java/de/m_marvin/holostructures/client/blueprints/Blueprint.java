@@ -8,10 +8,9 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
 
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-
 import com.google.common.base.Function;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.Config;
@@ -45,7 +44,7 @@ public class Blueprint {
 	protected List<BlockState> states;
 	protected Map<BlockPos, Integer> statemap;
 	protected Map<BlockPos, EntityData> blockentities;
-	protected MultiValuedMap<Vec3, EntityData> entities;
+	protected Multimap<Vec3, EntityData> entities;
 	
 	public static record EntityData(ResourceLocation type, Supplier<Optional<CompoundTag>> nbt) {
 		public void writeBytes(FriendlyByteBuf buff) {
@@ -68,7 +67,7 @@ public class Blueprint {
 		this.states = new ArrayList<>();
 		this.statemap = new HashMap<>();
 		this.blockentities = new HashMap<>();
-		this.entities = new ArrayListValuedHashMap<>();
+		this.entities = ArrayListMultimap.create();
 	}
 	
 	public static Blueprint createBlueprint(ILevelAccessor accessor, BlockPos corner1, BlockPos corner2, boolean includeEntities) {

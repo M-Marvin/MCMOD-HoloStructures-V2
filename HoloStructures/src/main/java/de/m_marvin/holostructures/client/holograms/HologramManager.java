@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -14,14 +12,13 @@ import de.m_marvin.holostructures.HoloStructures;
 import de.m_marvin.holostructures.client.ClientHandler;
 import de.m_marvin.holostructures.client.blueprints.Blueprint;
 import de.m_marvin.holostructures.client.rendering.HolographicRenderer;
-import io.netty.util.concurrent.CompleteFuture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 

@@ -18,9 +18,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ServerGamePacketListener;
-import net.minecraft.network.protocol.game.ServerboundChatPacket;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -29,6 +26,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE)
 public class ClientLevelAccessorImpl implements ILevelAccessor {
@@ -53,7 +51,7 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	
 	@SubscribeEvent
 	public static void onChatMessage(ClientChatReceivedEvent event) {
-		if (event.getSenderUUID().equals(Util.NIL_UUID)) {
+		if (event.getSender().equals(Util.NIL_UUID)) {
 			if (ClientHandler.getInstance().getBlueprints().isWorking() || pendingCommands.size() > 0) {
 				event.setCanceled(true);
 			}
@@ -68,13 +66,14 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 		this.player = player;
 	}
 	
-	public void sendPackage(Packet<ServerGamePacketListener> clientPackage) {
-		this.player.get().connection.send(clientPackage);
-	}
+//	public void sendPackage(Packet<ServerGamePacketListener> clientPackage) {
+//		this.player.get().connection.send(clientPackage);
+//	}
 	
 	public CommandResponse sendCommand(String command) {
-		ServerboundChatPacket commandPackage = new ServerboundChatPacket(command);
-		sendPackage(commandPackage);
+//		ServerboundChatPacket commandPackage = new ServerboundChatPacket(command);
+		player.get().connection.sendCommand(command);
+//		sendPackage(commandPackage);
 		CommandResponse response = new CommandResponse();
 		pendingCommands.add(response);
 		return response;
@@ -143,7 +142,8 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 		Optional<BlockEntity> blockEntity = Optional.ofNullable(this.level.get().getBlockEntity(pos));
 		if (blockEntity.isPresent()) {
 			CommandResponse response = sendCommand("/data get block " + UtilHelper.formatBlockPos(pos));
-			Blueprint.EntityData blockEntityData = new Blueprint.EntityData(blockEntity.get().getType().getRegistryName(), 
+			
+			Blueprint.EntityData blockEntityData = new Blueprint.EntityData(ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(blockEntity.get().getType()), 
 					() -> response.isPresent() ? Optional.of(Blueprint.BLOCK_ENTITY_DATA_FILTER.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			return Optional.of(blockEntityData);
 		}
@@ -166,13 +166,13 @@ public class ClientLevelAccessorImpl implements ILevelAccessor {
 	
 	@Override
 	public Map<Vec3, Blueprint.EntityData> getEntitiesData(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
-		AABB aabb = new AABB(corner1, corner2).inflate(1);
+		AABB aabb = AABB.encapsulatingFullBlocks(corner1, corner2).inflate(1);
 		
 		Map<Vec3, Blueprint.EntityData> map = new HashMap<>();
 		this.level.get().getEntities(null, aabb).forEach((entity) -> {
 			Vec3 position = positionMapper.apply(entity.position());
 			CommandResponse response = hasWriteAccess() ? sendCommand("/data get entity " + entity.getUUID().toString()) : new CommandResponse();
-			Blueprint.EntityData data = new Blueprint.EntityData(entity.getType().getRegistryName(), () -> response.isPresent() ? Optional.of(Blueprint.ENTITY_DATA_FILTER.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
+			Blueprint.EntityData data = new Blueprint.EntityData(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()), () -> response.isPresent() ? Optional.of(Blueprint.ENTITY_DATA_FILTER.apply(UtilHelper.encryptNBTFromResponse(response.getResponse()))) : Optional.empty());
 			map.put(position, data);
 		});
 		return map;

@@ -90,7 +90,7 @@ public class ClientProcessor implements ITaskProcessor {
 	public LiteralArgumentBuilder<CommandSourceStack> commandSelectionBuild() {
 		return Commands.literal("select")
 			.then(Commands.literal("corner1").executes((ctx) -> 
-				commandSelectionPos(ctx.getSource(), new BlockPos(ctx.getSource().getPosition()), 1)
+				commandSelectionPos(ctx.getSource(), UtilHelper.toBlockPos(ctx.getSource().getPosition()), 1)
 				)
 				.then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ctx) -> 
 					commandSelectionPos(ctx.getSource(), BlockPosArgument.getLoadedBlockPos(ctx, "pos"), 1)
@@ -98,7 +98,7 @@ public class ClientProcessor implements ITaskProcessor {
 				)
 			)
 			.then(Commands.literal("corner2").executes(
-				(ctx) -> commandSelectionPos(ctx.getSource(), new BlockPos(ctx.getSource().getPosition()), 2)
+				(ctx) -> commandSelectionPos(ctx.getSource(), UtilHelper.toBlockPos(ctx.getSource().getPosition()), 2)
 				)
 				.then(Commands.argument("pos", BlockPosArgument.blockPos()).executes(
 					(ctx) -> commandSelectionPos(ctx.getSource(), BlockPosArgument.getLoadedBlockPos(ctx, "pos"), 2)
