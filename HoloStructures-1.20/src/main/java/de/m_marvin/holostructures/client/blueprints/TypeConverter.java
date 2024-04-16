@@ -1,4 +1,4 @@
-package de.m_marvin.holostructures.client.levelbound;
+package de.m_marvin.holostructures.client.blueprints;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,7 +23,6 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -69,11 +68,11 @@ public class TypeConverter {
 		return data;
 	}
 	
-	public static BlockEntity data2blockEntity(BlockEntityData data) {
+	public static BlockEntity data2blockEntity(BlockState block, BlockEntityData data) {
 		BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.get(data2resLoc(data.getTypeName()));
 		if (type == null) return null;
 		BlockPos position = new BlockPos(data.getPosition().x, data.getPosition().y, data.getPosition().z);
-		BlockEntity blockEntity = type.create(position, Blocks.AIR.defaultBlockState()); // TODO is air valid ?
+		BlockEntity blockEntity = type.create(position, block);
 		blockEntity.deserializeNBT(data2nbt(data.getData()));
 		return blockEntity;
 	}

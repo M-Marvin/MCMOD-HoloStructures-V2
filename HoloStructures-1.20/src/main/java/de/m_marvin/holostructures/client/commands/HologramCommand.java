@@ -5,8 +5,8 @@ import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.holostructures.HoloStructures;
-import de.m_marvin.holostructures.client.commands.arguments.HologramArgument;
 import de.m_marvin.holostructures.client.commands.arguments.BlueprintArgument;
+import de.m_marvin.holostructures.client.commands.arguments.HologramArgument;
 import de.m_marvin.holostructures.client.holograms.Hologram;
 import de.m_marvin.holostructures.utility.UtilHelper;
 import net.minecraft.commands.CommandSourceStack;

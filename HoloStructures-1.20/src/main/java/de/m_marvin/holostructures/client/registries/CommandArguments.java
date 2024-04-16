@@ -1,10 +1,10 @@
 package de.m_marvin.holostructures.client.registries;
 
 import de.m_marvin.holostructures.HoloStructures;
+import de.m_marvin.holostructures.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostructures.client.commands.arguments.BlueprintFormatArgument;
 import de.m_marvin.holostructures.client.commands.arguments.BlueprintPathArgument;
 import de.m_marvin.holostructures.client.commands.arguments.HologramArgument;
-import de.m_marvin.holostructures.client.commands.arguments.BlueprintArgument;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;

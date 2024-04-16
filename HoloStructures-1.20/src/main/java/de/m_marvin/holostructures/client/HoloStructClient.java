@@ -5,7 +5,7 @@ import java.util.concurrent.Executor;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.m_marvin.holostructures.HoloStructures;
-import de.m_marvin.holostructures.blueprints.BlueprintManager;
+import de.m_marvin.holostructures.client.blueprints.BlueprintManager;
 import de.m_marvin.holostructures.client.commands.BlueprintCommand;
 import de.m_marvin.holostructures.client.commands.HologramCommand;
 import de.m_marvin.holostructures.client.holograms.HologramManager;

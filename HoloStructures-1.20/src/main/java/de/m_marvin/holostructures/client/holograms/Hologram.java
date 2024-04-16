@@ -9,7 +9,7 @@ import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostructures.HoloStructures;
-import de.m_marvin.holostructures.client.levelbound.TypeConverter;
+import de.m_marvin.holostructures.client.blueprints.TypeConverter;
 import de.m_marvin.holostructures.client.levelbound.access.ILevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -196,6 +196,7 @@ public class Hologram implements ILevelAccessor {
 	public void setBlockEntity(BlockPos position, BlockEntity blockentity) {
 		Optional<HologramChunk> chunk = getChunkAt(position);
 		if (chunk.isPresent()) chunk.get().setBlockEntity(position, blockentity);
+		blockentity.setLevel(this.level);
 		markChunkDirty(chunk.get().getPosition());
 	}
 	
@@ -236,7 +237,8 @@ public class Hologram implements ILevelAccessor {
 	@Override
 	public void setBlockEntity(Vec3i position, BlockEntityData blockEntity) {
 		if (blockEntity == null) setBlockEntity(new BlockPos(position.x, position.y, position.z), null);
-		setBlockEntity(new BlockPos(position.x, position.y, position.z), TypeConverter.data2blockEntity(blockEntity));
+		BlockState state = getBlock(new BlockPos(position.x, position.y, position.z));
+		setBlockEntity(new BlockPos(position.x, position.y, position.z), TypeConverter.data2blockEntity(state, blockEntity));
 	}
 
 	@Override

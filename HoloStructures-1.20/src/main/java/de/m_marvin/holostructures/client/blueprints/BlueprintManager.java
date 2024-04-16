@@ -1,4 +1,4 @@
-package de.m_marvin.holostructures.blueprints;
+package de.m_marvin.holostructures.client.blueprints;
 
 import java.util.HashMap;
 import java.util.Map;

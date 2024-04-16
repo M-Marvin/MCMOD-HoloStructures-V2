@@ -1,11 +1,15 @@
 package de.m_marvin.holostructures.client.rendering;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.BufferBuilder.RenderedBuffer;
 
 import de.m_marvin.holostructures.client.holograms.BlockHoloState;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -13,6 +17,7 @@ import net.minecraft.client.renderer.RenderType;
 
 public class HologramBufferContainer {
 
+	private static Set<RenderType> allocatedTypes = new HashSet<>();
 	private Map<BlockHoloState, HolographicBufferSource> renderBuilders;
 	
 	public HologramBufferContainer(Supplier<HolographicBufferSource> bufferSourceSource) {
@@ -25,32 +30,56 @@ public class HologramBufferContainer {
 	public HolographicBufferSource getBufferSource(BlockHoloState holoState) {
 		return this.renderBuilders.get(holoState);
 	}
+
+	public static synchronized Set<RenderType> getAlocatedRenderTypes() {
+		return allocatedTypes;
+	}
 	
 	public static class HolographicBufferSource implements MultiBufferSource {
 		
 		private Map<RenderType, BufferBuilder> bufferBuilders;
-		private BufferBuilder fallback;
+		private Function<RenderType, BufferBuilder> allocator;
 		
-		public HolographicBufferSource(Map<RenderType, BufferBuilder> builders, BufferBuilder fallback) {
-			this.bufferBuilders = builders;
-			this.fallback = fallback;
+		public HolographicBufferSource(Function<RenderType, BufferBuilder> bufferAllocator) {
+			this.bufferBuilders = new HashMap<>();
+			this.allocator = bufferAllocator;
 		}
 		
 		@Override
-		public VertexConsumer getBuffer(RenderType pRenderType) {
+		public BufferBuilder getBuffer(RenderType pRenderType) {
 			BufferBuilder buffer = getBufferRaw(pRenderType);
-			buffer.begin(pRenderType.mode(), pRenderType.format());
+			if (!buffer.building()) buffer.begin(pRenderType.mode(), pRenderType.format());
 			return buffer;
 		}
 		
 		public BufferBuilder getBufferRaw(RenderType pRenderType) {
-			return this.bufferBuilders.getOrDefault(pRenderType, this.fallback);
+			if (!this.bufferBuilders.containsKey(pRenderType)) {
+				this.bufferBuilders.put(pRenderType, this.allocator.apply(pRenderType));
+				if (!allocatedTypes.contains(pRenderType)) {
+					synchronized (this) {
+						allocatedTypes.add(pRenderType);
+					}
+				};
+			}
+			return this.bufferBuilders.get(pRenderType);
 		}
 		
-		public BufferBuilder.RenderedBuffer endBatch(RenderType pRenderType) {
-			return getBufferRaw(pRenderType).end();
+		public RenderedBuffer endBatch(RenderType pRenderType) {
+			BufferBuilder builder = getBuffer(pRenderType);
+			builder.setQuadSorting(RenderSystem.getVertexSorting());
+			return builder.end();
 		}
 		
+		public void discard() {
+			this.bufferBuilders.values().forEach(BufferBuilder::discard);
+			this.bufferBuilders.clear();
+		}
+		
+	}
+
+	public void discard() {
+		this.renderBuilders.values().forEach(HolographicBufferSource::discard);
+		this.renderBuilders.clear();
 	}
 	
 }

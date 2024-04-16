@@ -1,7 +1,5 @@
 package de.m_marvin.holostructures.client.rendering;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -11,7 +9,6 @@ import org.joml.Matrix4f;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
@@ -19,22 +16,26 @@ import de.m_marvin.holostructures.HoloStructures;
 import de.m_marvin.holostructures.client.holograms.BlockHoloState;
 import de.m_marvin.holostructures.client.holograms.Hologram;
 import de.m_marvin.holostructures.client.holograms.HologramChunk;
-import de.m_marvin.holostructures.client.rendering.HologramBufferContainer.HolographicBufferSource;
 import de.m_marvin.holostructures.client.rendering.HologramRender.HolographicChunk;
 import de.m_marvin.holostructures.client.rendering.HologramRender.HolographicChunk.HolographicChunkCompiled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -47,21 +48,12 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 @Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
 public class HolographicRenderer {
 	
-	public static final int BUFFER_BUILDER_CAPACITY = 786432; // copied this number from the RenderBuffers class
-	
 	public static final Supplier<MultiBufferSource> BUFFER_SOURCE = () -> Minecraft.getInstance().renderBuffers().bufferSource();
 	public static final Supplier<Camera> CAMERA = () -> Minecraft.getInstance().gameRenderer.getMainCamera();
 	public static final Supplier<BlockRenderDispatcher> BLOCK_RENDERER = () -> Minecraft.getInstance().getBlockRenderer();
 	public static final Supplier<BlockEntityRenderDispatcher> BLOCK_ENTITY_RENDERER = () -> Minecraft.getInstance().getBlockEntityRenderDispatcher();
 	
 	protected Int2ObjectMap<HologramRender> hologramRenders = new Int2ObjectArrayMap<>();
-	protected HologramBufferContainer bufferContainer = new HologramBufferContainer(() -> {
-		Map<RenderType, BufferBuilder> builders = new HashMap<>();
-		for (RenderType renderType : RenderType.chunkBufferLayers()) {
-			builders.put(renderType, new BufferBuilder(BUFFER_BUILDER_CAPACITY));
-		}
-		return new HologramBufferContainer.HolographicBufferSource(builders, builders.get(RenderType.solid()));
-	});
 	
 	@SubscribeEvent
 	public static void onRenderLevelLast(RenderLevelStageEvent event) {
@@ -85,6 +77,10 @@ public class HolographicRenderer {
 				renderer.renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.translucent());
 			} else if (event.getStage() == Stage.AFTER_TRIPWIRE_BLOCKS) {
 				renderer.renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.tripwire());
+			} else if (event.getStage() == Stage.AFTER_BLOCK_ENTITIES) {
+				HologramBufferContainer.getAlocatedRenderTypes().stream().filter(r -> !RenderType.chunkBufferLayers().contains(r)).forEach(renderLayer -> {
+					renderer.renderHolograms(poseStack, event.getProjectionMatrix(), renderLayer);
+				});
 			} else if (event.getStage() == Stage.AFTER_PARTICLES) {
 				renderer.renderHologramBounds(poseStack, BUFFER_SOURCE.get());
 			}
@@ -133,6 +129,7 @@ public class HolographicRenderer {
 			if (holoRender != null) {
 				holoRender.renderChunks.forEach((lp, chunk) -> {
 					chunk.compiled.get().discardBuffers();
+					chunk.discardBuffers();
 				});
 			}
 		});
@@ -143,14 +140,14 @@ public class HolographicRenderer {
 			hologram.renderChunks.forEach((pos, chunk) -> {
 				if (chunk.dirty) {
 					chunk.dirty = false;
-					compileHolographicChunk(hologram, chunk);
+					prerenderHolographicChunk(hologram, chunk);
 					return;
 				}
 			});
 		});
 	}
 	
-	private void compileHolographicChunk(HologramRender hologram, HolographicChunk chunk) {
+	private void prerenderHolographicChunk(HologramRender hologram, HolographicChunk chunk) {
 		
 		Optional<HologramChunk> holoChunk = hologram.hologram.getChunk(chunk.pos);
 		
@@ -162,83 +159,101 @@ public class HolographicRenderer {
 			
 		}
 		
-		HolographicChunkCompiled compiled = new HolographicChunkCompiled();
-		compiled.genBuffers();
-		
 		CompletableFuture.allOf(
-				
-				BlockHoloState.renderedStates().stream().flatMap(holoState -> {
-					
-					HolographicBufferSource bufferSource = this.bufferContainer.getBufferSource(holoState);
-					
-					return RenderType.chunkBufferLayers().stream().map(renderLayer -> {
-						
-						return CompletableFuture.runAsync(() -> {
-							
-							PoseStack poseStack = new PoseStack();
-							BlockRenderDispatcher blockRenderer = BLOCK_RENDERER.get();
-							BlockEntityRenderDispatcher blockEntityRenderer = BLOCK_ENTITY_RENDERER.get();
-							RandomSource random = RandomSource.create();
-							
-							VertexConsumer builder = bufferSource.getBuffer(renderLayer);
-							
-							holoChunk.get().getSections().forEach((yi, section) -> {
-								
-								int posY = yi << 4;
-	
-								for (int y = 0; y < 16; y++) {
-									for (int z = 0; z < 16; z++) {
-										for (int x = 0; x < 16; x++) {
-											BlockPos holoPos = new BlockPos((chunk.pos.x << 4) + x, posY + y, (chunk.pos.z << 4) + z);
-											BlockPos worldPos = hologram.hologram.getPosition().offset(holoPos);
-											BlockState state = section.getState(x, y, z);
-											
-											if (holoState != BlockHoloState.NO_BLOCK) state = hologram.hologram.level.getBlockState(worldPos);
-											if (holoState == section.getHoloState(x, y, z)) {
-												
-												BakedModel model = blockRenderer.getBlockModel(state);
-												if (!state.isAir() && model.getRenderTypes(state, random, ModelData.EMPTY).contains(renderLayer)) {
-													poseStack.pushPose();
-													poseStack.translate(x + 0.5F, posY + y + 0.5F, z + 0.5F);
-													if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.01F, 1.01F, 1.01F);
-													poseStack.translate(-0.5F, -0.5F, -0.5F);
-													blockRenderer.renderBatched(state, hologram.hologram.getPosition().offset(holoPos), hologram.hologram.level, poseStack, builder, false, random);
-													poseStack.popPose();
-												}
-												
-											}
-											
-										}
-									}
-								}
-								
-							});
-							
-							holoChunk.get().getBlockEntities().forEach((position, blockEntity) -> {
-								
-								BlockPos holoPos = position;
-								BlockPos worldPos = hologram.hologram.getPosition().offset(holoPos);
-								
-								// TODO fake world for rendering
-								blockEntityRenderer.render(blockEntity, 0, poseStack, bufferSource);
-								
-							});
-							
-						}).thenRunAsync(() -> {
-							
-							System.out.println("upload VAO"); // TODO DEBUG
-							compiled.bindBuffer(holoState, renderLayer).upload(bufferSource.endBatch(renderLayer));
-							
-						}, HoloStructures.CLIENT.RENDER_EXECUTOR);
-						
-					});
-					
-				}).toArray(i -> new CompletableFuture[i])
-				
-		).thenRun(() -> {
+				RenderType.chunkBufferLayers().stream().map(renderLayer ->
+					CompletableFuture.runAsync(() -> {
+						renderChunkLayers(chunk.bufferContainer, renderLayer, hologram.hologram.level, hologram.hologram.position, holoChunk.get());
+					})
+				).toArray(i -> new CompletableFuture[i])
+		)
+		.thenRunAsync(() ->
+			renderBlockEntities(chunk.bufferContainer, hologram.hologram.level, hologram.hologram.position, holoChunk.get())
+		).thenApplyAsync(nothing -> {
 			
+			HolographicChunkCompiled compiled = new HolographicChunkCompiled();
+			compiled.genBuffers(HologramBufferContainer.getAlocatedRenderTypes());
+			
+			BlockHoloState.renderedStates().forEach(holoState -> {
+				HologramBufferContainer.getAlocatedRenderTypes().forEach(renderLayer -> {
+					compiled.bindBuffer(holoState, renderLayer).upload(chunk.bufferContainer.getBufferSource(holoState).endBatch(renderLayer));
+				});
+			});
+			
+			return compiled;
+			
+		}, HoloStructures.CLIENT.RENDER_EXECUTOR).thenAccept(compiled -> {
+
 			chunk.compiled.get().discardBuffers();
 			chunk.compiled.set(compiled);
+			
+		});
+		
+	}
+	
+	private void renderBlockEntities(HologramBufferContainer bufferContainer, LevelAccessor level, BlockPos hologramPosition, HologramChunk holoChunk) {
+		
+		PoseStack poseStack = new PoseStack();
+		BlockEntityRenderDispatcher blockEntityRenderer = BLOCK_ENTITY_RENDERER.get();
+		
+		holoChunk.getBlockEntities().forEach((position, blockEntity) -> {
+			
+			ChunkPos chunkPos = holoChunk.getPosition();
+			BlockPos holoPos = position.offset(chunkPos.getMinBlockX(), 0, chunkPos.getMinBlockZ());
+			BlockPos worldPos = hologramPosition.offset(holoPos);
+			BlockHoloState holoState = holoChunk.getHoloState(holoPos);
+			
+			MultiBufferSource bufferSource = bufferContainer.getBufferSource(holoState);
+			BlockEntityRenderer<BlockEntity> renderer = blockEntityRenderer.getRenderer(blockEntity);
+			
+			if (renderer != null) {
+				
+				int light = LevelRenderer.getLightColor(level, worldPos);
+				
+				poseStack.pushPose();
+				poseStack.translate(holoPos.getX(), holoPos.getY(), holoPos.getZ());
+				renderer.render(blockEntity, 0, poseStack, bufferSource, light, OverlayTexture.NO_OVERLAY);
+				poseStack.popPose();
+				
+			}
+			
+		});
+		
+	}
+	
+	private void renderChunkLayers(HologramBufferContainer bufferContainer, RenderType renderLayer, LevelAccessor level, BlockPos hologramPosition, HologramChunk holoChunk) {
+		
+		PoseStack poseStack = new PoseStack();
+		BlockRenderDispatcher blockRenderer = BLOCK_RENDERER.get();
+		RandomSource random = RandomSource.create();
+		
+		holoChunk.getSections().forEach((yi, section) -> {
+			
+			int posY = yi << 4;
+
+			for (int y = 0; y < 16; y++) {
+				for (int z = 0; z < 16; z++) {
+					for (int x = 0; x < 16; x++) {
+						BlockPos holoPos = new BlockPos((holoChunk.getPosition().x << 4) + x, posY + y, (holoChunk.getPosition().z << 4) + z);
+						BlockPos worldPos = hologramPosition.offset(holoPos);
+						BlockState state = section.getState(x, y, z);
+						BlockHoloState holoState = section.getHoloState(x, y, z);
+
+						VertexConsumer builder = bufferContainer.getBufferSource(holoState).getBuffer(renderLayer);
+						
+						if (holoState != BlockHoloState.NO_BLOCK) state = level.getBlockState(worldPos);
+
+						BakedModel model = blockRenderer.getBlockModel(state);
+						if (!state.isAir() && model.getRenderTypes(state, random, ModelData.EMPTY).contains(renderLayer)) {
+							poseStack.pushPose();
+							poseStack.translate(x + 0.5F, posY + y + 0.5F, z + 0.5F);
+							if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.01F, 1.01F, 1.01F);
+							poseStack.translate(-0.5F, -0.5F, -0.5F);
+							blockRenderer.renderBatched(state, hologramPosition.offset(holoPos), level, poseStack, builder, false, random);
+							poseStack.popPose();
+						}
+					}
+				}
+			}
 			
 		});
 		
@@ -303,24 +318,33 @@ public class HolographicRenderer {
 	
 	protected void renderHolograms(PoseStack poseStack, Matrix4f projectionMatrix, RenderType renderLayer) {
 		
-		ModRenderType.hologramBlocks().setupRenderState();
+		renderLayer.setupRenderState();
 		ShaderInstance shader = RenderSystem.getShader();
-		initChunkRenderShader(poseStack.last().pose(), projectionMatrix, shader);
 		Uniform chunkOffset = shader.CHUNK_OFFSET;
 		Uniform holoStateColor = shader.COLOR_MODULATOR;
+		Uniform modelViewMatrix = shader.MODEL_VIEW_MATRIX;
+
+		initChunkRenderShader(projectionMatrix, shader);
 		
 		for (HologramRender hologramRender : hologramRenders.values()) {
 			BlockPos origin = hologramRender.hologram.getPosition();
 			
 			poseStack.pushPose();
 			poseStack.translate(origin.getX(), origin.getY(), origin.getZ());
+			
+			if (modelViewMatrix != null) {
+				modelViewMatrix.set(poseStack.last().pose());
+				modelViewMatrix.upload();
+			}
+			
 			for (HolographicChunk chunkRender : hologramRender.renderChunks.values()) {
 				if (chunkRender.compiled.get() != HolographicChunkCompiled.UNCOMPILED) {
 					if (chunkOffset != null) {
-						chunkOffset.set((float)(origin.getX() + chunkRender.pos.x * 16), (float)(origin.getY()), (float)(origin.getZ() + chunkRender.pos.z * 16));
+						chunkOffset.set(chunkRender.pos.x * 16, 0F, chunkRender.pos.z * 16);
 						chunkOffset.upload();
 					}
 					BlockHoloState.renderedStates().forEach((holoState) -> {
+						if (!chunkRender.compiled.get().hasBufferFor(holoState, renderLayer)) return;
 						if (holoStateColor != null) {
 							holoStateColor.set(holoState.colorRed, holoState.colorGreen, holoState.colorBlue, holoState.colorAlpha);
 							holoStateColor.upload();
@@ -336,16 +360,12 @@ public class HolographicRenderer {
 		
 	}
 	
-	protected void initChunkRenderShader(Matrix4f pModelViewMatrix, Matrix4f pProjectionMatrix, ShaderInstance pShader) {
+	protected void initChunkRenderShader(Matrix4f pProjectionMatrix, ShaderInstance pShader) {
 		for(int i = 0; i < 12; ++i) {
 			int j = RenderSystem.getShaderTexture(i);
 			pShader.setSampler("Sampler" + i, j);
 		}
-
-		if (pShader.MODEL_VIEW_MATRIX != null) {
-			pShader.MODEL_VIEW_MATRIX.set(pModelViewMatrix);
-		}
-
+		
 		if (pShader.PROJECTION_MATRIX != null) {
 			pShader.PROJECTION_MATRIX.set(pProjectionMatrix);
 		}

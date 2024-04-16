@@ -83,6 +83,12 @@ public class HologramChunk {
 		return Optional.ofNullable(section);
 	}
 	
+	public BlockHoloState getHoloState(BlockPos position) {
+		Optional<HologramSection> section = getAvailableSection(position.getY());
+		if (!section.isPresent()) return BlockHoloState.NO_BLOCK;
+		return section.get().getHoloState(position.getX() & 15, position.getY() & 15, position.getZ() & 15);
+	}
+	
 	public BlockState getBlock(BlockPos position) {
 		Optional<HologramSection> section = getAvailableSection(position.getY());
 		if (!section.isPresent()) return Blocks.AIR.defaultBlockState();
@@ -101,7 +107,7 @@ public class HologramChunk {
 	}
 	
 	public void setBlockEntity(BlockPos position, BlockEntity blockentity) {
-		this.blockentities.put(new BlockPos(position.getX() & 15, position.getY() & 15, position.getZ() & 15), blockentity);
+		this.blockentities.put(new BlockPos(position.getX() & 15, position.getY(), position.getZ() & 15), blockentity);
 	}
 	
 }
