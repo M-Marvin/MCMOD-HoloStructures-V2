@@ -18,6 +18,9 @@ public class BlueprintTest {
 	
 	public static void main(String... args) {
 		
+		Object test = null;
+		test.hashCode();
+		
 		File runDir = new File(BlueprintTest.class.getProtectionDomain().getCodeSource().getLocation().getPath(), "..\\..\\runs\\test");
 		System.out.println("run dir: " + runDir);
 		
