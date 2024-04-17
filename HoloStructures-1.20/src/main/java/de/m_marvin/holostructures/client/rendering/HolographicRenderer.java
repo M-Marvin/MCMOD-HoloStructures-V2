@@ -172,26 +172,25 @@ public class HolographicRenderer {
 			
 		}
 		
-		CompletableFuture.runAsync(() -> 
-			holoChunk.claimBuffers()
-		).thenRun(() ->
-			CompletableFuture.allOf(
-					RenderType.chunkBufferLayers().stream().map(renderLayer ->
-						CompletableFuture.runAsync(() -> {
-							renderChunkLayers(holoChunk.bufferContainer, renderLayer, holoRender.hologram, holoRender.hologram.position, holoChunk.pos, sectionIndex, section);
-						})
-					).toArray(i -> new CompletableFuture[i])
-			).join()
-		)
-		.thenRunAsync(() -> {
+		CompletableFuture.runAsync(() -> {
+			holoChunk.claimBuffers();
+			
+			RenderType.chunkBufferLayers().stream().forEach(renderLayer ->
+				renderChunkLayers(holoChunk.bufferContainer, renderLayer, holoRender.hologram, holoRender.hologram.position, holoChunk.pos, sectionIndex, section)
+			);
+			
 			List<BlockEntity> sectionBlockEntities = chunk.get().getBlockEntities().entrySet().stream()
 					.filter(entry -> entry.getKey().getY() >= sectionIndex << 4 && entry.getKey().getY() < (sectionIndex + 1) << 4)
 					.map(Map.Entry::getValue).toList();
 			renderBlockEntities(holoChunk.bufferContainer, holoRender.hologram, holoRender.hologram.position, holoChunk.pos, sectionIndex, section, sectionBlockEntities);
-		})
-		.thenRunAsync(() -> {
+			
 			List<Entity> sectionEntities = holoRender.hologram.getEntitiesInSection(chunk.get().getPosition(), sectionIndex);
 			renderEntities(holoChunk.bufferContainer, holoRender.hologram, holoRender.hologram.position, holoChunk.pos, sectionIndex, section, sectionEntities);
+		})
+		.exceptionally(e -> { 
+			HoloStructures.LOGGER.error("holographic renderer/prerender stage failed!");
+			e.printStackTrace();
+			return null;
 		})
 		.thenRunAsync(() -> {
 			
@@ -206,10 +205,16 @@ public class HolographicRenderer {
 			
 			HolographicSectionCompiled old = holoChunk.compiled.put(sectionIndex, compiled);
 			if (old != null) old.discardBuffers();
-
+			
 			holoChunk.releaseBuffers();
 			
-		}, HoloStructures.CLIENT.RENDER_EXECUTOR);
+		}, HoloStructures.CLIENT.RENDER_EXECUTOR)
+		.exceptionally(e -> {
+			holoChunk.releaseBuffers();
+			HoloStructures.LOGGER.error("holographic renderer/upload stage failed!");
+			e.printStackTrace();
+			return null;
+		});
 		
 	}
 	
@@ -298,7 +303,7 @@ public class HolographicRenderer {
 						poseStack.translate(x + 0.5F, y + 0.5F, z + 0.5F);
 						if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.01F, 1.01F, 1.01F);
 						poseStack.translate(-0.5F, -0.5F, -0.5F);
-						blockRenderer.renderBatched(state, hologramPosition.offset(holoPos), level, poseStack, builder, false, random);
+						blockRenderer.renderBatched(state, hologramPosition.offset(holoPos), level, poseStack, builder, false, random, modelData, renderLayer);
 						poseStack.popPose();
 					}
 					
@@ -412,6 +417,7 @@ public class HolographicRenderer {
 		}
 		
 		shader.clear();
+		renderLayer.clearRenderState();
 		
 	}
 	

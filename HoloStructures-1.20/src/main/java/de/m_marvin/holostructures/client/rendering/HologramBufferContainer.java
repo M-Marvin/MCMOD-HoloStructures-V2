@@ -53,15 +53,17 @@ public class HologramBufferContainer {
 		}
 		
 		public BufferBuilder getBufferRaw(RenderType pRenderType) {
-			if (!this.bufferBuilders.containsKey(pRenderType)) {
-				this.bufferBuilders.put(pRenderType, this.allocator.apply(pRenderType));
+			BufferBuilder buffer = this.bufferBuilders.get(pRenderType);
+			if (buffer == null) {
+				buffer = this.allocator.apply(pRenderType);
+				this.bufferBuilders.put(pRenderType, buffer);
 				if (!allocatedTypes.contains(pRenderType)) {
 					synchronized (this) {
 						allocatedTypes.add(pRenderType);
 					}
 				};
 			}
-			return this.bufferBuilders.get(pRenderType);
+			return buffer;
 		}
 		
 		public RenderedBuffer endBatch(RenderType pRenderType) {
