@@ -173,7 +173,7 @@ public class NBTStrructParser implements IBlueprintParser {
 							BlockEntityData blockEntity = source.getBlockEntity(position);
 							if (blockEntity != null) {
 								TagCompound blockEntityTag = blockEntity.getData();
-								blockEntityTag.putString("", null); // TODO block entity
+								blockEntityTag.putString("id", blockEntity.getTypeName().toString());
 								blockTag.putTag("nbt", blockEntity.getData());
 								
 							}
@@ -196,7 +196,6 @@ public class NBTStrructParser implements IBlueprintParser {
 					entityTag.putList("pos", writeVectorD(entity.getPosition()));
 					entityTag.putList("blockPos", writeVectorI(new Vec3i(entity.getPosition())));
 					entityTag.putTag("nbt", entity.getData());
-					// TODO entity tag
 					entityList.add(entityTag);
 				} catch (Throwable e) {
 					IBlueprintParser.logWarn(source, "failed to write entity nbt data: entity position %.2f %.2f %.2f", entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);

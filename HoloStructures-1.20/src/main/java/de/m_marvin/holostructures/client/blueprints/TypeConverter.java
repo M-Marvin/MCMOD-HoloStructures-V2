@@ -14,7 +14,9 @@ import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostructures.HoloStructures;
 import de.m_marvin.nbtutility.BinaryParser;
 import de.m_marvin.nbtutility.nbt.TagCompound;
+import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -22,15 +24,15 @@ import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.phys.Vec3;
 
 public class TypeConverter {
-	
-	// TODO try catchs conversion
 	
 	public static BlockStateData blockState2data(BlockState state) {
 		RegistryName blockName = new RegistryName(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
@@ -78,11 +80,22 @@ public class TypeConverter {
 	}
 	
 	public static EntityData entity2data(Entity entity) {
-		throw new UnsupportedOperationException("not yet implemented");
+		RegistryName entityName = resLoc2data(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
+		Vec3d position = new Vec3d(entity.position().x, entity.position().y, entity.position().z);
+		EntityData data = new EntityData(position, entityName);
+		data.setData(nbt2data(entity.serializeNBT()));
+		return data;
 	}
 	
 	public static Entity data2entity(EntityData data) {
-		throw new UnsupportedOperationException("not yet implemented");
+		EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(data2resLoc(data.getEntityName()));
+		if (type == null) return null;
+		Vec3 position = new Vec3(data.getPosition().x, data.getPosition().y, data.getPosition().z);
+		@SuppressWarnings("resource")
+		Entity entity = type.create(Minecraft.getInstance().level);
+		entity.load(data2nbt(data.getData()));
+		entity.setPos(position);
+		return entity;
 	}
 	
 	public static CompoundTag data2nbt(TagCompound data) {

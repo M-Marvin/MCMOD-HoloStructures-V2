@@ -30,7 +30,7 @@ public class HologramSection {
 	}
 	
 	public BlockState getState(int x, int y, int z) {
-		return this.states.getOrDefault(BlockPos.asLong(x, y, z), Blocks.AIR.defaultBlockState());
+		return this.states.getOrDefault(BlockPos.asLong(x & 15, y & 15, z & 15), Blocks.AIR.defaultBlockState());
 	}
 	
 	public void setState(int x, int y, int z, BlockState state) {
@@ -38,7 +38,7 @@ public class HologramSection {
 		if (replaced == null || replaced.isAir() != state.isAir()) {
 			if (state.isAir() && replaced != null) {
 				this.nonEmptyBlockCount--;
-				this.holoState.remove(BlockPos.asLong(x, y, z));
+				this.holoState.remove(BlockPos.asLong(x & 15, y & 15, z & 15));
 			} else {
 				this.nonEmptyBlockCount++;
 			}
@@ -46,11 +46,11 @@ public class HologramSection {
 	}
 
 	public BlockHoloState getHoloState(int x, int y, int z) {
-		return this.holoState.getOrDefault(BlockPos.asLong(x, y, z), BlockHoloState.NO_BLOCK);
+		return this.holoState.getOrDefault(BlockPos.asLong(x & 15, y & 15, z & 15), BlockHoloState.NO_BLOCK);
 	}
 
 	public void setHoloState(int x, int y, int z, BlockHoloState state) {
-		this.holoState.put(BlockPos.asLong(x, y, z),  state);
+		this.holoState.put(BlockPos.asLong(x & 15, y & 15, z & 15),  state);
 	}
 
 	public Long2ObjectMap<BlockState> getStates() {

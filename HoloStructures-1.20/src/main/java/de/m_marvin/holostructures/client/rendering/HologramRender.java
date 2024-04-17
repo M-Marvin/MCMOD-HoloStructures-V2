@@ -2,7 +2,6 @@ package de.m_marvin.holostructures.client.rendering;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -11,6 +10,10 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import de.m_marvin.holostructures.client.holograms.BlockHoloState;
 import de.m_marvin.holostructures.client.holograms.Hologram;
 import de.m_marvin.holostructures.client.rendering.HologramBufferContainer.HolographicBufferSource;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.client.renderer.RenderType;
@@ -20,9 +23,7 @@ public class HologramRender {
 
 	public static class HolographicChunk {
 		
-		public static class HolographicChunkCompiled {
-			
-			public static final HolographicChunkCompiled UNCOMPILED = new HolographicChunkCompiled();
+		public static class HolographicSectionCompiled {
 			
 			public Map<BlockHoloState, Map<RenderType, VertexBuffer>> renderBuffers;
 			
@@ -52,19 +53,39 @@ public class HologramRender {
 			
 		}
 
-		public static final int BUFFER_BUILDER_CAPACITY = 786432; // copied this number from the RenderBuffers class
+		public static final int BUFFER_BUILDER_CAPACITY = 786432; // TODO copied this number from the RenderBuffers class
 		
 		public ChunkPos pos;
-		public boolean dirty;
-		public AtomicReference<HolographicChunkCompiled> compiled = new AtomicReference<>(HolographicChunkCompiled.UNCOMPILED);
+		public IntList dirty = new IntArrayList();
+		public Int2ObjectMap<HolographicSectionCompiled> compiled = new Int2ObjectArrayMap<>();
 		public HologramBufferContainer bufferContainer;
+		public Boolean bufferClaimed = false;
 		
 		public HolographicChunk(ChunkPos pos) {
 			this.pos = pos;
-			this.dirty = true;
 			this.bufferContainer = new HologramBufferContainer(() -> {
 				return new HolographicBufferSource(renderType -> new BufferBuilder(BUFFER_BUILDER_CAPACITY));
 			});
+		}
+		
+		public void claimBuffers() {
+			try {
+				while (this.bufferClaimed) {
+					synchronized (this.bufferContainer) {
+						this.bufferContainer.wait();
+					}
+				}
+				this.bufferClaimed = true;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void releaseBuffers() {
+			this.bufferClaimed = false;
+			synchronized (this.bufferContainer) {
+				this.bufferContainer.notify();	
+			}
 		}
 		
 		public void discardBuffers() {

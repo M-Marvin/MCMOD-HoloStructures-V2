@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-public class Hologram implements ILevelAccessor {
+public class Hologram implements ILevelAccessor, IFakeLevelAccess {
 	
 	public BlockPos boundsMax;
 	public BlockPos boundsMin;
@@ -91,7 +91,7 @@ public class Hologram implements ILevelAccessor {
 	
 	protected void ensureMinBounds() {
 		if (this.chunks.isEmpty()) {
-			this.boundsMax = Vec3i.fromVec(this.boundsMin).max(Vec3i.fromVec(this.boundsMin).add(new Vec3i(1, 1, 1))).writeTo(new BlockPos(0, 0, 0));
+			this.boundsMax = Vec3i.fromVec(this.boundsMax).max(Vec3i.fromVec(this.boundsMin).add(new Vec3i(1, 1, 1))).writeTo(new BlockPos(0, 0, 0));
 		} else {
 			int maxChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().x).max().getAsInt();
 			int maxChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().z).max().getAsInt();
@@ -167,14 +167,21 @@ public class Hologram implements ILevelAccessor {
 		this.chunks.remove(chunk.getPosition().toLong());
 	}
 	
-	public void markChunkDirty(ChunkPos chunk) {
-		HoloStructures.CLIENT.HOLORENDERER.markDirty(this, chunk);
+	public void markSectionDirty(ChunkPos pos, int section) {
+		HoloStructures.CLIENT.HOLORENDERER.markDirty(this, pos, section);
+	}
+	
+	public void markChunkDirty(ChunkPos pos) {
+		Optional<HologramChunk> chunk = getChunk(pos);
+		if (chunk.isPresent()) {
+			chunk.get().getSections().keySet().forEach(section -> 
+				HoloStructures.CLIENT.HOLORENDERER.markDirty(this, pos, section)
+			);
+		}
 	}
 	
 	public void markDirtyAllChunks() {
-		this.chunks.forEach((lp, chunk) -> {
-			HoloStructures.CLIENT.HOLORENDERER.markDirty(this, new ChunkPos(lp));
-		});
+		this.chunks.keySet().forEach(lp -> markChunkDirty(new ChunkPos(lp)));
 	}
 	
 	/* standard level accessing methods */
@@ -184,7 +191,9 @@ public class Hologram implements ILevelAccessor {
 		if (chunk.isEmpty()) return;
 		chunk.get().setBlock(position, state);
 		if (chunk.get().isEmpty()) discardChunk(chunk.get());
-		markChunkDirty(chunk.get().getPosition());
+//		ensureMinBounds();
+		markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
+//		markChunkDirty(chunk.get().getPosition());
 	}
 	
 	public BlockState getBlock(BlockPos position) {
@@ -195,19 +204,32 @@ public class Hologram implements ILevelAccessor {
 	
 	public void setBlockEntity(BlockPos position, BlockEntity blockentity) {
 		Optional<HologramChunk> chunk = getChunkAt(position);
-		if (chunk.isPresent()) chunk.get().setBlockEntity(position, blockentity);
-		blockentity.setLevel(this.level);
-		markChunkDirty(chunk.get().getPosition());
+		if (chunk.isPresent()) {
+			chunk.get().setBlockEntity(position, blockentity);
+			blockentity.setLevel(this.level);
+//			ensureMinBounds();
+//			markChunkDirty(chunk.get().getPosition());
+			markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
+			
+		}
 	}
 	
-	public Optional<BlockEntity> getBlockEntity(BlockPos position) {
+	public BlockEntity getBlockEntity(BlockPos position) {
 		Optional<HologramChunk> chunk = getChunkAt(position);
-		if (chunk.isPresent()) return chunk.get().getBlockEntity(position);
-		return Optional.empty();
+		if (chunk.isPresent()) return chunk.get().getBlockEntity(position).orElseGet(null);
+		return null;
 	}
 	
 	public List<Entity> getEntitiesInBounds(AABB bounds) {
-		return this.entities.values().stream().filter((entity) -> bounds.intersects(entity.getBoundingBox())).toList();
+		return this.entities.values().stream().filter(entity -> bounds.intersects(entity.getBoundingBox())).toList();
+	}
+	
+	public List<Entity> getEntitiesInChunk(ChunkPos chunk) {
+		return getEntitiesInBounds(AABB.encapsulatingFullBlocks(new BlockPos(chunk.getMinBlockX(), getBoundsMin().y, chunk.getMinBlockZ()), new BlockPos(chunk.getMaxBlockX(), getBoundsMax().y, chunk.getMaxBlockZ())));
+	}
+
+	public List<Entity> getEntitiesInSection(ChunkPos chunk, int section) {
+		return getEntitiesInBounds(AABB.encapsulatingFullBlocks(new BlockPos(chunk.getMinBlockX(), section << 4, chunk.getMinBlockZ()), new BlockPos(chunk.getMaxBlockX(), (section + 1) << 4, chunk.getMaxBlockZ())));
 	}
 	
 	public Entity getEntityById(int id) {
@@ -215,7 +237,7 @@ public class Hologram implements ILevelAccessor {
 	}
 	
 	public void addEntity(Entity entity) {
-		if (this.entities.containsKey(entity.getId())) {
+		if (!this.entities.containsKey(entity.getId())) {
 			this.entities.put(entity.getId(), entity);
 		} else {
 			throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Entity is already tracked!"));
@@ -243,105 +265,46 @@ public class Hologram implements ILevelAccessor {
 
 	@Override
 	public BlockEntityData getBlockEntity(Vec3i position) {
-		Optional<BlockEntity> blockEntity = getBlockEntity(new BlockPos(position.x, position.y, position.z));
-		if (blockEntity.isEmpty()) return null;
-		return TypeConverter.blockEntity2data(blockEntity.get());
+		BlockEntity blockEntity = getBlockEntity(new BlockPos(position.x, position.y, position.z));
+		if (blockEntity == null) return null;
+		return TypeConverter.blockEntity2data(blockEntity);
 	}
 
 	@Override
 	public void addEntity(EntityData entity) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
+		addEntity(TypeConverter.data2entity(entity));
 	}
 
 	@Override
 	public void addEntity(Vec3i blockPos, EntityData entity) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
+		addEntity(TypeConverter.data2entity(entity));
 	}
 
 	@Override
 	public void addEntities(Collection<EntityData> entities) {
-		// TODO Auto-generated method stub
-//		throw new UnsupportedOperationException("not yet implemented");
+		entities.stream().map(TypeConverter::data2entity).forEach(this::addEntity);
 	}
 
 	@Override
 	public Collection<EntityData> getEntities() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
+		return this.entities.values().stream().map(TypeConverter::entity2data).toList();
 	}
 
 	@Override
 	public Collection<EntityData> getEntitiesOnBlock(Vec3i pos) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
+		return this.getEntitiesInBounds(new AABB(pos.x - 1, pos.y - 1, pos.z - 1, pos.x, pos.y, pos.z)).stream().map(TypeConverter::entity2data).toList();
 	}
 
 	@Override
 	public Collection<EntityData> getEntitiesWithin(Vec3i min, Vec3i max) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
+		return this.getEntitiesInBounds(new AABB(min.x, min.y, min.z, max.x, max.y, max.z)).stream().map(TypeConverter::entity2data).toList();
 	}
-
-//	public BlockPos getOrigin() {
-//		return origin;
-//	}
-//	
-//	public void setOrigin(BlockPos origin) {
-//		this.origin = origin;
-//	}
-	
-//	public ObjectCollection<Entity> getEntities() {
-//		return entities.values();
-//	}
-	
-//	@Override
-//	public BlockAndTintGetter getLevelGetter() {
-//		return this.level;
-//	}
-	
-//	@Override
-//	public boolean checkBlock(BlockPos pos, BlockState state) {
-//		if (!this.getBlock(pos).equals(state)) {
-//			this.setBlock(pos, state);
-//		}
-//		return true;
-//	}
-
-//	@Override
-//	public Optional<BlockEntityData> getBlockEntityData(BlockPos pos) {
-//		Optional<BlockEntity> blockentity = getBlockEntity(pos);
-//		if (blockentity.isPresent()) {
-//			return Optional.of(TypeConverter.blockEntity2data(blockentity.get()));
-//		}
-//		return Optional.empty();
-//	}
-	
-//	@Override
-//	public void setBlockEntityData(BlockPos pos, BlockEntityData data) {
-//		BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.get(TypeConverter.data2resLoc(data.getTypeName()));
-//		if (type != null) {
-//			BlockState state = getBlock(pos);
-//			if (!type.isValid(state)) throw new IllegalStateException("BlockEntity of type " + data.getTypeName() + " is invalid for state " + state.toString() + "!");
-//			BlockEntity blockentity = type.create(pos, state);
-//			blockentity.deserializeNBT(TypeConverter.data2nbt(data.getData()));
-//			setBlockEntity(pos, blockentity);
-//		}
-//	}
-	
-//	@Override
-//	public Map<Vec3, EntityData> getEntitiesData(BlockPos corner1, BlockPos corner2, Function<Vec3, Vec3> positionMapper) {
-//		AABB aabb = AABB.encapsulatingFullBlocks(corner1, corner2);
-//		return getEntitiesInBounds(aabb).stream().collect(Collectors.toMap((entity) -> new Vec3(entity.xo, entity.yo, entity.zo), (entity) -> TypeConverter.entity2data(entity)));
-//	}
-
-//	@Override
-//	public void addEntityData(Vec3 pos, EntityData data) {
-//		addEntity(TypeConverter.data2entity(data));
-//	}
 	
 	/* end of accessors */
+	
+	
+	
+	// TODO propably deprecated methods
 	
 	public void refreshChunk(ChunkPos chunk) {
 //		HolographicRenderer.markDirty(this, chunk);

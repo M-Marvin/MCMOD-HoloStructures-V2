@@ -69,52 +69,5 @@
 //	
 //	/* RenderType utility methods */
 //	
-////	/* TODO Dummy render-call
-////	 * 
-////	 * Don't understand why this is required, but shaders and rendetypes that are not used the "normal" way
-////	 * do not load textures until they get used the normal way at least once.
-////	 * This class uses all shaders affected by this (not used the normal way) to render a dummy vertex and
-////	 * loads the textures.
-////	 */
-////
-////	@SubscribeEvent
-////	public static void onResourceReloadRegister(RegisterClientReloadListenersEvent event) {
-////		event.registerReloadListener(DummyRenderer.reloadListener());
-////	}
-////	
-////	@Mod.EventBusSubscriber(modid=HoloStructures.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
-////	private static class DummyRenderer {
-////		static boolean reloaded = true;
-////		
-////		@SubscribeEvent
-////		public static void onRenerLast(RenderLevelStageEvent event) {
-////			if (!reloaded) {
-////				
-////				/* RenderType dummy call */
-////				getBuffer(hologramBlocks()).vertex(0, 0, 0).color(0, 0, 0, 0).uv(0, 0).uv2(0).normal(0, 0, 0).endVertex();
-////				
-////				reloaded = true;
-////			}
-////		}
-////		
-////		public static VertexConsumer getBuffer(RenderType renderType) {
-////			return Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(renderType);
-////		}
-////		
-////		public static PreparableReloadListener reloadListener() {
-////			return new SimplePreparableReloadListener<Void>() {
-////				@Override
-////				protected Void prepare(ResourceManager p_10796_, ProfilerFiller p_10797_) {
-////					return null;
-////				}
-////				@Override
-////				protected void apply(Void p_10793_, ResourceManager p_10794_, ProfilerFiller p_10795_) {
-////					DummyRenderer.reloaded = false;
-////					HoloStructures.LOGGER.debug("Recalled dummy shader renderer.");
-////				}
-////			};
-////		}
-////		
-////	}
 //	
 //}
