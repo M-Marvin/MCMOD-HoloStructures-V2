@@ -1,41 +1,20 @@
 {
     "targets": [
-        "swap"
+        "swap",
+        "holostruct:holographic"
     ],
     "passes": [
         {
-            "name": "holostructures:rendertype_hologram_blocks",
-            "intarget": "minecraft:main",
+            "name": "holostruct:rendertype_hologram_blocks",
+            "intarget": "holostruct:holographic",
             "outtarget": "swap",
             "uniforms": [
-                {
-                    "name": "RedMatrix",
-                    "values": [ 0.0, 0.0, 0.0 ]
-                },
-                {
-                    "name": "GreenMatrix",
-                    "values": [ 0.3, 0.59, 0.11 ]
-                },
-                {
-                    "name": "BlueMatrix",
-                    "values": [ 0.0, 0.0, 0.0 ]
-                }
             ]
         },
         {
-            "name": "bits",
+            "name": "blit",
             "intarget": "swap",
-            "outtarget": "minecraft:main",
-            "uniforms": [
-                {
-                    "name": "Resolution",
-                    "values": [ 16.0 ]
-                },
-                {
-                    "name": "MosaicSize",
-                    "values": [ 4.0 ]
-                }
-            ]
+            "outtarget": "minecraft:main"
         }
     ]
 }

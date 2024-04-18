@@ -1,5 +1,6 @@
 package de.m_marvin.holostruct.client.rendering;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -8,6 +9,8 @@ import java.util.function.Supplier;
 
 import org.joml.Matrix4f;
 
+import com.google.gson.JsonSyntaxException;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -19,8 +22,11 @@ import de.m_marvin.holostruct.client.holograms.BlockHoloState;
 import de.m_marvin.holostruct.client.holograms.Hologram;
 import de.m_marvin.holostruct.client.holograms.HologramChunk;
 import de.m_marvin.holostruct.client.holograms.HologramSection;
+import de.m_marvin.holostruct.client.rendering.HologramBufferContainer.HolographicBufferSource;
 import de.m_marvin.holostruct.client.rendering.HologramRender.HolographicChunk;
 import de.m_marvin.holostruct.client.rendering.HologramRender.HolographicChunk.HolographicSectionCompiled;
+import de.m_marvin.holostruct.client.rendering.posteffect.PostEffectUtil;
+import de.m_marvin.holostruct.client.rendering.posteffect.SelectivePostChain;
 import de.m_marvin.holostruct.utility.UtilHelper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -39,6 +45,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
@@ -65,13 +72,65 @@ public class HolographicRenderer {
 	
 	protected Int2ObjectMap<HologramRender> hologramRenders = new Int2ObjectArrayMap<>();
 	
+	public SelectivePostChain postEffect;
+	
+    public void loadEffect(ResourceLocation pResourceLocation) {
+        if (this.postEffect != null) {
+            this.postEffect.close();
+        }
+
+        try {
+            this.postEffect = new SelectivePostChain(Minecraft.getInstance().getTextureManager(), Minecraft.getInstance().getResourceManager(), Minecraft.getInstance().getMainRenderTarget(), pResourceLocation);
+            this.postEffect.resize(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
+        } catch (IOException ioexception) {
+           HoloStruct.LOGGER.warn("Failed to load shader: {}", pResourceLocation, ioexception);
+           this.postEffect = null;
+        } catch (JsonSyntaxException jsonsyntaxexception) {
+        	HoloStruct.LOGGER.warn("Failed to parse shader: {}", pResourceLocation, jsonsyntaxexception);
+            this.postEffect = null;
+        }
+    }
+	
+//    @SubscribeEvent
+//    public static void onReload(AddReloadListenerEvent event) {
+//    	event.addListener((pPreparationBarrier, pResourceManager, pPreparationsProfiler, pReloadProfiler, pBackgroundExecutor, pGameExecutor) -> {
+//    		return CompletableFuture.runAsync(() -> {
+//    			HolographicRenderer renderer = HoloStruct.CLIENT.HOLORENDERER;
+//        		renderer.postEffect = null;
+//    		}).exceptionally(e -> {
+//    			e.printStackTrace();
+//    			return null;
+//    		});
+//    	});
+//    }
+    
 	@SubscribeEvent
 	public static void onRenderLevelLast(RenderLevelStageEvent event) {
+
+		HolographicRenderer renderer = HoloStruct.CLIENT.HOLORENDERER;
+		
 		if (event.getStage() == Stage.AFTER_SKY) {
-			HolographicRenderer renderer = HoloStruct.CLIENT.HOLORENDERER;
 			renderer.recompileDirtyChunks();
+			
+//			renderer.postEffect = null;
+			if (renderer.postEffect == null) {
+				renderer.loadEffect(new ResourceLocation("holostruct:shaders/post/creeper.json"));
+			}
+			
+			RenderTarget framebuffer = renderer.postEffect.getTempTarget("holostruct:holographic");
+			PostEffectUtil.preparePostEffect(renderer.postEffect);
+			PostEffectUtil.clearFramebuffer(framebuffer);
+			PostEffectUtil.unbinFramebuffer(framebuffer);
+			
+		} else if (event.getStage() == Stage.AFTER_WEATHER) {
+
+			
+			renderer.postEffect.process(0);
+			
 		} else {
-			HolographicRenderer renderer = HoloStruct.CLIENT.HOLORENDERER;
+			
+			RenderTarget framebuffer = renderer.postEffect.getTempTarget("holostruct:holographic");
+			PostEffectUtil.bindFramebuffer(framebuffer);
 			
 			PoseStack poseStack = event.getPoseStack();
 			poseStack.pushPose();
@@ -91,11 +150,15 @@ public class HolographicRenderer {
 				HologramBufferContainer.getAlocatedRenderTypes().stream().filter(r -> !RenderType.chunkBufferLayers().contains(r)).forEach(renderLayer -> {
 					renderer.renderHolograms(poseStack, event.getProjectionMatrix(), renderLayer);
 				});
-			} else if (event.getStage() == Stage.AFTER_PARTICLES) {
+			} else 
+				if (event.getStage() == Stage.AFTER_PARTICLES) {
 				renderer.renderHologramBounds(poseStack, BUFFER_SOURCE.get());
 			}
 			
 			poseStack.popPose();
+			
+			PostEffectUtil.unbinFramebuffer(framebuffer);
+			
 		}
 	}
 	
@@ -154,14 +217,14 @@ public class HolographicRenderer {
 		hologramRenders.forEach((hid, hologram) -> {
 			hologram.renderChunks.forEach((pos, chunk) -> {
 				chunk.dirty.forEach(section ->
-					prerenderHolographicChunk(hologram, chunk, section)
+					prerenderHolographicSection(hologram, chunk, section)
 				);
 				chunk.dirty.clear();
 			});
 		});
 	}
 	
-	private void prerenderHolographicChunk(HologramRender holoRender, HolographicChunk holoChunk, int sectionIndex) {
+	private void prerenderHolographicSection(HologramRender holoRender, HolographicChunk holoChunk, int sectionIndex) {
 		
 		Optional<HologramChunk> chunk = holoRender.hologram.getChunk(holoChunk.pos);
 		HologramSection section = chunk.isPresent() ? chunk.get().getSections().get(sectionIndex) : null;
@@ -200,7 +263,8 @@ public class HolographicRenderer {
 			
 			BlockHoloState.renderedStates().forEach(holoState -> {
 				HologramBufferContainer.getAlocatedRenderTypes().forEach(renderLayer -> {
-					compiled.bindBuffer(holoState, renderLayer).upload(holoChunk.bufferContainer.getBufferSource(holoState).endBatch(renderLayer));
+					HolographicBufferSource bufferSource = holoChunk.bufferContainer.getBufferSource(holoState);
+					compiled.bindBuffer(holoState, renderLayer).upload(bufferSource.endBatch(renderLayer));
 				});
 			});
 			
@@ -379,17 +443,11 @@ public class HolographicRenderer {
 		
 		renderLayer.setupRenderState();
 		ShaderInstance shader = RenderSystem.getShader();
-		
-		if (shader == null) {
-			HoloStruct.LOGGER.warn("SHADER ERROR");
-			return;
-		}
-		
 		Uniform chunkOffset = shader.CHUNK_OFFSET;
 		Uniform holoStateColor = shader.COLOR_MODULATOR;
 		Uniform modelViewMatrix = shader.MODEL_VIEW_MATRIX;
 
-		initChunkRenderShader(projectionMatrix, shader);
+		setupSectionShader(projectionMatrix, shader);
 		
 		for (HologramRender hologramRender : hologramRenders.values()) {
 			BlockPos origin = hologramRender.hologram.getPosition();
@@ -404,6 +462,7 @@ public class HolographicRenderer {
 			
 			for (HolographicChunk chunkRender : hologramRender.renderChunks.values()) {
 				chunkRender.compiled.forEach((yi, section) -> {
+					
 					if (chunkRender.compiled.containsKey((int) yi)) {
 						if (chunkOffset != null) {
 							chunkOffset.set((float) (chunkRender.pos.x << 4), (float) (yi << 4), (float) (chunkRender.pos.z << 4));
@@ -428,7 +487,7 @@ public class HolographicRenderer {
 		
 	}
 	
-	protected void initChunkRenderShader(Matrix4f pProjectionMatrix, ShaderInstance pShader) {
+	protected void setupSectionShader(Matrix4f pProjectionMatrix, ShaderInstance pShader) {
 		for(int i = 0; i < 12; ++i) {
 			int j = RenderSystem.getShaderTexture(i);
 			pShader.setSampler("Sampler" + i, j);

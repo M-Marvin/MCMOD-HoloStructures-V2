@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferBuilder.RenderedBuffer;
+import com.mojang.blaze3d.vertex.BufferBuilder.SortState;
 
 import de.m_marvin.holostruct.client.holograms.BlockHoloState;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -57,19 +58,23 @@ public class HologramBufferContainer {
 			if (buffer == null) {
 				buffer = this.allocator.apply(pRenderType);
 				this.bufferBuilders.put(pRenderType, buffer);
-				if (!allocatedTypes.contains(pRenderType)) {
-					synchronized (this) {
-						allocatedTypes.add(pRenderType);
-					}
-				};
+				if (!getAlocatedRenderTypes().contains(pRenderType)) getAlocatedRenderTypes().add(pRenderType);
 			}
 			return buffer;
 		}
 		
+		public Set<RenderType> localyAllocated() {
+			return this.bufferBuilders.keySet();
+		}
+		
 		public RenderedBuffer endBatch(RenderType pRenderType) {
 			BufferBuilder builder = getBuffer(pRenderType);
-			builder.setQuadSorting(RenderSystem.getVertexSorting());
 			return builder.end();
+		}
+		
+		public SortState makeSortState(RenderType pRenderType) {
+			BufferBuilder builder = getBuffer(pRenderType);
+			return builder.getSortState();
 		}
 		
 		public void discard() {
