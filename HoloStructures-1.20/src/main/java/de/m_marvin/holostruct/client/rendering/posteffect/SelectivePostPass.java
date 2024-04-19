@@ -8,9 +8,11 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL30;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.pipeline.MainTarget;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.shaders.BlendMode;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -82,18 +84,20 @@ public class SelectivePostPass implements AutoCloseable {
 		this.effect.safeGetUniform("Time").set(pPartialTicks);
 		Minecraft minecraft = Minecraft.getInstance();
 		this.effect.safeGetUniform("ScreenSize").set((float)minecraft.getWindow().getWidth(), (float)minecraft.getWindow().getHeight());
+		
+		/* HS2 Modification: Reset BlendMode#lastApplied since it for some reason gets not reset automatically */
+		new BlendMode().apply();
+		
 		this.effect.apply();
 		
-		/* HS2 Modification: Don't clear source buffer, we are going to ADD stuff, not replace */
-		//this.outTarget.clear(Minecraft.ON_OSX);
+		/* HS2 Modification: Don't clear main framebuffer, we are going to ADD stuff, not replace */
+		if (!(this.outTarget instanceof MainTarget))
+			this.outTarget.clear(Minecraft.ON_OSX);
 		
 		this.outTarget.bindWrite(false);
 		
-		/* HS2 Modification: Dont use GL_ALWAS, we want depth testing to work when adding stuff */
-		RenderSystem.depthFunc(GL30.GL_LESS);
-		/* HS2 Modification: Enable blend */
-		RenderSystem.enableBlend();
-		RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+		/* HS2 Modification: Don't use GL_ALWAS, we want depth testing to work when adding stuff */
+		RenderSystem.depthFunc(GL30.GL_LEQUAL);
 		
 		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
 		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
@@ -104,6 +108,12 @@ public class SelectivePostPass implements AutoCloseable {
 		BufferUploader.draw(bufferbuilder.end());
 		RenderSystem.depthFunc(515);
 		this.effect.clear();
+		
+		/* HS2 Modification: Copy over the depth data to temp framebuffers */
+		/* For some reason the depth data gets lost when using a temp buffer as target */
+		if (!(this.outTarget instanceof MainTarget))
+			this.outTarget.copyDepthFrom(inTarget);
+		
 		this.outTarget.unbindWrite();
 		this.inTarget.unbindRead();
 

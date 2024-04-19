@@ -204,7 +204,7 @@ public class SelectivePostChain implements AutoCloseable {
 					} catch (Exception exception) {
 						ChainedJsonException chainedjsonexception1 = ChainedJsonException.forException(exception);
 						chainedjsonexception1.prependJsonKey("uniforms[" + l + "]");
-						/* HS2 Modification: Don't abbort parsing, just throw a warning */
+						/* HS2 Modification: Don't abort parsing, just throw a warning */
 						HoloStruct.LOGGER.warn("Failed to set uniform!", exception);
 						//throw chainedjsonexception1;
 					}

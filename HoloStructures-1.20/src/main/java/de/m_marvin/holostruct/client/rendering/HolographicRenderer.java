@@ -1,5 +1,6 @@
 package de.m_marvin.holostruct.client.rendering;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -11,10 +12,15 @@ import org.joml.Matrix4f;
 
 import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage.Format;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexBuffer.Usage;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import de.m_marvin.holostruct.HoloStruct;
@@ -77,6 +83,8 @@ public class HolographicRenderer {
 	public static final ResourceLocation HOLOGRAPHIC_TARGET = new ResourceLocation(HoloStruct.MODID, "holographic");
 	
 	protected Int2ObjectMap<HologramRender> hologramRenders = new Int2ObjectArrayMap<>();
+//	protected VertexBuffer globalBuffer = new VertexBuffer(Usage.DYNAMIC);
+//	protected BufferBuilder globalBuilder = new BufferBuilder(2000);
 	protected SelectivePostChain activePostEffect;
 	protected RenderTarget activeFramebuffer;
 	
@@ -91,13 +99,36 @@ public class HolographicRenderer {
 			if (renderer.activePostEffect != null) {
 				PostEffectUtil.preparePostEffect(renderer.activePostEffect);
 				PostEffectUtil.clearFramebuffer(renderer.activeFramebuffer);
-				PostEffectUtil.unbinFramebuffer(renderer.activeFramebuffer);
+				PostEffectUtil.unbindFramebuffer(renderer.activeFramebuffer);
 			}
 			
 		} else if (event.getStage() == Stage.AFTER_WEATHER) {
 			
 			if (renderer.activePostEffect != null)
 				renderer.activePostEffect.process(event.getPartialTick());
+			
+			
+//			RenderTarget frame = Minecraft.getInstance().getMainRenderTarget();   // renderer.activePostEffect.getTempTarget("swap");// renderer.activePostEffect.getTempTarget("swap");
+//			System.out.println(frame.useDepth);
+//			
+//			try {
+//				
+//				NativeImage image = new NativeImage(frame.width, frame.height, false);
+//		        RenderSystem.bindTexture(frame.getColorTextureId());
+//				image.downloadTexture(0, false);
+//				image.flipY();
+//				image.writeToFile(new File("C:\\Users\\marvi\\Desktop\\frame.png"));
+//				image.close();
+//				
+////				image = new NativeImage(Format.LUMINANCE, frame.width, frame.height, false);
+////			    RenderSystem.bindTexture(frame.getDepthTextureId());
+////				image.downloadDepthBuffer(0);
+////				image.flipY();
+////				image.writeToFile(new File("C:\\Users\\marvi\\Desktop\\depth.png"));
+////				image.close();
+//			} catch (Throwable e) {
+//				e.printStackTrace();
+//			}
 			
 		} else {
 			
@@ -122,15 +153,15 @@ public class HolographicRenderer {
 				HologramBufferContainer.getAlocatedRenderTypes().stream().filter(r -> !RenderType.chunkBufferLayers().contains(r)).forEach(renderLayer -> {
 					renderer.renderHolograms(poseStack, event.getProjectionMatrix(), renderLayer);
 				});
+				renderer.renderHologramBounds(poseStack, BUFFER_SOURCE.get());
 			} else 
 				if (event.getStage() == Stage.AFTER_PARTICLES) {
-				renderer.renderHologramBounds(poseStack, BUFFER_SOURCE.get());
 			}
 			
 			poseStack.popPose();
 
 			if (renderer.activeFramebuffer != null)
-				PostEffectUtil.unbinFramebuffer(renderer.activeFramebuffer);
+				PostEffectUtil.unbindFramebuffer(renderer.activeFramebuffer);
 			
 		}
 	}
@@ -423,6 +454,10 @@ public class HolographicRenderer {
 			renderHologramLine(poseStack, buffer, lx, hy, lz, 1, 1, 1, 1);
 			
 			poseStack.popPose();
+//			globalBuffer.bind();
+//			globalBuffer.upload(globalBuilder.end());
+//			globalBuffer.draw();
+//			VertexBuffer.unbind();
 			
 		});
 		

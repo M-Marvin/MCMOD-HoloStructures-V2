@@ -1,13 +1,14 @@
 {
     "targets": [
 		"holostruct:holographic",
+		"holostruct:holographic2",
         "swap"
     ],
     "passes": [
         {
             "name": "holostruct:color_convolve",
             "intarget": "holostruct:holographic",
-            "outtarget": "minecraft:main",
+            "outtarget": "swap",
             "uniforms": [
                 {
                     "name": "RedMatrix",
@@ -20,6 +21,21 @@
                 {
                     "name": "BlueMatrix",
                     "values": [ 0.0, 0.0, 0.0 ]
+                }
+            ]
+        },
+        {
+            "name": "holostruct:bits",
+            "intarget": "swap",
+            "outtarget": "minecraft:main",
+            "uniforms": [
+                {
+                    "name": "Resolution",
+                    "values": [ 16.0 ]
+                },
+                {
+                    "name": "MosaicSize",
+                    "values": [ 4.0 ]
                 }
             ]
         }

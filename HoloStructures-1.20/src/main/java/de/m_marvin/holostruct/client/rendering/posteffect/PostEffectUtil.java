@@ -19,7 +19,7 @@ public class PostEffectUtil {
 		framebuffer.bindWrite(true);
 	}
 	
-	public static void unbinFramebuffer(RenderTarget framebuffer) {
+	public static void unbindFramebuffer(RenderTarget framebuffer) {
 		framebuffer.unbindWrite();
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 	}
