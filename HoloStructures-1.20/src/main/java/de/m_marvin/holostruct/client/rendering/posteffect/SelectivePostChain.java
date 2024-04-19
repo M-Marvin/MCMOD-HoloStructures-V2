@@ -1,5 +1,14 @@
 package de.m_marvin.holostruct.client.rendering.posteffect;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import org.joml.Matrix4f;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
@@ -10,11 +19,8 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Nullable;
+
+import de.m_marvin.holostruct.HoloStruct;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -25,7 +31,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import org.joml.Matrix4f;
 
 @OnlyIn(Dist.CLIENT)
 public class SelectivePostChain implements AutoCloseable {
@@ -199,7 +204,9 @@ public class SelectivePostChain implements AutoCloseable {
 					} catch (Exception exception) {
 						ChainedJsonException chainedjsonexception1 = ChainedJsonException.forException(exception);
 						chainedjsonexception1.prependJsonKey("uniforms[" + l + "]");
-						throw chainedjsonexception1;
+						/* HS2 Modification: Don't abbort parsing, just throw a warning */
+						HoloStruct.LOGGER.warn("Failed to set uniform!", exception);
+						//throw chainedjsonexception1;
 					}
 
 					++l;

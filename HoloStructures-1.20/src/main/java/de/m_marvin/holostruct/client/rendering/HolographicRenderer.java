@@ -43,9 +43,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
@@ -69,41 +71,15 @@ public class HolographicRenderer {
 	public static final Supplier<BlockRenderDispatcher> BLOCK_RENDERER = () -> Minecraft.getInstance().getBlockRenderer();
 	public static final Supplier<BlockEntityRenderDispatcher> BLOCK_ENTITY_RENDERER = () -> Minecraft.getInstance().getBlockEntityRenderDispatcher();
 	public static final Supplier<EntityRenderDispatcher> ENTITY_RENDERER = () -> Minecraft.getInstance().getEntityRenderDispatcher();
+	public static final Supplier<TextureManager> TEXTURE_MANAGER = () -> Minecraft.getInstance().getTextureManager();
+	public static final Supplier<ResourceManager> RESOURCE_MANAGER = () -> Minecraft.getInstance().getResourceManager();
+	public static final Supplier<RenderTarget> MAIN_FRAMEBUFFER = () -> Minecraft.getInstance().getMainRenderTarget();
+	public static final ResourceLocation HOLOGRAPHIC_TARGET = new ResourceLocation(HoloStruct.MODID, "holographic");
 	
 	protected Int2ObjectMap<HologramRender> hologramRenders = new Int2ObjectArrayMap<>();
+	protected SelectivePostChain activePostEffect;
+	protected RenderTarget activeFramebuffer;
 	
-	public SelectivePostChain postEffect;
-	
-    public void loadEffect(ResourceLocation pResourceLocation) {
-        if (this.postEffect != null) {
-            this.postEffect.close();
-        }
-
-        try {
-            this.postEffect = new SelectivePostChain(Minecraft.getInstance().getTextureManager(), Minecraft.getInstance().getResourceManager(), Minecraft.getInstance().getMainRenderTarget(), pResourceLocation);
-            this.postEffect.resize(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
-        } catch (IOException ioexception) {
-           HoloStruct.LOGGER.warn("Failed to load shader: {}", pResourceLocation, ioexception);
-           this.postEffect = null;
-        } catch (JsonSyntaxException jsonsyntaxexception) {
-        	HoloStruct.LOGGER.warn("Failed to parse shader: {}", pResourceLocation, jsonsyntaxexception);
-            this.postEffect = null;
-        }
-    }
-	
-//    @SubscribeEvent
-//    public static void onReload(AddReloadListenerEvent event) {
-//    	event.addListener((pPreparationBarrier, pResourceManager, pPreparationsProfiler, pReloadProfiler, pBackgroundExecutor, pGameExecutor) -> {
-//    		return CompletableFuture.runAsync(() -> {
-//    			HolographicRenderer renderer = HoloStruct.CLIENT.HOLORENDERER;
-//        		renderer.postEffect = null;
-//    		}).exceptionally(e -> {
-//    			e.printStackTrace();
-//    			return null;
-//    		});
-//    	});
-//    }
-    
 	@SubscribeEvent
 	public static void onRenderLevelLast(RenderLevelStageEvent event) {
 
@@ -112,25 +88,21 @@ public class HolographicRenderer {
 		if (event.getStage() == Stage.AFTER_SKY) {
 			renderer.recompileDirtyChunks();
 			
-//			renderer.postEffect = null;
-			if (renderer.postEffect == null) {
-				renderer.loadEffect(new ResourceLocation("holostruct:shaders/post/creeper.json"));
+			if (renderer.activePostEffect != null) {
+				PostEffectUtil.preparePostEffect(renderer.activePostEffect);
+				PostEffectUtil.clearFramebuffer(renderer.activeFramebuffer);
+				PostEffectUtil.unbinFramebuffer(renderer.activeFramebuffer);
 			}
 			
-			RenderTarget framebuffer = renderer.postEffect.getTempTarget("holostruct:holographic");
-			PostEffectUtil.preparePostEffect(renderer.postEffect);
-			PostEffectUtil.clearFramebuffer(framebuffer);
-			PostEffectUtil.unbinFramebuffer(framebuffer);
-			
 		} else if (event.getStage() == Stage.AFTER_WEATHER) {
-
 			
-			renderer.postEffect.process(0);
+			if (renderer.activePostEffect != null)
+				renderer.activePostEffect.process(event.getPartialTick());
 			
 		} else {
 			
-			RenderTarget framebuffer = renderer.postEffect.getTempTarget("holostruct:holographic");
-			PostEffectUtil.bindFramebuffer(framebuffer);
+			if (renderer.activeFramebuffer != null)
+				PostEffectUtil.bindFramebuffer(renderer.activeFramebuffer);
 			
 			PoseStack poseStack = event.getPoseStack();
 			poseStack.pushPose();
@@ -156,10 +128,31 @@ public class HolographicRenderer {
 			}
 			
 			poseStack.popPose();
-			
-			PostEffectUtil.unbinFramebuffer(framebuffer);
+
+			if (renderer.activeFramebuffer != null)
+				PostEffectUtil.unbinFramebuffer(renderer.activeFramebuffer);
 			
 		}
+	}
+	
+	public void loadPostEffect(ResourceLocation postEffect) {
+		RenderSystem.recordRenderCall(() -> {
+			if (this.activePostEffect != null) {
+				this.activePostEffect.close();
+				this.activeFramebuffer = null;
+			}
+			
+			try {
+				this.activePostEffect = new SelectivePostChain(TEXTURE_MANAGER.get(), RESOURCE_MANAGER.get(), MAIN_FRAMEBUFFER.get(), postEffect);
+				this.activeFramebuffer = this.activePostEffect.getTempTarget(HOLOGRAPHIC_TARGET.toString());
+			} catch (IOException e) {
+				HoloStruct.LOGGER.warn("Failed to load holographic post effect: {}", postEffect, e);
+				this.activePostEffect = null;
+			} catch (JsonSyntaxException e) {
+				HoloStruct.LOGGER.warn("Failed to parse holographic post effect: {}", postEffect, e);
+				this.activePostEffect = null;
+			}
+		});
 	}
 	
 	public void markDirty(Hologram hologram, ChunkPos pos, int section) {

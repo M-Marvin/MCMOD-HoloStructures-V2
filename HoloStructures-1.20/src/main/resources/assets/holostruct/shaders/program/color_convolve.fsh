@@ -37,5 +37,5 @@ void main() {
     OutColor = (Chroma * Saturation) + Luma;
 	
     gl_FragDepth = InDepth;
-    fragColor = vec4(OutColor, 1.0);
+    fragColor = vec4(OutColor, InTexel.a);
 }

@@ -9,6 +9,8 @@ import org.lwjgl.opengl.GL30;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -89,6 +91,9 @@ public class SelectivePostPass implements AutoCloseable {
 		
 		/* HS2 Modification: Dont use GL_ALWAS, we want depth testing to work when adding stuff */
 		RenderSystem.depthFunc(GL30.GL_LESS);
+		/* HS2 Modification: Enable blend */
+		RenderSystem.enableBlend();
+		RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 		
 		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
 		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);

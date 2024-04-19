@@ -1,6 +1,7 @@
 package de.m_marvin.holostruct.client.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.blueprints.api.Blueprint;
@@ -14,6 +15,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public class HologramCommand {
 	
@@ -84,9 +86,31 @@ public class HologramCommand {
 								)
 						)
 				)
+		)
+		.then(
+				Commands.literal("effect")
+				.then(
+						Commands.argument("effect", StringArgumentType.string())
+						.executes(source ->
+								changePostEffect(source, StringArgumentType.getString(source, "effect"))
+						)
+				)
 		));
 	}
 
+	public static int changePostEffect(CommandContext<CommandSourceStack> source, String postEffectName) {
+		
+		// TODO command only for debugging
+		try {
+			ResourceLocation effect = new ResourceLocation(postEffectName);
+			HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(effect);
+		} catch (Throwable e) {
+			return 0;
+		}
+		return 1;
+		
+	}
+	
 	public static int changePosition(CommandContext<CommandSourceStack> source, String hologramName, BlockPos position) {
 		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.getHologram(hologramName);
 		if (hologram == null) {
