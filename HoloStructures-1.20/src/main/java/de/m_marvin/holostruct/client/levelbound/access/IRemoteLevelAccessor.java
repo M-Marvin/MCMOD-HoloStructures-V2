@@ -1,9 +1,11 @@
 package de.m_marvin.holostruct.client.levelbound.access;
 
 import de.m_marvin.blueprints.api.IStructAccessor;
+import de.m_marvin.holostruct.client.holograms.IFakeLevelAccess;
+import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.univec.impl.Vec3i;
 
-public interface ILevelAccessor extends IStructAccessor {
+public interface IRemoteLevelAccessor extends IStructAccessor, IFakeLevelAccess {
 
 	@Override
 	public default void setOffset(Vec3i offset) {}
@@ -36,5 +38,7 @@ public interface ILevelAccessor extends IStructAccessor {
 	
 	@Override
 	default void clearParseLogs() {}
+
+	public AccessLevel getAccessLevel();
 	
 }

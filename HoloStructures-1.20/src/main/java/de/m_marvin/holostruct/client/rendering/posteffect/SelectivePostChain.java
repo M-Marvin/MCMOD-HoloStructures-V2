@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -22,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.m_marvin.holostruct.HoloStruct;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.EffectInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -45,8 +47,13 @@ public class SelectivePostChain implements AutoCloseable {
 	private int screenHeight;
 	private float time;
 	private float lastStamp;
-
+	private Consumer<EffectInstance> shaderConfigurator;
+	
 	public SelectivePostChain(TextureManager pTextureManager, ResourceManager pResourceManager, RenderTarget pScreenTarget, ResourceLocation pName) throws IOException, JsonSyntaxException {
+		this(pTextureManager, pResourceManager, pScreenTarget, pName, null);
+	}
+	
+	public SelectivePostChain(TextureManager pTextureManager, ResourceManager pResourceManager, RenderTarget pScreenTarget, ResourceLocation pName, Consumer<EffectInstance> shaderConfigurator) throws IOException, JsonSyntaxException {
 		this.resourceManager = pResourceManager;
 		this.screenTarget = pScreenTarget;
 		this.time = 0.0F;
@@ -54,6 +61,7 @@ public class SelectivePostChain implements AutoCloseable {
 		this.screenWidth = pScreenTarget.viewWidth;
 		this.screenHeight = pScreenTarget.viewHeight;
 		this.name = pName.toString();
+		this.shaderConfigurator = shaderConfigurator;
 		this.updateOrthoMatrix();
 		this.load(pTextureManager, pName);
 	}
@@ -285,7 +293,7 @@ public class SelectivePostChain implements AutoCloseable {
 
 	public SelectivePostPass addPass(String pProgramName, RenderTarget pFramebuffer, RenderTarget pFramebufferOut) throws IOException {
 		/* HS2 Modification: Use selective post pass */
-		SelectivePostPass postpass = new SelectivePostPass(this.resourceManager, pProgramName, pFramebuffer, pFramebufferOut);
+		SelectivePostPass postpass = new SelectivePostPass(this.resourceManager, pProgramName, pFramebuffer, pFramebufferOut, this.shaderConfigurator);
 		this.passes.add(this.passes.size(), postpass);
 		return postpass;
 	}
@@ -321,7 +329,7 @@ public class SelectivePostChain implements AutoCloseable {
 		while(this.time > 20.0F) {
 			this.time -= 20.0F;
 		}
-
+		
 		for(SelectivePostPass postpass : this.passes) {
 			postpass.process(this.time / 20.0F);
 		}

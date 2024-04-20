@@ -5,7 +5,7 @@
         "dstrgb": "1-srcalpha"
     },
     "vertex": "holostruct:base",
-    "fragment": "holostruct:sobel",
+    "fragment": "holostruct:base",
     "attributes": [ "Position" ],
     "samplers": [
         { "name": "DiffuseSampler" },

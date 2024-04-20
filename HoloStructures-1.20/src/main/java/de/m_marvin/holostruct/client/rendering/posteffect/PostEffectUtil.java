@@ -8,6 +8,7 @@ public class PostEffectUtil {
 	
 	public static void preparePostEffect(SelectivePostChain postEffect) {
 		postEffect.resize(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 	}
 	
 	public static void clearFramebuffer(RenderTarget framebuffer) {	

@@ -103,7 +103,11 @@ public class HologramCommand {
 		// TODO command only for debugging
 		try {
 			ResourceLocation effect = new ResourceLocation(postEffectName);
-			HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(effect);
+			if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(effect)) {
+				source.getSource().sendFailure(Component.literal("Failed to apply shader!"));
+				return 0;
+			}
+			source.getSource().sendSuccess(() -> Component.literal("Applied shader"), false);
 		} catch (Throwable e) {
 			return 0;
 		}

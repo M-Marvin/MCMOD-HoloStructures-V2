@@ -1,36 +1,58 @@
 package de.m_marvin.holostruct.client.levelbound;
 
-import de.m_marvin.holostruct.client.levelbound.access.ILevelAccessor;
+import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
 
 public class Levelbound {
 	
 	public static enum AccessLevel {
-		NO_ACCESS(),
-		READ_CLIENT(),
-		FULL_CLIENT(),
-		READ_SERVER(),
-		FULL_SERVER();
+		NO_ACCESS(false, false, false),
+		READ_CLIENT(true, false, false),
+		COPY_CLIENT(true, true, false),
+		FULL_CLIENT(true, true, true),
+		READ_SERVER(true, false, false),
+		COPY_SERVER(true, true, false),
+		FULL_SERVER(true, true, true);
+		
+		private boolean hasRead;
+		private boolean hasCopy;
+		private boolean hasWrite;
+		
+		private AccessLevel(boolean hasRead, boolean hasCopy, boolean hasWrite) {
+			this.hasRead = hasRead;
+			this.hasCopy = hasCopy;
+			this.hasWrite = hasWrite;
+		}
+		
+		public boolean hasRead() {
+			return this.hasRead;
+		}
+		
+		public boolean hasCopy() {
+			return this.hasCopy;
+		}
+		
+		public boolean hasWrite() {
+			return this.hasWrite;
+		}
 	}
 	
-	private AccessLevel accessLevel;
-	private ILevelAccessor accessor;
+	private IRemoteLevelAccessor accessor;
 	
 	public Levelbound() {
-		this.accessLevel = AccessLevel.NO_ACCESS;
 		this.accessor = new NoAccessAccessor();
 	}
 	
-	public void setAccess(ILevelAccessor accessor, AccessLevel accessLevel) {
+	public void setAccess(IRemoteLevelAccessor accessor) {
 		this.accessor = accessor;
 	}
 
 	public AccessLevel getAccessLevel() {
-		return accessLevel;
+		return this.accessor.getAccessLevel();
 	}
 	
-	public ILevelAccessor getAccessor() {
-		return accessor;
+	public IRemoteLevelAccessor getAccessor() {
+		return this.accessor;
 	}
 	
 }

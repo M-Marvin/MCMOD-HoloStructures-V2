@@ -16,7 +16,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 @Mod(HoloStruct.MODID)
-@Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE)
+//@Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE)
 public class HoloStruct {
 	
 	public static final String MODID = "holostruct";
@@ -36,10 +36,10 @@ public class HoloStruct {
 		return INSTANCE;
 	}
 	
-	@SubscribeEvent
-	public static void onServerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-		CLIENT.LEVELBOUND.setAccess(new ClientLevelAccessorImpl(Minecraft.getInstance()), AccessLevel.FULL_CLIENT);
-	}
+//	@SubscribeEvent
+//	public static void onServerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+////		CLIENT.LEVELBOUND.setAccess(new ClientLevelAccessorImpl(Minecraft.getInstance()), AccessLevel.FULL_CLIENT);
+//	}
 	
 	/* TODO */
 	// Schem format mit Mod-Blöcken die fehlen

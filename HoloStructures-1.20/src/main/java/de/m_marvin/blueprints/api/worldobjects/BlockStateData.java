@@ -1,6 +1,8 @@
 package de.m_marvin.blueprints.api.worldobjects;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -8,6 +10,8 @@ import java.util.Objects;
 import de.m_marvin.blueprints.api.RegistryName;
 
 public class BlockStateData {
+	
+	public static final List<RegistryName> AIR_BLOCKS = Arrays.asList(new RegistryName("minecraft:air"), new RegistryName("minecraft:void_air"), new RegistryName("minecraft:cave_air"));
 	
 	protected RegistryName blockName;
 	protected Map<String, String> properties = new HashMap<>();
@@ -30,6 +34,10 @@ public class BlockStateData {
 	
 	public Map<String, String> getProperties() {
 		return properties;
+	}
+	
+	public boolean isAir() {
+		return AIR_BLOCKS.contains(this.blockName);
 	}
 	
 	public BlockStateData copy() {

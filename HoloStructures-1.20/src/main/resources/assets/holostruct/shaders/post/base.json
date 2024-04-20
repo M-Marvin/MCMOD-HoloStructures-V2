@@ -1,0 +1,13 @@
+{
+    "targets": [
+		"holostruct:holographic"
+    ],
+    "passes": [
+        {
+            "name": "holostruct:base",
+            "intarget": "holostruct:holographic",
+            "outtarget": "minecraft:main",
+            "uniforms": []
+        }
+    ]
+}

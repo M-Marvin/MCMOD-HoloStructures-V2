@@ -3,8 +3,11 @@ package de.m_marvin.holostruct.client.holograms;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
+import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
+import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,6 +26,24 @@ public enum BlockHoloState {
 		this.colorGreen = g;
 		this.colorBlue = b;
 		this.colorAlpha = a;
+	}
+	
+	public static BlockHoloState getHoloState(BlockStateData targetState, BlockStateData holoState, BlockEntityData targetBlockEntity, BlockEntityData holoBlockEntity) {
+		if (holoState.isAir()) {
+			return BlockHoloState.CORRECT_BLOCK;
+		} else if (targetState.isAir()) {
+			return BlockHoloState.NO_BLOCK;
+		} else if (!targetState.getBlockName().equals(holoState.getBlockName())) {
+			return BlockHoloState.WRONG_BLOCK;
+		} else if (!targetState.equals(holoState)) {
+			return BlockHoloState.WRONG_STATE;
+		} else {
+			if (Objects.equal(targetBlockEntity, holoBlockEntity)) {
+				return BlockHoloState.CORRECT_BLOCK;
+			} else {
+				return BlockHoloState.WRONG_DATA;
+			}
+		}
 	}
 	
 	public static BlockHoloState getHoloState(BlockState holoState, Optional<BlockEntity> holoBlockEntity, BlockState realState, Optional<BlockEntity> realBlockEntity) {

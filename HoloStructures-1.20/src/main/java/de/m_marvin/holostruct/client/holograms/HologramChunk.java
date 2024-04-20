@@ -82,6 +82,11 @@ public class HologramChunk {
 		}
 		return Optional.ofNullable(section);
 	}
+
+	public void setHoloState(BlockPos position, BlockHoloState state) {
+		Optional<HologramSection> section = getAvailableSection(position.getY());
+		if (section.isPresent()) section.get().setHoloState(position.getX() & 15, position.getY() & 15, position.getZ() & 15, state);
+	}
 	
 	public BlockHoloState getHoloState(BlockPos position) {
 		Optional<HologramSection> section = getAvailableSection(position.getY());

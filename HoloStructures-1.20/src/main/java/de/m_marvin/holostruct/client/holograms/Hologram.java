@@ -5,12 +5,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.google.common.base.Objects;
+
+import de.m_marvin.blueprints.api.IStructAccessor;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
-import de.m_marvin.holostruct.client.levelbound.access.ILevelAccessor;
+import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
+import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -28,7 +32,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-public class Hologram implements ILevelAccessor, IFakeLevelAccess {
+public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	
 	public BlockPos boundsMax;
 	public BlockPos boundsMin;
@@ -190,6 +194,38 @@ public class Hologram implements ILevelAccessor, IFakeLevelAccess {
 		this.chunks.keySet().forEach(lp -> markChunkDirty(new ChunkPos(lp)));
 	}
 	
+	public void setHoloState(BlockPos position, BlockHoloState state) {
+		Optional<HologramChunk> chunk = getChunkAt(position);
+		if (chunk.isPresent()) chunk.get().setHoloState(position, state);
+	}
+
+	public void setHoloState(Vec3i position, BlockHoloState state) {
+		setHoloState(new BlockPos(position.x, position.y, position.z), state);
+	}
+	
+	public BlockHoloState getHoloState(Vec3i position) {
+		return getHoloState(new BlockPos(position.x, position.y, position.z));
+	}
+
+	public BlockHoloState getHoloState(BlockPos position) {
+		Optional<HologramChunk> chunk = getChunkAt(position);
+		if (chunk.isPresent()) return chunk.get().getHoloState(position);
+		return BlockHoloState.CORRECT_BLOCK;
+	}
+	
+	public void updateHoloStateAt(IStructAccessor target, Vec3i targetOffset, Vec3i holoPos) {
+		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition())).sub(targetOffset);
+		BlockStateData targetState = target.getBlock(targetPos);
+		BlockStateData holoState = getBlock(holoPos);
+		BlockEntityData targetBE = target.getBlockEntity(targetPos);
+		BlockEntityData holoBE = getBlockEntity(holoPos);
+		BlockHoloState state = BlockHoloState.getHoloState(targetState, holoState, targetBE, holoBE);
+		if (getHoloState(holoPos) != state) {
+			setHoloState(holoPos, state);
+			markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
+		}
+	}
+	
 	/* standard level accessing methods */
 	
 	public void setBlock(BlockPos position, BlockState state) {
@@ -199,6 +235,7 @@ public class Hologram implements ILevelAccessor, IFakeLevelAccess {
 		if (chunk.get().isEmpty()) discardChunk(chunk.get());
 		markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 		this.updateBounds = true;
+		// TODO holostates
 	}
 	
 	public BlockState getBlock(BlockPos position) {
@@ -214,13 +251,13 @@ public class Hologram implements ILevelAccessor, IFakeLevelAccess {
 			blockentity.setLevel(this.level);
 			markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 			this.updateBounds = true;
-			
+			// TODO holostates
 		}
 	}
 	
 	public BlockEntity getBlockEntity(BlockPos position) {
 		Optional<HologramChunk> chunk = getChunkAt(position);
-		if (chunk.isPresent()) return chunk.get().getBlockEntity(position).orElseGet(null);
+		if (chunk.isPresent()) return chunk.get().getBlockEntity(position).orElseGet(() -> null);
 		return null;
 	}
 	
@@ -303,20 +340,36 @@ public class Hologram implements ILevelAccessor, IFakeLevelAccess {
 	public Collection<EntityData> getEntitiesWithin(Vec3i min, Vec3i max) {
 		return this.getEntitiesInBounds(new AABB(min.x, min.y, min.z, max.x, max.y, max.z)).stream().map(TypeConverter::entity2data).toList();
 	}
+
+	@Override
+	public void copyTo(IStructAccessor target) {
+		target.setBounds(getBoundsMin(), getBoundsMax());
+		target.setOffset(getOffset());
+		this.chunks.forEach((lp, chunk) -> {
+			ChunkPos chunkpos = new ChunkPos(lp);
+			chunk.sections.forEach((yi, section) -> {
+				Vec3i sectionpos = new Vec3i(chunkpos.getMinBlockX(), yi << 4, chunkpos.getMinBlockZ());
+				section.states.forEach((blp, state) -> {
+					Vec3i pos = sectionpos.add(Vec3i.fromVec(BlockPos.of(blp)));
+					target.setBlock(pos, TypeConverter.blockState2data(state));
+				});
+			});
+			chunk.blockentities.forEach((p, blockEntity) -> {
+				Vec3i pos = new Vec3i(chunkpos.getMinBlockX(), 0, chunkpos.getMinBlockZ()).add(Vec3i.fromVec(p));
+				target.setBlockEntity(pos, TypeConverter.blockEntity2data(blockEntity));
+			});
+		});
+		target.addEntities(this.getEntities());
+	}
+	
+	@Override
+	public void clearParseLogs() {}
+
+	@Override
+	public void logParseWarn(String errorMessage) {}
 	
 	/* end of accessors */
 	
-	public void markDirty(ChunkPos chunk, int section) {
-		HoloStruct.CLIENT.HOLORENDERER.markDirty(null, chunk, section);
-	}
-	
-	public void refreshAllChunks() {
-		this.chunks.forEach((lp, chunk) -> 
-			chunk.getSections().forEach((yi, section) ->
-				markDirty(chunk.position, yi)
-			)
-		);
-	}
 	
 	
 	

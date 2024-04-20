@@ -1,0 +1,76 @@
+{
+    "targets": [
+		"holostruct:holographic/no_block",
+		"holostruct:holographic/wrong_block",
+		"holostruct:holographic/wrong_state",
+		"holostruct:holographic/wrong_data",
+        "swap"
+    ],
+    "passes": [
+		{
+			"name": "holostruct:color_convolve",
+			"intarget": "holostruct:holographic/wrong_state",
+			"outtarget": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.3, 0.59, 0.11 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.5 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:color_convolve",
+			"intarget": "holostruct:holographic/wrong_block",
+			"outtarget": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.3, 0.59, 0.11 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.5 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:color_convolve",
+			"intarget": "holostruct:holographic/no_block",
+			"outtarget": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.8, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.8, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.8 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:scanline",
+			"intarget": "swap",
+			"outtarget": "minecraft:main",
+			"uniforms": [
+				
+			]
+		}
+    ]
+}

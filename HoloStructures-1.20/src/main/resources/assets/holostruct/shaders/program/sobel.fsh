@@ -1,6 +1,7 @@
 #version 150
 
 uniform sampler2D DiffuseSampler;
+uniform sampler2D DepthSampler;
 
 in vec2 texCoord;
 in vec2 oneTexel;
@@ -18,5 +19,6 @@ void main(){
     vec4 upDiff    = center - up;
     vec4 downDiff  = center - down;
     vec4 total = clamp(leftDiff + rightDiff + upDiff + downDiff, 0.0, 1.0);
-    fragColor = vec4(total.rgb, 1.0);
+    gl_FragDepth = texture(DepthSampler, texCoord).x;
+    fragColor = vec4(total.rgb, center.a);
 }
