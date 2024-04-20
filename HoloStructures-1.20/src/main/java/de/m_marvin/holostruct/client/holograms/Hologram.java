@@ -5,15 +5,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.google.common.base.Objects;
-
 import de.m_marvin.blueprints.api.IStructAccessor;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
-import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -213,17 +210,17 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		return BlockHoloState.CORRECT_BLOCK;
 	}
 	
-	public void updateHoloStateAt(IStructAccessor target, Vec3i targetOffset, Vec3i holoPos) {
+	public void updateHoloStateAt(IRemoteLevelAccessor target, Vec3i targetOffset, Vec3i holoPos) {
 		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition())).sub(targetOffset);
 		BlockStateData targetState = target.getBlock(targetPos);
 		BlockStateData holoState = getBlock(holoPos);
-		BlockEntityData targetBE = target.getBlockEntity(targetPos);
 		BlockEntityData holoBE = getBlockEntity(holoPos);
+		BlockEntityData targetBE = target.getAccessLevel().hasCopy() ? target.getBlockEntity(targetPos) : holoBE;
 		BlockHoloState state = BlockHoloState.getHoloState(targetState, holoState, targetBE, holoBE);
-		if (getHoloState(holoPos) != state) {
+		//if (getHoloState(holoPos) != state) { TODO check if neccessarry
 			setHoloState(holoPos, state);
 			markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
-		}
+		//}
 	}
 	
 	/* standard level accessing methods */
@@ -369,38 +366,5 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	public void logParseWarn(String errorMessage) {}
 	
 	/* end of accessors */
-	
-	
-	
-	
-	// TODO propably deprecated methods
-	
-//	public void updateAllHoloBlockStates() {
-//		this.chunks.keySet().forEach((chunkLong) -> {
-//			updateChunkHoloBlockStates(new ChunkPos(chunkLong));
-//		});
-//	}
-//	
-//	public void updateChunkHoloBlockStates(ChunkPos chunkPos) {
-//		Optional<HologramChunk> chunk = getChunk(chunkPos);
-//		if (chunk.isPresent()) {
-//			BlockPos chunkPosition = this.position.offset(chunkPos.x << 4, 0, chunkPos.z << 4);
-//			chunk.get().getSections().forEach((positionIndex, section) -> {
-//				BlockPos sectionPosition = chunkPosition.offset(0, positionIndex << 4, 0);
-//				section.getStates().forEach((positionLong, holoBlockState) -> {
-//					BlockHoloState holoState = null;
-//					if (!holoBlockState.isAir()) {
-//						BlockPos worldPosition = sectionPosition.offset(BlockPos.getX(positionLong), BlockPos.getY(positionLong), BlockPos.getZ(positionLong));
-//						BlockState realBlockState = this.level.getBlockState(worldPosition);
-//						Optional<BlockEntity> holoBlockEntity = chunk.get().getBlockEntity(worldPosition);
-//						Optional<BlockEntity> realBlockEntity = Optional.ofNullable(this.level.getBlockEntity(worldPosition));
-//						holoState = BlockHoloState.getHoloState(holoBlockState, holoBlockEntity, realBlockState, realBlockEntity);
-//					}
-//					section.getHoloStates().put((long) positionLong, holoState);
-//				});
-//			});
-//			refreshChunk(chunkPos);
-//		}
-//	}
 	
 }

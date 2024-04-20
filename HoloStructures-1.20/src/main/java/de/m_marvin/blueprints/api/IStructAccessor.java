@@ -16,6 +16,13 @@ public interface IStructAccessor {
 	public Vec3i getBoundsMin();
 	public Vec3i getBoundsMax();
 	
+	public default boolean isInBounds(Vec3i position) {
+		Vec3i min = getBoundsMin();
+		Vec3i max = getBoundsMax().sub(new Vec3i(1, 1, 1));
+		return	min.min(position).equals(min) &&
+				max.max(position).equals(max);
+	}
+	
 	public void setBlock(Vec3i position, BlockStateData state);
 	public BlockStateData getBlock(Vec3i position);
 	

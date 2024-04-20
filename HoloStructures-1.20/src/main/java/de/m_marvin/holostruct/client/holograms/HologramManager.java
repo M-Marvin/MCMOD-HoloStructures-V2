@@ -62,15 +62,8 @@ public class HologramManager {
 		if (!HoloStruct.CLIENT.LEVELBOUND.getAccessLevel().hasRead()) return;
 		getHolograms().values().forEach(hologram -> {
 			Vec3i holoPosition = Vec3i.fromVec(position.subtract(hologram.getPosition()));
+			if (!hologram.isInBounds(holoPosition)) return;
 			hologram.updateHoloStateAt(HoloStruct.CLIENT.LEVELBOUND.getAccessor(), new Vec3i(0, 0, 0), holoPosition);
-			
-//			BlockPos holoPos = position.subtract(hologram.getPosition());
-//			Optional<HologramChunk> chunk = hologram.getChunkAt(holoPos);
-//			if (chunk.isPresent()) {
-//				ChunkPos chunkpos = chunk.get().getPosition();
-//				int section = holoPos.getY() >> 4;
-//				hologram.markSectionDirty(chunkpos, section);
-//			}
 		});
 	}
 	

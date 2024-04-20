@@ -1,9 +1,9 @@
 package de.m_marvin.holostruct.client.rendering;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.RenderType;
 
 public class HologramBufferContainer {
 
-	private static Set<RenderType> allocatedTypes = new HashSet<>();
+	private static Set<RenderType> allocatedTypes = new CopyOnWriteArraySet<>();
 	private Map<BlockHoloState, HolographicBufferSource> renderBuilders;
 	
 	public HologramBufferContainer(Supplier<HolographicBufferSource> bufferSourceSource) {

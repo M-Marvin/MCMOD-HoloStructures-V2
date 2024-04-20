@@ -1,7 +1,6 @@
 package de.m_marvin.holostruct.client.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.blueprints.api.Blueprint;
@@ -15,7 +14,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
 public class HologramCommand {
 	
@@ -86,35 +84,9 @@ public class HologramCommand {
 								)
 						)
 				)
-		)
-		.then(
-				Commands.literal("effect")
-				.then(
-						Commands.argument("effect", StringArgumentType.string())
-						.executes(source ->
-								changePostEffect(source, StringArgumentType.getString(source, "effect"))
-						)
-				)
 		));
 	}
 
-	public static int changePostEffect(CommandContext<CommandSourceStack> source, String postEffectName) {
-		
-		// TODO command only for debugging
-		try {
-			ResourceLocation effect = new ResourceLocation(postEffectName);
-			if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(effect)) {
-				source.getSource().sendFailure(Component.literal("Failed to apply shader!"));
-				return 0;
-			}
-			source.getSource().sendSuccess(() -> Component.literal("Applied shader"), false);
-		} catch (Throwable e) {
-			return 0;
-		}
-		return 1;
-		
-	}
-	
 	public static int changePosition(CommandContext<CommandSourceStack> source, String hologramName, BlockPos position) {
 		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.getHologram(hologramName);
 		if (hologram == null) {
@@ -190,24 +162,5 @@ public class HologramCommand {
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.created", hologramName), false);
 		return 1;
 	}
-	
-//	public static int loadBlueprint(CommandContext<CommandSourceStack> source, String blueprintPath, String blueprintName) {
-//		File blueprintFile = UtilHelper.resolvePath(blueprintPath);
-//		if (!blueprintFile.exists()) {
-//			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.load.nofile", blueprintPath));
-//			return 0;
-//		}
-//		
-//		Blueprint blueprint = BlueprintLoader.loadBlueprint(blueprintFile);
-//		if (blueprint == null) {
-//			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.load.invalidfile", blueprintPath));
-//			return 0;
-//		}
-//		
-//		HoloStructures.CLIENT.BLUEPRINTS.setLoadedBlueprint(blueprintName, blueprint);
-//		
-//		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.load.loaded", blueprintName), false);
-//		return 1;
-//	}
 	
 }

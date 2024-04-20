@@ -29,10 +29,8 @@ public enum BlockHoloState {
 	}
 	
 	public static BlockHoloState getHoloState(BlockStateData targetState, BlockStateData holoState, BlockEntityData targetBlockEntity, BlockEntityData holoBlockEntity) {
-		if (holoState.isAir()) {
+		if (holoState.isAir() && targetState.isAir()) {
 			return BlockHoloState.CORRECT_BLOCK;
-		} else if (targetState.isAir()) {
-			return BlockHoloState.NO_BLOCK;
 		} else if (!targetState.getBlockName().equals(holoState.getBlockName())) {
 			return BlockHoloState.WRONG_BLOCK;
 		} else if (!targetState.equals(holoState)) {

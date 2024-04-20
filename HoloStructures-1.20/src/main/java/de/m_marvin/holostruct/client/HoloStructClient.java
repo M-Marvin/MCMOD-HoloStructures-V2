@@ -2,12 +2,17 @@ package de.m_marvin.holostruct.client;
 
 import java.util.concurrent.Executor;
 
+import org.spongepowered.asm.mixin.injection.Inject;
+
+import com.google.j2objc.annotations.ReflectionSupport.Level;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.BlueprintManager;
 import de.m_marvin.holostruct.client.commands.BlueprintCommand;
+import de.m_marvin.holostruct.client.commands.DebugCommand;
 import de.m_marvin.holostruct.client.commands.HologramCommand;
+import de.m_marvin.holostruct.client.event.ClientBlockEvent;
 import de.m_marvin.holostruct.client.holograms.HologramManager;
 import de.m_marvin.holostruct.client.levelbound.Levelbound;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
@@ -22,6 +27,9 @@ import net.neoforged.fml.common.Mod.EventBusSubscriber.Bus;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ChunkDataEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 
 @Mod.EventBusSubscriber(modid=HoloStruct.MODID, value=Dist.CLIENT, bus=Bus.FORGE)
 public class HoloStructClient {
@@ -42,13 +50,12 @@ public class HoloStructClient {
 	public static final void onCommandsRegister(RegisterClientCommandsEvent event) {
 		BlueprintCommand.register(event.getDispatcher());
 		HologramCommand.register(event.getDispatcher());
+		DebugCommand.register(event.getDispatcher());
 	}
 	
 	@SubscribeEvent
-	public static void onBlockChange(net.neoforged.neoforge.event.VanillaGameEvent event) {
-		BlockPos position = event.getPos();
-		System.out.println("UPDATE AT " + position);
-//		HoloStruct.CLIENT.HOLOGRAMS.updateHoloSectionAt(position);
+	public static void onBlockChange(ClientBlockEvent event) {
+		HoloStruct.CLIENT.HOLOGRAMS.updateHoloSectionAt(event.getPosition());
 	}
 	
 	@SubscribeEvent
