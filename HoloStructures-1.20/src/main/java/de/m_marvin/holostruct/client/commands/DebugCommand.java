@@ -20,7 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 public class DebugCommand {
 	
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-		dispatcher.register(Commands.literal("holodebug")
+		dispatcher.register(Commands.literal("debug_hs2")
 		.then(
 				Commands.literal("framedump")
 				.then(

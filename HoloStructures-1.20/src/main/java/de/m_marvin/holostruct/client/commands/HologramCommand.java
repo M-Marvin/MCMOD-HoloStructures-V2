@@ -1,6 +1,7 @@
 package de.m_marvin.holostruct.client.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.blueprints.api.Blueprint;
@@ -84,9 +85,40 @@ public class HologramCommand {
 								)
 						)
 				)
+		).then(
+				Commands.literal("layermode")
+				.then(
+						Commands.literal("enable")
+						.executes(source ->
+								layerMode(source, true, (int) Math.floor(source.getSource().getPosition().y))
+						)
+						.then(
+								Commands.argument("layer", IntegerArgumentType.integer())
+								.executes(source -> 
+										layerMode(source, true, IntegerArgumentType.getInteger(source, "layer"))
+								)
+						)
+				)
+				.then(
+						Commands.literal("disable")
+						.executes(source ->
+								layerMode(source, false, 0)
+						)
+				)
 		));
 	}
 
+	public static int layerMode(CommandContext<CommandSourceStack> source, boolean layerMode, int layer) {
+		HoloStruct.CLIENT.HOLOGRAMS.setOneLayerMode(layerMode);
+		if (layerMode) {
+			HoloStruct.CLIENT.HOLOGRAMS.setActiveLayer(layer);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.layermode.enabled", layer), false);
+		} else {
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.layermode.disabled"), false);
+		}
+		return 1;
+	}
+	
 	public static int changePosition(CommandContext<CommandSourceStack> source, String hologramName, BlockPos position) {
 		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.getHologram(hologramName);
 		if (hologram == null) {
@@ -95,6 +127,7 @@ public class HologramCommand {
 		}
 		
 		hologram.setPosition(position);
+		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.position.changed", hologramName, position.getX(), position.getY(), position.getZ()), false);
 		return 1;
@@ -158,6 +191,8 @@ public class HologramCommand {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.create.failed", hologramName));
 			return 0;
 		}
+		
+		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.created", hologramName), false);
 		return 1;

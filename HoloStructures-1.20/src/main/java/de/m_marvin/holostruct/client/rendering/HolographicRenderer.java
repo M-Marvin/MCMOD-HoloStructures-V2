@@ -23,6 +23,7 @@ import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.holograms.BlockHoloState;
 import de.m_marvin.holostruct.client.holograms.Hologram;
 import de.m_marvin.holostruct.client.holograms.HologramChunk;
+import de.m_marvin.holostruct.client.holograms.HologramManager;
 import de.m_marvin.holostruct.client.holograms.HologramSection;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.rendering.HologramBufferContainer.HolographicBufferSource;
@@ -71,6 +72,7 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 @Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
 public class HolographicRenderer {
 	
+	public static final Supplier<HologramManager> HOLOGRAM_MANAGER = () -> HoloStruct.CLIENT.HOLOGRAMS;
 	public static final Supplier<Camera> CAMERA = () -> Minecraft.getInstance().gameRenderer.getMainCamera();
 	public static final Supplier<BlockRenderDispatcher> BLOCK_RENDERER = () -> Minecraft.getInstance().getBlockRenderer();
 	public static final Supplier<BlockEntityRenderDispatcher> BLOCK_ENTITY_RENDERER = () -> Minecraft.getInstance().getBlockEntityRenderDispatcher();
@@ -310,11 +312,15 @@ public class HolographicRenderer {
 		
 		PoseStack poseStack = new PoseStack();
 		BlockEntityRenderDispatcher blockEntityRenderer = BLOCK_ENTITY_RENDERER.get();
+		HologramManager hologramManager = HOLOGRAM_MANAGER.get();
 		
 		blockEntities.forEach(blockEntity -> {
 			
 			BlockPos holoPos = blockEntity.getBlockPos();
 			BlockPos worldPos = hologramPosition.offset(holoPos);
+			
+			if (worldPos.getY() != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) return;
+			
 			BlockHoloState holoState = section.getHoloState(holoPos.getX(), holoPos.getY(), holoPos.getZ());
 			
 			MultiBufferSource bufferSource = bufferContainer.getBufferSource(holoState);
@@ -339,11 +345,14 @@ public class HolographicRenderer {
 		
 		PoseStack poseStack = new PoseStack();
 		EntityRenderDispatcher entityRenderer = ENTITY_RENDERER.get();
+		HologramManager hologramManager = HOLOGRAM_MANAGER.get();
 		
 		entities.forEach(entity -> {
 			
 			Vec3 holoPos = entity.position();
 			Vec3 worldPos = holoPos.add(hologramPosition.getX(), hologramPosition.getY(), hologramPosition.getZ());
+			
+			if ((int) Math.floor(worldPos.y) != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) return;
 			
 			MultiBufferSource bufferSource = bufferContainer.getBufferSource(BlockHoloState.NO_BLOCK); // Currently entities do not support detecting of correct placement
 			EntityRenderer<? super Entity> renderer = entityRenderer.getRenderer(entity);
@@ -366,6 +375,7 @@ public class HolographicRenderer {
 		
 		PoseStack poseStack = new PoseStack();
 		BlockRenderDispatcher blockRenderer = BLOCK_RENDERER.get();
+		HologramManager hologramManager = HOLOGRAM_MANAGER.get();
 		RandomSource random = RandomSource.create();
 		
 		int posY = yindex << 4;
@@ -375,6 +385,9 @@ public class HolographicRenderer {
 				for (int x = 0; x < 16; x++) {
 					BlockPos holoPos = new BlockPos(chunkPos.getMinBlockX() + x, posY + y, chunkPos.getMinBlockX() + z);
 					BlockPos worldPos = hologramPosition.offset(holoPos);
+					
+					if (worldPos.getY() != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) continue;
+					
 					BlockState state = section.getState(x, y, z);
 					BlockHoloState holoState = section.getHoloState(x, y, z);
 
@@ -504,13 +517,14 @@ public class HolographicRenderer {
 						}
 						BlockHoloState.renderedStates().forEach((holoState) -> {
 							
+							if (!section.hasBufferFor(holoState, renderLayer)) return;
+							
 							RenderTarget framebuffer = null;
 							if (this.activePostEffect != null) {
 								framebuffer = this.activePostEffect.getTempTarget(HOLOGRAPHIC_TARGET.get(holoState).toString());
 								if (framebuffer != null) PostEffectUtil.bindFramebuffer(framebuffer);
 							}
 							
-							if (!section.hasBufferFor(holoState, renderLayer)) return;
 							section.bindBuffer(holoState, renderLayer).draw();
 							
 							if (this.activePostEffect != null) {

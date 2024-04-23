@@ -32,7 +32,11 @@ public enum BlockHoloState {
 		if (holoState.isAir() && targetState.isAir()) {
 			return BlockHoloState.CORRECT_BLOCK;
 		} else if (!targetState.getBlockName().equals(holoState.getBlockName())) {
-			return BlockHoloState.WRONG_BLOCK;
+			if (targetState.isAir()) {
+				return BlockHoloState.NO_BLOCK;
+			} else {
+				return BlockHoloState.WRONG_BLOCK;
+			}
 		} else if (!targetState.equals(holoState)) {
 			return BlockHoloState.WRONG_STATE;
 		} else {

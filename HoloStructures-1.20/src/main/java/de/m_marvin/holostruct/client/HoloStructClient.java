@@ -2,9 +2,6 @@ package de.m_marvin.holostruct.client;
 
 import java.util.concurrent.Executor;
 
-import org.spongepowered.asm.mixin.injection.Inject;
-
-import com.google.j2objc.annotations.ReflectionSupport.Level;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.m_marvin.holostruct.HoloStruct;
@@ -19,17 +16,12 @@ import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
 import de.m_marvin.holostruct.client.rendering.HolographicRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.Mod.EventBusSubscriber.Bus;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
-import net.neoforged.neoforge.event.level.ChunkDataEvent;
-import net.neoforged.neoforge.event.level.ChunkEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
 
 @Mod.EventBusSubscriber(modid=HoloStruct.MODID, value=Dist.CLIENT, bus=Bus.FORGE)
 public class HoloStructClient {

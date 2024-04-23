@@ -210,17 +210,26 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		return BlockHoloState.CORRECT_BLOCK;
 	}
 	
-	public void updateHoloStateAt(IRemoteLevelAccessor target, Vec3i targetOffset, Vec3i holoPos) {
-		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition())).sub(targetOffset);
+	public void updateHoloStateAt(IRemoteLevelAccessor target, Vec3i holoPos) {
+		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition()));
 		BlockStateData targetState = target.getBlock(targetPos);
 		BlockStateData holoState = getBlock(holoPos);
 		BlockEntityData holoBE = getBlockEntity(holoPos);
 		BlockEntityData targetBE = target.getAccessLevel().hasCopy() ? target.getBlockEntity(targetPos) : holoBE;
 		BlockHoloState state = BlockHoloState.getHoloState(targetState, holoState, targetBE, holoBE);
-		//if (getHoloState(holoPos) != state) { TODO check if neccessarry
-			setHoloState(holoPos, state);
-			markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
-		//}
+		setHoloState(holoPos, state);
+		markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
+	}
+	
+	public void updateHoloStates(IRemoteLevelAccessor target) {
+		for (int y = this.boundsMin.getY(); y < this.boundsMax.getY(); y++) {
+			for (int z = this.boundsMin.getZ(); z < this.boundsMax.getZ(); z++) {
+				for (int x = this.boundsMin.getX(); x < this.boundsMax.getX(); x++) {
+					Vec3i holoPos = new Vec3i(x, y, z);
+					updateHoloStateAt(target, holoPos);
+				}
+			}
+		}
 	}
 	
 	/* standard level accessing methods */
@@ -232,7 +241,6 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		if (chunk.get().isEmpty()) discardChunk(chunk.get());
 		markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 		this.updateBounds = true;
-		// TODO holostates
 	}
 	
 	public BlockState getBlock(BlockPos position) {
@@ -248,7 +256,6 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 			blockentity.setLevel(this.level);
 			markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 			this.updateBounds = true;
-			// TODO holostates
 		}
 	}
 	

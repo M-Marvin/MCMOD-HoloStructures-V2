@@ -23,6 +23,8 @@
 "holostruct.commands.hologram.blueprint.stored": "Hologram '%1$s' exported in blueprint '%2$s'",
 "holostruct.commands.hologram.create.invalidblueprint": "Blueprint '%1$s' not found",
 "holostruct.commands.hologram.create.failed": "Failed to create Hologramm '%1$s'!",
-"holostruct.commands.hologram.create.created": "Hologram '%1$s' created"
+"holostruct.commands.hologram.create.created": "Hologram '%1$s' created",
+"holostruct.commands.hologram.layermode.enabled": "Layermode activeted, show only Y %d",
+"holostruct.commands.hologram.layermode.disabled": "Layermode deactivated, show entire holograms"
 
 }

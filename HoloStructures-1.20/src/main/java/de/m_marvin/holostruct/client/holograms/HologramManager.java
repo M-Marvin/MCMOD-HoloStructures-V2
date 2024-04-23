@@ -2,7 +2,6 @@ package de.m_marvin.holostruct.client.holograms;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -13,7 +12,6 @@ import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 
 public class HologramManager {
@@ -22,6 +20,26 @@ public class HologramManager {
 	
 	protected Thread workerThread;
 	protected Map<String, Hologram> holograms = new HashMap<>();
+	protected int activeLayer = 0;
+	protected boolean oneLayerMode = false;
+	
+	public int getActiveLayer() {
+		return activeLayer;
+	}
+	
+	public void setActiveLayer(int activeLayer) {
+		this.activeLayer = activeLayer;
+		redrawAllHolograms();
+	}
+	
+	public boolean isOneLayerMode() {
+		return oneLayerMode;
+	}
+	
+	public void setOneLayerMode(boolean oneLayerMode) {
+		this.oneLayerMode = oneLayerMode;
+		redrawAllHolograms();
+	}
 	
 	public Hologram createHologram(@Nullable Blueprint blueprint, BlockPos position, String name) {
 		if (holograms.containsKey(name)) return null;
@@ -63,8 +81,12 @@ public class HologramManager {
 		getHolograms().values().forEach(hologram -> {
 			Vec3i holoPosition = Vec3i.fromVec(position.subtract(hologram.getPosition()));
 			if (!hologram.isInBounds(holoPosition)) return;
-			hologram.updateHoloStateAt(HoloStruct.CLIENT.LEVELBOUND.getAccessor(), new Vec3i(0, 0, 0), holoPosition);
+			hologram.updateHoloStateAt(HoloStruct.CLIENT.LEVELBOUND.getAccessor(), holoPosition);
 		});
+	}
+	
+	public void redrawAllHolograms() {
+		getHolograms().values().forEach(Hologram::markDirtyAllChunks);
 	}
 	
 }
