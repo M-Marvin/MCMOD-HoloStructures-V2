@@ -379,7 +379,7 @@ public class HolographicRenderer {
 		RandomSource random = RandomSource.create();
 		
 		int posY = yindex << 4;
-
+		
 		for (int y = 0; y < 16; y++) {
 			for (int z = 0; z < 16; z++) {
 				for (int x = 0; x < 16; x++) {
@@ -401,9 +401,10 @@ public class HolographicRenderer {
 					
 					if (!state.isAir() && model.getRenderTypes(state, random, modelData).contains(renderLayer)) {
 						poseStack.pushPose();
-						poseStack.translate(x + 0.5F, y + 0.5F, z + 0.5F);
-						if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.01F, 1.01F, 1.01F);
-						poseStack.translate(-0.5F, -0.5F, -0.5F);
+						poseStack.translate(x, y, z);
+//						if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.1F, 1.1F, 1.1F);
+//						poseStack.translate(-0.5F, -0.5F, -0.5F);
+						
 						blockRenderer.renderBatched(state, hologramPosition.offset(holoPos), holoLevel, poseStack, builder, false, random, modelData, renderLayer);
 						poseStack.popPose();
 					}
@@ -496,6 +497,9 @@ public class HolographicRenderer {
 
 		setupSectionShader(projectionMatrix, shader);
 		
+		RenderSystem.enablePolygonOffset();
+		RenderSystem.polygonOffset(-1F, -1F);
+		
 		for (HologramRender hologramRender : hologramRenders.values()) {
 			BlockPos origin = hologramRender.hologram.getPosition();
 			
@@ -537,6 +541,8 @@ public class HolographicRenderer {
 			}
 			poseStack.popPose();
 		}
+		
+		RenderSystem.disablePolygonOffset();
 		
 		shader.clear();
 		renderLayer.clearRenderState();

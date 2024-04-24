@@ -1,13 +1,12 @@
 {
     "targets": [
-		"holostruct:holographic",
-		"holostruct:holographic2",
+		"holostruct:holographic/no_block",
         "swap"
     ],
     "passes": [
         {
             "name": "holostruct:color_convolve",
-            "intarget": "holostruct:holographic",
+            "intarget": "holostruct:holographic/no_block",
             "outtarget": "swap",
             "uniforms": [
                 {

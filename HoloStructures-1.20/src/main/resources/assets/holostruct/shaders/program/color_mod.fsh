@@ -28,11 +28,6 @@ void main() {
 	
     // Offset & Scale
     OutColor = (OutColor * ColorScale) + Offset;
-
-    // Saturation
-    float Luma = dot(OutColor, Gray);
-    vec3 Chroma = OutColor - Luma;
-    OutColor = (Chroma * Saturation) + Luma;
 	
     gl_FragDepth = InDepth;
     fragColor = vec4(OutColor, InTexel.a);

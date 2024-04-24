@@ -1,13 +1,99 @@
 {
     "targets": [
-		"holostruct:holographic"
+		"holostruct:holographic/no_block",
+		"holostruct:holographic/wrong_block",
+		"holostruct:holographic/wrong_state",
+		"holostruct:holographic/wrong_data",
+        "swap"
     ],
     "passes": [
-        {
-            "name": "holostruct:base",
-            "intarget": "holostruct:holographic",
-            "outtarget": "minecraft:main",
-            "uniforms": []
-        }
+		{
+			"name": "holostruct:color_mod",
+			"intarget": "holostruct:holographic/wrong_data",
+			"outtarget": "minecraft:main",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.2, 0.2, 0.2 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.0, 0.0, 0.35 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:color_mod",
+			"intarget": "holostruct:holographic/wrong_state",
+			"outtarget": "minecraft:main",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.6, 0.6, 0.6 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.6, 0.6, 0.6 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.20, 0.20, 0.0 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:color_mod",
+			"intarget": "holostruct:holographic/wrong_block",
+			"outtarget": "minecraft:main",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.2, 0.2, 0.2 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.35, 0.0, 0.0 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:color_mod",
+			"intarget": "holostruct:holographic/no_block",
+			"outtarget": "minecraft:main",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.8, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.8, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.8 ]
+                }
+			]
+		}
     ]
 }

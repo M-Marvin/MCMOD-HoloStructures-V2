@@ -8,32 +8,59 @@
     ],
     "passes": [
 		{
-			"name": "holostruct:color_convolve",
+			"name": "holostruct:color_mod",
+			"intarget": "holostruct:holographic/wrong_data",
+			"outtarget": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.2, 0.2, 0.2 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.0, 0.0, 0.35 ]
+                }
+			]
+		},
+		{
+			"name": "holostruct:color_mod",
 			"intarget": "holostruct:holographic/wrong_state",
 			"outtarget": "swap",
 			"uniforms": [
 				{
                     "name": "RedMatrix",
-                    "values": [ 0.3, 0.59, 0.11 ]
+                    "values": [ 0.6, 0.6, 0.6 ]
                 },
                 {
                     "name": "GreenMatrix",
-                    "values": [ 0.0, 0.0, 0.0 ]
+                    "values": [ 0.6, 0.6, 0.6 ]
                 },
                 {
                     "name": "BlueMatrix",
-                    "values": [ 0.0, 0.0, 0.5 ]
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.20, 0.20, 0.0 ]
                 }
 			]
 		},
 		{
-			"name": "holostruct:color_convolve",
+			"name": "holostruct:color_mod",
 			"intarget": "holostruct:holographic/wrong_block",
 			"outtarget": "swap",
 			"uniforms": [
 				{
                     "name": "RedMatrix",
-                    "values": [ 0.3, 0.59, 0.11 ]
+                    "values": [ 0.2, 0.2, 0.2 ]
                 },
                 {
                     "name": "GreenMatrix",
@@ -41,12 +68,16 @@
                 },
                 {
                     "name": "BlueMatrix",
-                    "values": [ 0.0, 0.0, 0.5 ]
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.35, 0.0, 0.0 ]
                 }
 			]
 		},
 		{
-			"name": "holostruct:color_convolve",
+			"name": "holostruct:color_mod",
 			"intarget": "holostruct:holographic/no_block",
 			"outtarget": "swap",
 			"uniforms": [
@@ -69,7 +100,10 @@
 			"intarget": "swap",
 			"outtarget": "minecraft:main",
 			"uniforms": [
-				
+				{
+                    "name": "Alpha",
+                    "values": [ 0.8 ]
+                }
 			]
 		}
     ]
