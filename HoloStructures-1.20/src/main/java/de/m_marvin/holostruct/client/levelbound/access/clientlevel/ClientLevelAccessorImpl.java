@@ -2,6 +2,7 @@ package de.m_marvin.holostruct.client.levelbound.access.clientlevel;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
@@ -9,99 +10,148 @@ import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
+import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
-	private Minecraft minecraft;
+	private final Minecraft minecraft;
+	private boolean allowCopyOperations;
+	private boolean allowModifyOperations;
 	
-	public ClientLevelAccessorImpl(Minecraft minecraft) {
+	public ClientLevelAccessorImpl(Minecraft minecraft, boolean allowCopy, boolean allowModify) {
 		this.minecraft = minecraft;
+		this.allowCopyOperations = allowCopy;
+		this.allowModifyOperations = allowModify;
 	}
 	
 	@Override
 	public AccessLevel getAccessLevel() {
-		return AccessLevel.READ_CLIENT;
-	}
-	
-	@Override
-	public void setBlock(Vec3i positon, BlockStateData state) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
+		return this.allowCopyOperations ? this.allowModifyOperations ? AccessLevel.FULL_CLIENT : AccessLevel.COPY_CLIENT : AccessLevel.READ_CLIENT;
 	}
 
 	@Override
-	public BlockStateData getBlock(Vec3i position) {
-		BlockState state = minecraft.level.getBlockState(new BlockPos(position.x, position.y, position.z));
-		return TypeConverter.blockState2data(state);
-	}
-
-	@Override
-	public void setBlockEntity(Vec3i position, BlockEntityData blockEntity) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public BlockEntityData getBlockEntity(Vec3i position) {
-		// TODO incomplete, no data
-		BlockEntity blockEntity = minecraft.level.getBlockEntity(new BlockPos(position.x, position.y, position.z));
-		return blockEntity == null ? null : TypeConverter.blockEntity2data(blockEntity);
-	}
-
-	@Override
-	public void addEntity(EntityData entity) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public void addEntity(Vec3i blockPos, EntityData entity) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public void addEntities(Collection<EntityData> entities) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public Collection<EntityData> getEntities() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public Collection<EntityData> getEntitiesOnBlock(Vec3i pos) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public Collection<EntityData> getEntitiesWithin(Vec3i min, Vec3i max) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public List<Entity> getEntitiesInBounds(AABB bounds) {
+	public CompletableFuture<Boolean> setBlock(Vec3i position, BlockStateData state) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void setBlock(BlockPos pos, BlockState sate) {
+	public CompletableFuture<BlockStateData> getBlock(Vec3i position) {
+		BlockState state = this.minecraft.player.level().getBlockState(new BlockPos(position.x, position.y, position.z));
+		CompletableFuture<BlockStateData> future = new CompletableFuture<>();
+		future.complete(TypeConverter.blockState2data(state));
+		return future;
+	}
+
+	@Override
+	public CompletableFuture<Boolean> setBlockEntity(Vec3i position, BlockEntityData blockEntity) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<BlockEntityData> getBlockEntity(Vec3i position) {
+		if (!this.minecraft.player.hasPermissions(2)) {
+			return CompletableFuture.completedFuture(null);
+		}
 		
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
+		BlockEntity blockEntiy = minecraft.level.getBlockEntity(pos);
+		if (blockEntiy == null) return CompletableFuture.completedFuture(null);
+		
+		ResourceLocation typeName = BlockEntityType.getKey(blockEntiy.getType());
+		BlockEntityData data = new BlockEntityData(position, TypeConverter.resLoc2data(typeName));
+		
+		CompletableFuture<BlockEntityData> querryFuture = new CompletableFuture<>();
+		this.minecraft.player.connection.getDebugQueryHandler().queryBlockEntityTag(pos, nbt -> {
+			data.setData(TypeConverter.nbt2data(nbt));
+			querryFuture.complete(data);
+		});
+		return querryFuture;
+	}
+	
+	@Override
+	public CompletableFuture<Boolean> addEntity(EntityData entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public CompletableFuture<Boolean> addEntities(Collection<EntityData> entities) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public CompletableFuture<Collection<EntityData>> getEntitiesOnBlock(Vec3i pos) {
+		if (!this.minecraft.player.hasPermissions(2)) {
+			return CompletableFuture.completedFuture(null);
+		}
+		
+		List<CompletableFuture<EntityData>> queryFutures = this.minecraft.level.getEntities(null, new AABB(new BlockPos(pos.x, pos.y, pos.z))).stream()
+				.map(entity -> {
+					CompletableFuture<CompoundTag> querryFuture = new CompletableFuture<>();
+					this.minecraft.player.connection.getDebugQueryHandler().queryEntityTag(entity.getId(), querryFuture::complete);
+					return querryFuture.thenApply(nbt -> {
+						ResourceLocation typeName = EntityType.getKey(entity.getType());
+						Vec3d position = Vec3d.fromVec(entity.position());
+						
+						EntityData data = new EntityData(position, TypeConverter.resLoc2data(typeName));
+						data.setData(TypeConverter.nbt2data(nbt));
+						return data;
+					});
+				})
+				.toList();
+		return CompletableFuture.allOf(queryFutures.toArray(i -> new CompletableFuture[i]))
+				.thenApply(v -> queryFutures.stream().map(CompletableFuture::join).toList());
+	}
+
+	@Override
+	public CompletableFuture<Collection<EntityData>> getEntitiesWithin(Vec3i min, Vec3i max) {
+		if (!this.minecraft.player.hasPermissions(2)) {
+			return CompletableFuture.completedFuture(null);
+		}
+		
+		List<CompletableFuture<EntityData>> queryFutures = this.minecraft.level.getEntities(null, new AABB(min.x, min.y, min.z, max.x, max.y, max.z)).stream()
+				.map(entity -> {
+					CompletableFuture<CompoundTag> queryFuture = new CompletableFuture<>();
+					this.minecraft.player.connection.getDebugQueryHandler().queryEntityTag(entity.getId(), queryFuture::complete);
+					return queryFuture.thenApply(nbt -> {
+						ResourceLocation typeName = EntityType.getKey(entity.getType());
+						Vec3d position = Vec3d.fromVec(entity.position());
+						
+						EntityData data = new EntityData(position, TypeConverter.resLoc2data(typeName));
+						data.setData(TypeConverter.nbt2data(nbt));
+						return data;
+					});
+				})
+				.toList();
+		return CompletableFuture.allOf(queryFutures.toArray(i -> new CompletableFuture[i]))
+				.thenApply(v -> queryFutures.stream().map(CompletableFuture::join).toList());
+	}
+	
+	/* Default fake level methods, only affect client level */
+	
+	@Override
+	public List<Entity> getEntitiesInBounds(AABB bounds) {
+		return this.minecraft.level.getEntities(null, bounds);
+	}
+
+	@Override
+	public void setBlock(BlockPos pos, BlockState sate) {
+		this.minecraft.level.setBlock(pos, sate, 0);
 	}
 
 	@Override
@@ -111,14 +161,12 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	@Override
 	public LevelAccessor getLevel() {
-		// TODO Auto-generated method stub
 		return minecraft.level;
 	}
 
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
-		// TODO
 		return minecraft.level.getBlockEntity(pPos);
 	}
-	
+
 }

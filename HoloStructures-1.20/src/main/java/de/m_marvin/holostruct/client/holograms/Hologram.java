@@ -11,6 +11,7 @@ import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
+import de.m_marvin.holostruct.client.levelbound.Levelbound;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -211,14 +212,20 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	}
 	
 	public void updateHoloStateAt(IRemoteLevelAccessor target, Vec3i holoPos) {
+		if (!target.getAccessLevel().hasRead()) {
+			setHoloState(holoPos, BlockHoloState.NO_BLOCK);
+			return;
+		}
 		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition()));
-		BlockStateData targetState = target.getBlock(targetPos);
-		BlockStateData holoState = getBlock(holoPos);
-		BlockEntityData holoBE = getBlockEntity(holoPos);
-		BlockEntityData targetBE = target.getAccessLevel().hasCopy() ? target.getBlockEntity(targetPos) : holoBE;
-		BlockHoloState state = BlockHoloState.getHoloState(targetState, holoState, targetBE, holoBE);
-		setHoloState(holoPos, state);
-		markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
+		Levelbound.LEVEL_ACCESS_EXECUTOR.execute(() -> {
+			BlockStateData targetState = target.getBlock(targetPos).join();
+			BlockStateData holoState = getBlock(holoPos);
+			BlockEntityData holoBE = getBlockEntity(holoPos);
+			BlockEntityData targetBE = target.getBlockEntity(targetPos).join();
+			BlockHoloState state = BlockHoloState.getHoloState(targetState, holoState, targetBE, holoBE);
+			setHoloState(holoPos, state);
+			markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
+		});
 	}
 	
 	public void updateHoloStates(IRemoteLevelAccessor target) {

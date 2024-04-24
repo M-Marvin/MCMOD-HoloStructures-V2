@@ -6,14 +6,9 @@ import com.mojang.logging.LogUtils;
 
 import de.m_marvin.holostruct.client.Config;
 import de.m_marvin.holostruct.client.HoloStructClient;
-import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
-import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
 import de.m_marvin.holostruct.client.registries.CommandArguments;
-import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 @Mod(HoloStruct.MODID)
 //@Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE)

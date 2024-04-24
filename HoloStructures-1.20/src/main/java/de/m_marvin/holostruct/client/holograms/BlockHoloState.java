@@ -40,7 +40,7 @@ public enum BlockHoloState {
 		} else if (!targetState.equals(holoState)) {
 			return BlockHoloState.WRONG_STATE;
 		} else {
-			if (Objects.equal(targetBlockEntity, holoBlockEntity)) {
+			if (targetBlockEntity == null || Objects.equal(targetBlockEntity, holoBlockEntity)) {
 				return BlockHoloState.CORRECT_BLOCK;
 			} else {
 				return BlockHoloState.WRONG_DATA;

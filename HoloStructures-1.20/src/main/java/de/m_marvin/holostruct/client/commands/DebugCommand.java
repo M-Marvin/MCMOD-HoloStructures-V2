@@ -2,6 +2,8 @@ package de.m_marvin.holostruct.client.commands;
 
 import java.io.File;
 
+import org.openjdk.nashorn.internal.runtime.regexp.joni.Region;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -9,13 +11,22 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
+import de.m_marvin.blueprints.api.RegistryName;
+import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientCommandDispatcher;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.AddEntityCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.Command;
 import de.m_marvin.holostruct.client.rendering.posteffect.SelectivePostChain;
+import de.m_marvin.univec.impl.Vec3d;
+import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class DebugCommand {
 	
@@ -41,9 +52,30 @@ public class DebugCommand {
 								changePostEffect(source, StringArgumentType.getString(source, "posteffect"))
 						)
 				)
+		)
+		.then(
+				Commands.literal("test")
+				.executes(source ->
+						commandDispatch(source)
+				)
 		));
 	}
-
+	
+	public static int commandDispatch(CommandContext<CommandSourceStack> source) {
+		
+		try {
+			
+			Command<Boolean> cmd = new AddEntityCommand(new EntityData(new Vec3d(0, 100, 0), new RegistryName("minecraft:pig")));
+			
+			HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(cmd);
+		} catch (Throwable e) {
+			source.getSource().sendFailure(Component.literal("Exception was thrown: " + e.getMessage()));
+		}
+		
+		return 0;
+		
+	}
+	
 	public static int changePostEffect(CommandContext<CommandSourceStack> source, String postEffectName) {
 		
 		try {

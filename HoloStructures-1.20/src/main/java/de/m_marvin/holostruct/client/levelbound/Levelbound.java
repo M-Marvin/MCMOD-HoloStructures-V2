@@ -1,9 +1,14 @@
 package de.m_marvin.holostruct.client.levelbound;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
 
 public class Levelbound {
+	
+	public static final Executor LEVEL_ACCESS_EXECUTOR = Executors.newSingleThreadExecutor();
 	
 	public static enum AccessLevel {
 		NO_ACCESS(false, false, false),

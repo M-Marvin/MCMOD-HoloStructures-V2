@@ -3,6 +3,7 @@ package de.m_marvin.blueprints.api.worldobjects;
 import java.util.Objects;
 
 import de.m_marvin.blueprints.api.RegistryName;
+import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.nbtutility.nbt.TagCompound;
 import de.m_marvin.univec.impl.Vec3i;
 
@@ -27,6 +28,7 @@ public class BlockEntityData {
 	}
 	
 	public void setData(TagCompound data) {
+		TypeConverter.BLOCK_ENTITY_META_FILTER.accept(data);
 		this.data = data;
 	}
 	
@@ -42,7 +44,6 @@ public class BlockEntityData {
 	public boolean equals(Object obj) {
 		if (obj instanceof BlockEntityData other) {
 			return	other.typeName.equals(this.typeName) &&
-					other.position.equals(this.position) &&
 					other.data.equals(this.data);
 		}
 		return false;

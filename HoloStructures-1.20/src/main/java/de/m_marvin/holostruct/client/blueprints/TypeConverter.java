@@ -4,8 +4,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
@@ -33,6 +37,13 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
 
 public class TypeConverter {
+	
+	public static final Consumer<TagCompound> BLOCK_ENTITY_META_FILTER = tag -> {
+		tag.removeTag("x");
+		tag.removeTag("y");
+		tag.removeTag("z");
+		tag.removeTag("id");	
+	};
 	
 	public static BlockStateData blockState2data(BlockState state) {
 		RegistryName blockName = new RegistryName(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
@@ -110,9 +121,13 @@ public class TypeConverter {
 	}
 	
 	public static TagCompound nbt2data(CompoundTag nbt) {
+		if (nbt == null) return null;
 		try {
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-			nbt.write(new DataOutputStream(buffer));
+			NbtIo.write(nbt, new DataOutputStream(buffer));
+			OutputStream os = new FileOutputStream(new File("C:\\Users\\marvi\\Desktop\\dump.nbt"));
+			os.write(buffer.toByteArray());
+			os.close();
 			return BinaryParser.fromBytes(buffer.toByteArray(), TagCompound.class, false);
 		} catch (IOException e) {
 			System.err.println("failed to convert nbt data!");
