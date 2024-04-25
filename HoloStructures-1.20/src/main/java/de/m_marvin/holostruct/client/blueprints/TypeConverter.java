@@ -104,12 +104,13 @@ public class TypeConverter {
 		Vec3 position = new Vec3(data.getPosition().x, data.getPosition().y, data.getPosition().z);
 		@SuppressWarnings("resource")
 		Entity entity = type.create(Minecraft.getInstance().level);
-		entity.load(data2nbt(data.getData()));
+		if (data.getData() != null) entity.load(data2nbt(data.getData()));
 		entity.setPos(position);
 		return entity;
 	}
 	
 	public static CompoundTag data2nbt(TagCompound data) {
+		if (data == null) return null;
 		try {
 			byte[] nbtBin = BinaryParser.toBytes(data, false);
 			return NbtIo.read(new DataInputStream(new ByteArrayInputStream(nbtBin)), NbtAccounter.unlimitedHeap());

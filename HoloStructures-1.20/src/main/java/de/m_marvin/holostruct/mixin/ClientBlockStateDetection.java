@@ -1,6 +1,5 @@
 package de.m_marvin.holostruct.mixin;
 
-import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,7 +12,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 
-@Debug(export = true)
 @Mixin(ClientLevel.class)
 public class ClientBlockStateDetection {
 	

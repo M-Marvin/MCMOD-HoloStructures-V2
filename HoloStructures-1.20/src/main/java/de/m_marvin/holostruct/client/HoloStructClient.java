@@ -10,6 +10,7 @@ import de.m_marvin.holostruct.client.commands.BlueprintCommand;
 import de.m_marvin.holostruct.client.commands.DebugCommand;
 import de.m_marvin.holostruct.client.commands.HologramCommand;
 import de.m_marvin.holostruct.client.event.ClientBlockEvent;
+import de.m_marvin.holostruct.client.event.ClientLanguageInjectEvent;
 import de.m_marvin.holostruct.client.holograms.HologramManager;
 import de.m_marvin.holostruct.client.levelbound.Levelbound;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
@@ -17,6 +18,7 @@ import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientCommand
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
 import de.m_marvin.holostruct.client.rendering.HolographicRenderer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.locale.Language;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -61,7 +63,15 @@ public class HoloStructClient {
 	}
 	
 	@SubscribeEvent
+	public static void onLanguageInject(ClientLanguageInjectEvent event) {
+		HoloStruct.CLIENT.COMMAND_DISPATCHER.reloadReverseMap(event.getLanguage());
+	}
+	
+	@SubscribeEvent
 	public static void onConnectoToServer(ClientPlayerNetworkEvent.LoggingIn event) {
+		// Ensures the initial language is loaded
+		HoloStruct.CLIENT.COMMAND_DISPATCHER.reloadReverseMap(Language.getInstance());
+		
 		// TODO access level
 		HoloStruct.CLIENT.LEVELBOUND.setAccess(new ClientLevelAccessorImpl(Minecraft.getInstance(), true, true));
 	}

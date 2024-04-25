@@ -1,7 +1,10 @@
 package de.m_marvin.holostruct.client.commands;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.TypeConversionException;
 import org.openjdk.nashorn.internal.runtime.regexp.joni.Region;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -12,13 +15,21 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.blueprints.api.RegistryName;
+import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
+import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
+import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientCommandDispatcher;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.AddEntityCommand;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.Command;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.SetBlockEntityCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.SetBlockStateCommand;
 import de.m_marvin.holostruct.client.rendering.posteffect.SelectivePostChain;
+import de.m_marvin.nbtutility.nbt.TagCompound;
+import de.m_marvin.nbtutility.nbt.TagList;
 import de.m_marvin.univec.impl.Vec3d;
+import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
@@ -26,6 +37,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.commands.TagCommand;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class DebugCommand {
@@ -65,9 +78,28 @@ public class DebugCommand {
 		
 		try {
 			
-			Command<Boolean> cmd = new AddEntityCommand(new EntityData(new Vec3d(0, 100, 0), new RegistryName("minecraft:pig")));
+//			Command<Boolean> cmd = new AddEntityCommand(new EntityData(new Vec3d(0, 100, 0), new RegistryName("minecraft:pig")));
+//			Command<Boolean> cmd2 = new AddEntityCommand(new EntityData(new Vec3d(0, 100, 0), new RegistryName("minecraft:creeper")));
+//			
+//			HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(cmd);
+//			HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(cmd);
+//			HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(cmd2);
 			
-			HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(cmd);
+			BlockEntityData blockEntity = new BlockEntityData(new Vec3i(29, 71, 31), new RegistryName("minecraft:chest"));
+			TagCompound nbt = new TagCompound();
+			List<TagCompound> items = new ArrayList<>();
+			TagCompound item = new TagCompound();
+			item.putString("id", "minecraft:glass");
+			item.putShort("Count", (short) 32);
+			items.add(item);
+			nbt.putList("Items", items);
+			blockEntity.setData(nbt);
+			
+			BlockStateData state = TypeConverter.blockState2data(Blocks.CHEST.defaultBlockState());
+			
+			HoloStruct.CLIENT.LEVELBOUND.getAccessor().setBlock(new Vec3i(29, 71, 31), state);
+			HoloStruct.CLIENT.LEVELBOUND.getAccessor().setBlockEntity(new Vec3i(29, 71, 31), blockEntity);
+			
 		} catch (Throwable e) {
 			source.getSource().sendFailure(Component.literal("Exception was thrown: " + e.getMessage()));
 		}

@@ -5,7 +5,8 @@
 	"mixins": [
 	],
 	"client": [
-		"ClientBlockStateDetection"
+		"ClientBlockStateDetection",
+		"ClientLanguageInjectDetection"
 	],
 	"minVersion": "0.8"
 }

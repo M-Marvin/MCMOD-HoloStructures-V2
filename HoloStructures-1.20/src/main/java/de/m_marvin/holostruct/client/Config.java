@@ -15,6 +15,9 @@ public class Config {
 	private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 	public static ModConfigSpec CONFIG;
 	
+	public static final String CLIENT_COMMAND_DISPATCHER = "client_command_dispatcher";
+	public static ModConfigSpec.IntValue COMMAND_TIMEOUT;
+	
 	public static final String CATAGORY_BLUEPRINTS = "blueprints";
 	public static ModConfigSpec.IntValue PLACEMENT_STATE_FIX_ITERATIONS;
 	public static ModConfigSpec.ConfigValue<String> FIX_IGNORED_BLOCK_STATE_PROPS;
@@ -25,8 +28,11 @@ public class Config {
 	public static ModConfigSpec.EnumValue<BlueprintFormat> DEFAULT_BLUEPRINT_FORMAT;
 	
 	static {
+		BUILDER.comment("Settings of the client command dispatcher");
+		BUILDER.push(CLIENT_COMMAND_DISPATCHER);
+		COMMAND_TIMEOUT = BUILDER.comment("Timeout in ms to wait for response when executing an command").defineInRange("command_timeout", 2000, 500, 60000);
 		BUILDER.comment("Settings of the blueprints (copy paste selection etc)");
-		BUILDER.push(CATAGORY_BLUEPRINTS);
+		BUILDER.push(CATAGORY_BLUEPRINTS);		
 		PLACEMENT_STATE_FIX_ITERATIONS = BUILDER.comment("Ammount of itterations to try fixing misconnected blocks after pasting a blueprint.").defineInRange("placement_state_fix_iterations", 4, 1, 64);
 		FIX_IGNORED_BLOCK_STATE_PROPS = BUILDER.comment("Blockstate properties ignored by the validation algorithm.").define("fix_ignored_block_state_props", "power,powered");
 		BUILDER.pop();

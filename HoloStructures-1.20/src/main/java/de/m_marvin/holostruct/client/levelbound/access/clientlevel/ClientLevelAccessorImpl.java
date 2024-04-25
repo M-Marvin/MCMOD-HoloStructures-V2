@@ -7,9 +7,14 @@ import java.util.concurrent.CompletableFuture;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
+import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.AddEntityCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.Command;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.SetBlockEntityCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.SetBlockStateCommand;
 import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;
@@ -43,10 +48,10 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	@Override
 	public CompletableFuture<Boolean> setBlock(Vec3i position, BlockStateData state) {
-		// TODO Auto-generated method stub
-		return null;
+		Command<Boolean> command = new SetBlockStateCommand(position, state);
+		return HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(command);
 	}
-
+	
 	@Override
 	public CompletableFuture<BlockStateData> getBlock(Vec3i position) {
 		BlockState state = this.minecraft.player.level().getBlockState(new BlockPos(position.x, position.y, position.z));
@@ -57,8 +62,8 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	@Override
 	public CompletableFuture<Boolean> setBlockEntity(Vec3i position, BlockEntityData blockEntity) {
-		// TODO Auto-generated method stub
-		return null;
+		Command<Boolean> command = new SetBlockEntityCommand(blockEntity);
+		return HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(command);
 	}
 
 	@Override
@@ -84,14 +89,15 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 	
 	@Override
 	public CompletableFuture<Boolean> addEntity(EntityData entity) {
-		// TODO Auto-generated method stub
-		return null;
+		Command<Boolean> command = new AddEntityCommand(entity);
+		return HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(command);
 	}
 	
 	@Override
 	public CompletableFuture<Boolean> addEntities(Collection<EntityData> entities) {
-		// TODO Auto-generated method stub
-		return null;
+		List<CompletableFuture<Boolean>> futures = entities.stream().map(this::addEntity).toList();
+		return CompletableFuture.allOf(futures.toArray(i -> new CompletableFuture[i]))
+				.thenApply(v -> futures.stream().map(CompletableFuture::join).reduce((a, b) -> a & b).get());
 	}
 	
 	@Override

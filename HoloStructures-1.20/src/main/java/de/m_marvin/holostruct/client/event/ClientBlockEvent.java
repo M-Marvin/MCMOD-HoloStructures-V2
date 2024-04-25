@@ -8,8 +8,8 @@ import net.neoforged.bus.api.Event;
 public class ClientBlockEvent extends Event {
 		
 	    private final ClientLevel level;
-		private BlockPos position;
-		private BlockState state;
+		private final BlockPos position;
+		private final BlockState state;
 		
 		public ClientBlockEvent(ClientLevel level, BlockPos position, BlockState state) {
 			this.level = level;

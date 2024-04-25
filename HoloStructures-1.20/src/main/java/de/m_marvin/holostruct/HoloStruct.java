@@ -9,6 +9,7 @@ import de.m_marvin.holostruct.client.HoloStructClient;
 import de.m_marvin.holostruct.client.registries.CommandArguments;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 @Mod(HoloStruct.MODID)
 //@Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE)
@@ -16,7 +17,7 @@ public class HoloStruct {
 	
 	public static final String MODID = "holostruct";
 	public static final Logger LOGGER = LogUtils.getLogger();
-	public static final HoloStructClient CLIENT = new HoloStructClient();
+	public static final HoloStructClient CLIENT = FMLEnvironment.dist.isClient() ? new HoloStructClient() : null;
 	
 	private static HoloStruct INSTANCE;
 	
@@ -30,11 +31,6 @@ public class HoloStruct {
 	public static HoloStruct getInstance() {
 		return INSTANCE;
 	}
-	
-//	@SubscribeEvent
-//	public static void onServerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-////		CLIENT.LEVELBOUND.setAccess(new ClientLevelAccessorImpl(Minecraft.getInstance()), AccessLevel.FULL_CLIENT);
-//	}
 	
 	/* TODO */
 	// Schem format mit Mod-Blöcken die fehlen
