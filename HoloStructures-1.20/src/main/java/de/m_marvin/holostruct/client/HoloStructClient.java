@@ -16,6 +16,7 @@ import de.m_marvin.holostruct.client.levelbound.Levelbound;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientCommandDispatcher;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
+import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ClientLevelboundPackageHandler;
 import de.m_marvin.holostruct.client.rendering.HolographicRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.locale.Language;
@@ -35,6 +36,7 @@ public class HoloStructClient {
 	public final BlueprintManager BLUEPRINTS = new BlueprintManager();
 	public final HologramManager HOLOGRAMS = new HologramManager();
 	public final HolographicRenderer HOLORENDERER = new HolographicRenderer();
+	public final ClientLevelboundPackageHandler CLIENT_LEVELBOUND = new ClientLevelboundPackageHandler();
 	
 	public final Executor RENDER_EXECUTOR = new Executor() {
 		@Override
@@ -74,6 +76,7 @@ public class HoloStructClient {
 		
 		// TODO access level
 		HoloStruct.CLIENT.LEVELBOUND.setAccess(new ClientLevelAccessorImpl(Minecraft.getInstance(), true, true));
+//		HoloStruct.CLIENT.LEVELBOUND.setAccess(new ServerLevelAccessorImpl(Minecraft.getInstance(), true, true));
 	}
 	
 	@SubscribeEvent

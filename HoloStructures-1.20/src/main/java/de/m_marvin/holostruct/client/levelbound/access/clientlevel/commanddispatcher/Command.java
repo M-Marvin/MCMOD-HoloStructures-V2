@@ -48,7 +48,9 @@ public abstract class Command<T> {
 	}
 	
 	public boolean isOutdated(long current) {
-		return current - this.sendTime > Config.COMMAND_TIMEOUT.get();
+		boolean outdated = current - this.sendTime > Config.COMMAND_TIMEOUT.get();
+		if (outdated) this.future.completeExceptionally(new Throwable("timed out"));
+		return outdated;
 	}
 	
 }

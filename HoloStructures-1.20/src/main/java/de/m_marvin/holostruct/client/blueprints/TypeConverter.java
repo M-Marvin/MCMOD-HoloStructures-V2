@@ -46,6 +46,7 @@ public class TypeConverter {
 	};
 	
 	public static BlockStateData blockState2data(BlockState state) {
+		if (state == null) return null;
 		RegistryName blockName = new RegistryName(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
 		BlockStateData data = new BlockStateData(blockName);
 		for (Property<?> prop : state.getProperties()) {
@@ -55,6 +56,7 @@ public class TypeConverter {
 	}
 	
 	public static BlockState data2blockState(BlockStateData data) {
+		if (data == null) return null;
 		Block block = BuiltInRegistries.BLOCK.get(data2resLoc(data.getBlockName()));
 		BlockState state = block.defaultBlockState();
 		for (Property<?> prop : state.getProperties()) {
@@ -74,6 +76,7 @@ public class TypeConverter {
 	}
 	
 	public static BlockEntityData blockEntity2data(BlockEntity blockEntity) {
+		if (blockEntity == null) return null;
 		RegistryName typeName = resLoc2data(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()));
 		Vec3i position = new Vec3i(blockEntity.getBlockPos().getX(), blockEntity.getBlockPos().getY(), blockEntity.getBlockPos().getZ());
 		BlockEntityData data = new BlockEntityData(position, typeName);
@@ -82,6 +85,7 @@ public class TypeConverter {
 	}
 	
 	public static BlockEntity data2blockEntity(BlockState block, BlockEntityData data) {
+		if (data == null) return null;
 		BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.get(data2resLoc(data.getTypeName()));
 		if (type == null) return null;
 		BlockPos position = new BlockPos(data.getPosition().x, data.getPosition().y, data.getPosition().z);
@@ -91,6 +95,7 @@ public class TypeConverter {
 	}
 	
 	public static EntityData entity2data(Entity entity) {
+		if (entity == null) return null;
 		RegistryName entityName = resLoc2data(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
 		Vec3d position = new Vec3d(entity.position().x, entity.position().y, entity.position().z);
 		EntityData data = new EntityData(position, entityName);
@@ -99,6 +104,7 @@ public class TypeConverter {
 	}
 	
 	public static Entity data2entity(EntityData data) {
+		if (data == null) return null;
 		EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(data2resLoc(data.getEntityName()));
 		if (type == null) return null;
 		Vec3 position = new Vec3(data.getPosition().x, data.getPosition().y, data.getPosition().z);

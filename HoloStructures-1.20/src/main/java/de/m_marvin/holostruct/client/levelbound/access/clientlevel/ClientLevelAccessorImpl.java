@@ -10,6 +10,7 @@ import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
+import de.m_marvin.holostruct.client.levelbound.access.AccessDeniedException;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.AddEntityCommand;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.Command;
@@ -48,6 +49,9 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	@Override
 	public CompletableFuture<Boolean> setBlock(Vec3i position, BlockStateData state) {
+		if (!allowModifyOperations)
+			throw new AccessDeniedException("modify operation denied!");
+		
 		Command<Boolean> command = new SetBlockStateCommand(position, state);
 		return HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(command);
 	}
@@ -62,6 +66,9 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	@Override
 	public CompletableFuture<Boolean> setBlockEntity(Vec3i position, BlockEntityData blockEntity) {
+		if (!allowModifyOperations)
+			throw new AccessDeniedException("modify operation denied!");
+		
 		Command<Boolean> command = new SetBlockEntityCommand(blockEntity);
 		return HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(command);
 	}
@@ -89,12 +96,18 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 	
 	@Override
 	public CompletableFuture<Boolean> addEntity(EntityData entity) {
+		if (!allowModifyOperations)
+			throw new AccessDeniedException("modify operation denied!");
+		
 		Command<Boolean> command = new AddEntityCommand(entity);
 		return HoloStruct.CLIENT.COMMAND_DISPATCHER.startDispatch(command);
 	}
 	
 	@Override
 	public CompletableFuture<Boolean> addEntities(Collection<EntityData> entities) {
+		if (!allowModifyOperations)
+			throw new AccessDeniedException("modify operation denied!");
+		
 		List<CompletableFuture<Boolean>> futures = entities.stream().map(this::addEntity).toList();
 		return CompletableFuture.allOf(futures.toArray(i -> new CompletableFuture[i]))
 				.thenApply(v -> futures.stream().map(CompletableFuture::join).reduce((a, b) -> a & b).get());

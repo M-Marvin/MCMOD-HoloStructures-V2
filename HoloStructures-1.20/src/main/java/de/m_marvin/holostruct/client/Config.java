@@ -15,8 +15,9 @@ public class Config {
 	private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 	public static ModConfigSpec CONFIG;
 	
-	public static final String CLIENT_COMMAND_DISPATCHER = "client_command_dispatcher";
+	public static final String LEVELBOUND = "levelbound";
 	public static ModConfigSpec.IntValue COMMAND_TIMEOUT;
+	public static ModConfigSpec.IntValue PACKAGE_TIMEOUT;
 	
 	public static final String CATAGORY_BLUEPRINTS = "blueprints";
 	public static ModConfigSpec.IntValue PLACEMENT_STATE_FIX_ITERATIONS;
@@ -29,8 +30,9 @@ public class Config {
 	
 	static {
 		BUILDER.comment("Settings of the client command dispatcher");
-		BUILDER.push(CLIENT_COMMAND_DISPATCHER);
+		BUILDER.push(LEVELBOUND);
 		COMMAND_TIMEOUT = BUILDER.comment("Timeout in ms to wait for response when executing an command").defineInRange("command_timeout", 2000, 500, 60000);
+		PACKAGE_TIMEOUT = BUILDER.comment("Timeout in ms to wait for response when sending a network package").defineInRange("package_timeout", 2000, 100, 60000);
 		BUILDER.comment("Settings of the blueprints (copy paste selection etc)");
 		BUILDER.push(CATAGORY_BLUEPRINTS);		
 		PLACEMENT_STATE_FIX_ITERATIONS = BUILDER.comment("Ammount of itterations to try fixing misconnected blocks after pasting a blueprint.").defineInRange("placement_state_fix_iterations", 4, 1, 64);

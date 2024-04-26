@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client;
+package de.m_marvin.holostruct.utility;
 
 import java.util.List;
 
