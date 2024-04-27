@@ -6,6 +6,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 
 import org.bukkit.entity.Player;
@@ -17,12 +18,14 @@ public class HoloStructPlugin extends JavaPlugin implements Listener, PluginMess
 	
 	public static final String HOLOSTRUCT_GET_CONFIG = "holostruct:querry_access_permissions";
 	public static final String HOLOSTRUCT_SET_CONFIG = "holostruct:send_access_permissons";
+	public static final String CONFIG_FILE = "holostruct-server.toml";
 	
-	public Config configuration = new Config();
+	public Config configuration = new Config(new File(this.getDataFolder(), CONFIG_FILE));
 	
 	@Override
 	public void onEnable() {
 		System.out.println("HS2/Permisson Plugin enabled");
+		if (!this.getDataFolder().isDirectory()) this.getDataFolder().mkdir();
 		this.getServer().getMessenger().registerOutgoingPluginChannel(this, HOLOSTRUCT_SET_CONFIG);
 		this.getServer().getMessenger().registerIncomingPluginChannel(this, HOLOSTRUCT_GET_CONFIG, this);
 	}
