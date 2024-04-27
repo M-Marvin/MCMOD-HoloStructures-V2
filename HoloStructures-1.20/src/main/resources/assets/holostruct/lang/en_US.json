@@ -25,6 +25,25 @@
 "holostruct.commands.hologram.create.failed": "Failed to create Hologramm '%1$s'!",
 "holostruct.commands.hologram.create.created": "Hologram '%1$s' created",
 "holostruct.commands.hologram.layermode.enabled": "Layermode activeted, show only Y %d",
-"holostruct.commands.hologram.layermode.disabled": "Layermode deactivated, show entire holograms"
+"holostruct.commands.hologram.layermode.disabled": "Layermode deactivated, show entire holograms",
+"holostruct.commands.hologram.viewmode.failed": "Failed to enable vew mode '%1$s!'",
+"holostruct.commands.hologram.viewmode.enabled": "View mode activated '%1$s'",
+"holostruct.commands.status.title": "HoloStruct acess level status:",
+"holostruct.commands.status.no_access": "[no access] (No access to the game level)",
+"holostruct.commands.status.read_client": "[read client] (Read access to the game level trough client)",
+"holostruct.commands.status.copy_client": "[copy client] (Read access with permisson top copy from level trough client)",
+"holostruct.commands.status.full_client": "[full client] (Read and write to the game level trough client)",
+"holostruct.commands.status.read_server": "[read server] (Read accces to the game level trough server)",
+"holostruct.commands.status.copy_server": "[copy server] (Read access with permisson top copy from level trough server)",
+"holostruct.commands.status.full_server": "[full server] (Read and write to the gamelevel trough server)",
+"holostruct.commands.status.details": "Access level details:",
+"holostruct.commands.status.details.read.yes": " [✓] read access (Validate placed blocks)",
+"holostruct.commands.status.details.read.no": " [X] read access (No block placement validation)",
+"holostruct.commands.status.details.copy.yes": " [✓] copy access (Copy structures from the world)",
+"holostruct.commands.status.details.copy.no": " [x] copy access (No copying from the world allowed)",
+"holostruct.commands.status.details.write.yes": " [✓] write access (Automatically placing blocks)",
+"holostruct.commands.status.details.write.no": " [X] write access (No placement of blocks allowed)",
+"holostruct.commands.status.details.server.yes": " [✓] server mode (Direct access trough server, fast)",
+"holostruct.commands.status.details.server.no": " [X] client mode (Only indirect access to level, slower)"
 
 }

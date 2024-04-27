@@ -2,7 +2,7 @@ package de.m_marvin.holostruct.client.levelbound.access.serverlevel;
 
 import java.util.concurrent.CompletableFuture;
 
-import de.m_marvin.holostruct.client.Config;
+import de.m_marvin.holostruct.client.ClientConfig;
 import de.m_marvin.holostruct.levelbound.network.ILevelboundPackage;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 
@@ -34,7 +34,7 @@ public class PendingPackage<P extends ILevelboundPackage<T>, T> {
 	}
 	
 	public boolean isOutdated(long current) {
-		boolean outdated = current - this.sendTime > Config.PACKAGE_TIMEOUT.get();
+		boolean outdated = current - this.sendTime > ClientConfig.PACKAGE_TIMEOUT.get();
 		if (outdated) this.future.completeExceptionally(new Throwable("timed out"));
 		return outdated;
 	}

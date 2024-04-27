@@ -17,8 +17,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
-import de.m_marvin.holostruct.client.Config;
-import de.m_marvin.holostruct.utility.UtilHelper;
+import de.m_marvin.holostruct.client.ClientConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 
@@ -32,6 +32,11 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 	private BlueprintPathArgument(boolean suggestExistingFiles, boolean allowOnlyExisting) {
 		 this.suggestExistingFiles = suggestExistingFiles;
 		 this.allowOnlyExisting = allowOnlyExisting;
+	}
+	
+	@SuppressWarnings("resource")
+	public static File resolvePath(String path) {
+		return new File(Minecraft.getInstance().gameDirectory, path);
 	}
 	
 	public static BlueprintPathArgument save() {
@@ -61,18 +66,18 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 	@Override
 	public String parse(final StringReader reader) throws CommandSyntaxException {
 		String input = reader.readString();
-		String[] inputSplit = input.split(":");
+		String[] inputSplit = input.endsWith(":") ? new String[] {input.substring(0, input.length() - 1), ""} : input.split(":");
 		String path;
 		if (inputSplit.length > 1) {
-			String folderPath = Config.getFolder(inputSplit[0]);
+			String folderPath = ClientConfig.getFolder(inputSplit[0]);
 			String filePath = input.substring(inputSplit[0].length() + 1, input.length());
 			path = folderPath + "/" + filePath;
 		} else {
-			String folderPath = Config.getDefaultFolder();
+			String folderPath = ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get();
 			String filePath = input;
 			path = folderPath + "/" + filePath;
 		}
-		if (allowOnlyExisting && !UtilHelper.resolvePath(path).isFile()) {
+		if (allowOnlyExisting && !resolvePath(path).isFile()) {
 			throw new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage("Could not parse invalid blueprint file!")), Component.translatable("argument.blueprintpath.invalid"));
 		}
 		return path;
@@ -101,10 +106,10 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 			return Suggestions.empty();
 		} else {
 			Set<String> pathList = new HashSet<>();
-			Config.getAdditionalFolders().forEach((folderName, path) -> {
-				listPaths(UtilHelper.resolvePath(path), folderName + ":", pathList, suggestExistingFiles);
+			ClientConfig.getAdditionalFolders().forEach((folderName, path) -> {
+				listPaths(resolvePath(path), folderName + ":", pathList, suggestExistingFiles);
 			});
-			listPaths(UtilHelper.resolvePath(Config.getDefaultFolder()), "", pathList, suggestExistingFiles);
+			listPaths(resolvePath(ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get()), "", pathList, suggestExistingFiles);
 			return SharedSuggestionProvider.suggest(Stream.of(pathList.toArray()).map((s) -> "\"" + s + "\""), p_118251_);
 		}
 	}

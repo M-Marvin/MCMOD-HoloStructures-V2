@@ -44,7 +44,8 @@ public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 	
 	@Override
 	public AccessLevel getAccessLevel() {
-		return this.allowCopyOperations ? this.allowModifyOperations ? AccessLevel.FULL_CLIENT : AccessLevel.COPY_CLIENT : AccessLevel.READ_CLIENT;
+		boolean isPrivileged = this.minecraft.player.hasPermissions(2);
+		return this.allowCopyOperations ? (this.allowModifyOperations && isPrivileged) ? AccessLevel.FULL_CLIENT : AccessLevel.COPY_CLIENT : AccessLevel.READ_CLIENT;
 	}
 
 	@Override

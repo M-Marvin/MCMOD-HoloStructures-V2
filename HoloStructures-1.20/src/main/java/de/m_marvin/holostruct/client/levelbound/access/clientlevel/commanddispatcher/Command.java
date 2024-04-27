@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import de.m_marvin.holostruct.client.Config;
+import de.m_marvin.holostruct.client.ClientConfig;
 
 public abstract class Command<T> {
 	
@@ -48,7 +48,7 @@ public abstract class Command<T> {
 	}
 	
 	public boolean isOutdated(long current) {
-		boolean outdated = current - this.sendTime > Config.COMMAND_TIMEOUT.get();
+		boolean outdated = current - this.sendTime > ClientConfig.COMMAND_TIMEOUT.get();
 		if (outdated) this.future.completeExceptionally(new Throwable("timed out"));
 		return outdated;
 	}

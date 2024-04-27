@@ -53,7 +53,7 @@ public class HologramRender {
 			
 		}
 
-		public static final int BUFFER_BUILDER_CAPACITY = 786432; // TODO copied this number from the RenderBuffers class
+		public static final int BUFFER_BUILDER_CAPACITY = 786432;
 		
 		public ChunkPos pos;
 		public IntList dirty = new IntArrayList();

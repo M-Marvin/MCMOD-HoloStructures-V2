@@ -8,6 +8,7 @@ import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.HologramArgument;
+import de.m_marvin.holostruct.client.commands.arguments.ViewMode;
 import de.m_marvin.holostruct.client.holograms.Hologram;
 import de.m_marvin.holostruct.utility.UtilHelper;
 import net.minecraft.commands.CommandSourceStack;
@@ -85,7 +86,8 @@ public class HologramCommand {
 								)
 						)
 				)
-		).then(
+		)
+		.then(
 				Commands.literal("layermode")
 				.then(
 						Commands.literal("enable")
@@ -105,9 +107,45 @@ public class HologramCommand {
 								layerMode(source, false, 0)
 						)
 				)
+		)
+		.then(
+				Commands.literal("viewmode")
+				.then(
+						Commands.literal("vanilla")
+						.executes(source -> 
+								selectViewMode(source, ViewMode.VANILLA)
+						)
+				)
+				.then(
+						Commands.literal("base")
+						.executes(source -> 
+								selectViewMode(source, ViewMode.BASE)
+						)
+				)
+				.then(
+						Commands.literal("scanline")
+						.executes(source -> 
+								selectViewMode(source, ViewMode.SCANLINE)
+						)
+				)
+				.then(
+						Commands.literal("creeper")
+						.executes(source -> 
+								selectViewMode(source, ViewMode.CREEPER)
+						)
+				)
 		));
 	}
 
+	public static int selectViewMode(CommandContext<CommandSourceStack> source, ViewMode viewMode) {
+		if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(viewMode.getPostEffect())) {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.viewmode.failed", viewMode.name()));
+			return 0;
+		}
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.viewmode.enabled", viewMode.name()), false);
+		return 1;
+	}
+	
 	public static int layerMode(CommandContext<CommandSourceStack> source, boolean layerMode, int layer) {
 		HoloStruct.CLIENT.HOLOGRAMS.setOneLayerMode(layerMode);
 		if (layerMode) {

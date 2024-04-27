@@ -159,6 +159,10 @@ public class HolographicRenderer {
 			this.activePostEffect.close();
 		}
 		
+		if (postEffect == null) {
+			return true;
+		}
+		
 		try {
 			this.activePostEffect = new SelectivePostChain(TEXTURE_MANAGER.get(), RESOURCE_MANAGER.get(), MAIN_FRAMEBUFFER.get(), postEffect, this::setupPostEffectShader);
 			return true;
@@ -611,9 +615,6 @@ public class HolographicRenderer {
 	@SuppressWarnings("resource")
 	protected void setupPostEffectShader(EffectInstance shader) {
 		shader.safeGetUniform("GameTime").set((float) Minecraft.getInstance().level.getGameTime() + Minecraft.getInstance().getFrameTime());
-		// TODO z offest
-//		shader.safeGetUniform("ZNear").set(0.05F);
-//		shader.safeGetUniform("ZFar").set(Minecraft.getInstance().gameRenderer.getDepthFar());
 	}
 	
 }
