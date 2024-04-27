@@ -4,10 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -132,9 +129,6 @@ public class TypeConverter {
 		try {
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			NbtIo.write(nbt, new DataOutputStream(buffer));
-			OutputStream os = new FileOutputStream(new File("C:\\Users\\marvi\\Desktop\\dump.nbt"));
-			os.write(buffer.toByteArray());
-			os.close();
 			return BinaryParser.fromBytes(buffer.toByteArray(), TagCompound.class, false);
 		} catch (IOException e) {
 			System.err.println("failed to convert nbt data!");
