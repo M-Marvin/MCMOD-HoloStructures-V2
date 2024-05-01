@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher;
+package de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands;
 
 import java.util.Locale;
 import java.util.Optional;

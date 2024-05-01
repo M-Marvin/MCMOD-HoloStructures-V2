@@ -9,20 +9,38 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 
 import de.m_marvin.holostruct.client.holograms.BlockHoloState;
 import de.m_marvin.holostruct.client.holograms.Hologram;
+import de.m_marvin.holostruct.client.holograms.HologramChunk;
+import de.m_marvin.holostruct.client.holograms.HologramSection;
 import de.m_marvin.holostruct.client.rendering.HologramBufferContainer.HolographicBufferSource;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.ChunkPos;
 
+/**
+ * Each {@link Hologram} has an holographic render instance on the {@link HolographicRenderer}.
+ * Used to store the render data.
+ * @author Marvin Koehler
+ */
 public class HologramRender {
 
+	/**
+	 * Each {@link HologramChunk} has an holographic chunk instance on the {@link HolographicRenderer}.
+	 * Used to store the render data.
+	 * @author Marvin Koehler
+	 */
 	public static class HolographicChunk {
 		
+		/**
+		 * Each {@link HologramSection} has an holographic section instance on the {@link HolographicRenderer}.
+		 * The section instances get newly instantiated on each redraw.
+		 * Used to store the render data.
+		 * @author Marvin Koehler
+		 */
 		public static class HolographicSectionCompiled {
 			
 			public Map<BlockHoloState, Map<RenderType, VertexBuffer>> renderBuffers;
@@ -56,7 +74,7 @@ public class HologramRender {
 		public static final int BUFFER_BUILDER_CAPACITY = 786432;
 		
 		public ChunkPos pos;
-		public IntList dirty = new IntArrayList();
+		public IntSet dirty = new IntOpenHashSet();
 		public Int2ObjectMap<HolographicSectionCompiled> compiled = new Int2ObjectArrayMap<>();
 		public HologramBufferContainer bufferContainer;
 		public Boolean bufferClaimed = false;

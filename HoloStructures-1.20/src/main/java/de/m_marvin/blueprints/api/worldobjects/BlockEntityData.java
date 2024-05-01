@@ -7,6 +7,12 @@ import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.nbtutility.nbt.TagCompound;
 import de.m_marvin.univec.impl.Vec3i;
 
+/**
+ * This class represents an block entitiy's data.<br>
+ * It contains its block position, its registry name and its nbt data compound
+ * 
+ * @author Marvin Koehler
+ */
 public class BlockEntityData {
 	
 	protected Vec3i position;
@@ -27,6 +33,9 @@ public class BlockEntityData {
 		return position;
 	}
 	
+	/**
+	 * <b>NOTE</b>: This method filters out some of the fields of the nbt data, since they would be duplicates of the {@link BlockEntityData#position} and {@link BlockEntityData#registryName} fields.
+	 */
 	public void setData(TagCompound data) {
 		TypeConverter.BLOCK_ENTITY_META_FILTER.accept(data);
 		this.data = data;
@@ -40,6 +49,9 @@ public class BlockEntityData {
 		return typeName;
 	}
 	
+	/**
+	 * <b>NOTE</b>: Position is ignored, only nbt and registry name are compared
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof BlockEntityData other) {
@@ -48,10 +60,13 @@ public class BlockEntityData {
 		}
 		return false;
 	}
-	
+
+	/**
+	 * <b>NOTE</b>: Position is ignored, only nbt and registry name are considered
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.position, this.typeName, this.data);
+		return Objects.hash(this.typeName, this.data);
 	}
 	
 	@Override

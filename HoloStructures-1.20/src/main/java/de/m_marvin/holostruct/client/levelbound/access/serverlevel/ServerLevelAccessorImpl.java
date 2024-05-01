@@ -11,6 +11,7 @@ import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.holostruct.client.levelbound.access.AccessDeniedException;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
 import de.m_marvin.holostruct.levelbound.network.AddEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.GetBlockEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.GetBlockStatePackage;
@@ -30,6 +31,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+/**
+ * This client level accessor is used if the mod is available on server side.
+ * It uses custom network packages to communicate with the server.
+ * This implementation is faster than the {@link ClientLevelAccessorImpl}
+ * @author Marvin Koehler
+ *
+ */
 public class ServerLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	private final Minecraft minecraft;
@@ -44,26 +52,37 @@ public class ServerLevelAccessorImpl implements IRemoteLevelAccessor {
 		this.allowModifyOperations = allowModify;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public <P extends ILevelboundPackage<T>, T> void handleResponse(P pkg) {
+		synchronized (this.pending) {
+			int taskId = pkg.getTaskId();
+			
+			PendingPackage<?, ?> pending = this.pending.get(taskId);
+			if (pending != null && pending.isRightPackageType(pkg)) {
+				if (((PendingPackage<P, T>) pending).accept(pkg)) {
+					this.pending.remove(taskId);
+				}
+			}
+			
+			long now = System.currentTimeMillis();
+			List<Integer> outdated = new ArrayList<>();
+			for (Int2ObjectMap.Entry<PendingPackage<?, ?>> entry : this.pending.int2ObjectEntrySet()) {
+				if (entry.getValue() == null || entry.getValue().isOutdated(now)) outdated.add(entry.getIntKey());
+			}
+			outdated.forEach(id -> this.pending.remove((int) id));
+		}
+	}
+
 	protected int nextPackageId() {
 		return this.packageIdCounter++;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <P extends ILevelboundPackage<T>, T> void handleResponse(P pkg) {
-		int taskId = pkg.getTaskId();
-		PendingPackage<?, ?> pending = this.pending.get(taskId);
-		if (pending != null && pending.isRightPackageType(pkg)) {
-			if (((PendingPackage<P, T>) pending).accept(pkg)) {
-				this.pending.remove(taskId);
-			}
+	protected <T> CompletableFuture<T> startDispatch(ILevelboundPackage<T> pkg) {
+		PendingPackage<ILevelboundPackage<T>, T> pending = new PendingPackage<ILevelboundPackage<T>, T>(pkg);
+		synchronized (this.pending) {
+			this.pending.put(pkg.getTaskId(), pending);
+			return pending.startDispatch(System.currentTimeMillis(), this.minecraft.getConnection());
 		}
-		
-		long now = System.currentTimeMillis();
-		List<Integer> outdated = new ArrayList<>();
-		for (Int2ObjectMap.Entry<PendingPackage<?, ?>> entry : this.pending.int2ObjectEntrySet()) {
-			if (entry.getValue().isOutdated(now)) outdated.add(entry.getIntKey());
-		}
-		outdated.forEach(id -> this.pending.remove((int) id));
 	}
 
 	@Override
@@ -77,18 +96,12 @@ public class ServerLevelAccessorImpl implements IRemoteLevelAccessor {
 		if (!allowModifyOperations)
 			throw new AccessDeniedException("modify operation denied!");
 		
-		int taskId = nextPackageId();
-		PendingPackage<SetBlockStatePackage, Boolean> pending = new PendingPackage<SetBlockStatePackage, Boolean>(new SetBlockStatePackage(taskId, position, state));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new SetBlockStatePackage(nextPackageId(), position, state));
 	}
 
 	@Override
 	public CompletableFuture<BlockStateData> getBlock(Vec3i position) {
-		int taskId = nextPackageId();
-		PendingPackage<GetBlockStatePackage, BlockStateData> pending = new PendingPackage<GetBlockStatePackage, BlockStateData>(new GetBlockStatePackage(taskId, position));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new GetBlockStatePackage(nextPackageId(), position));
 	}
 
 	@Override
@@ -96,18 +109,12 @@ public class ServerLevelAccessorImpl implements IRemoteLevelAccessor {
 		if (!allowModifyOperations)
 			throw new AccessDeniedException("modify operation denied!");
 		
-		int taskId = nextPackageId();
-		PendingPackage<SetBlockEntityPackage, Boolean> pending = new PendingPackage<SetBlockEntityPackage, Boolean>(new SetBlockEntityPackage(taskId, blockEntity));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new SetBlockEntityPackage(nextPackageId(), blockEntity));
 	}
 
 	@Override
 	public CompletableFuture<BlockEntityData> getBlockEntity(Vec3i position) {
-		int taskId = nextPackageId();
-		PendingPackage<GetBlockEntityPackage, BlockEntityData> pending = new PendingPackage<GetBlockEntityPackage, BlockEntityData>(new GetBlockEntityPackage(taskId, position));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new GetBlockEntityPackage(nextPackageId(), position));
 	}
 
 	@Override
@@ -115,10 +122,7 @@ public class ServerLevelAccessorImpl implements IRemoteLevelAccessor {
 		if (!allowModifyOperations)
 			throw new AccessDeniedException("modify operation denied!");
 		
-		int taskId = nextPackageId();
-		PendingPackage<AddEntityPackage, Boolean> pending = new PendingPackage<AddEntityPackage, Boolean>(new AddEntityPackage(taskId, entity));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new AddEntityPackage(nextPackageId(), entity));
 	}
 
 	@Override
@@ -133,18 +137,12 @@ public class ServerLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	@Override
 	public CompletableFuture<Collection<EntityData>> getEntitiesOnBlock(Vec3i pos) {
-		int taskId = nextPackageId();
-		PendingPackage<GetEntitiesPackage, Collection<EntityData>> pending = new PendingPackage<GetEntitiesPackage, Collection<EntityData>>(new GetEntitiesPackage(taskId, new Vec3d(pos), new Vec3d(1, 1, 1).add(pos)));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new GetEntitiesPackage(nextPackageId(), new Vec3d(pos), new Vec3d(1, 1, 1).add(pos)));
 	}
 
 	@Override
 	public CompletableFuture<Collection<EntityData>> getEntitiesWithin(Vec3i min, Vec3i max) {
-		int taskId = nextPackageId();
-		PendingPackage<GetEntitiesPackage, Collection<EntityData>> pending = new PendingPackage<GetEntitiesPackage, Collection<EntityData>>(new GetEntitiesPackage(taskId, new Vec3d(min), new Vec3d(max)));
-		this.pending.put(taskId, pending);
-		return pending.startDispatch(System.currentTimeMillis(), this.minecraft.player.connection);
+		return startDispatch(new GetEntitiesPackage(nextPackageId(), new Vec3d(min), new Vec3d(max)));
 	}
 
 	/* Default fake level methods, only affect client level */

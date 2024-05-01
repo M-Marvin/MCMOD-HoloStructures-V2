@@ -15,6 +15,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * An hologram chunk consists of {@link HologramSection}'s.
+ * @author Marvin Koehler
+ */
 public class HologramChunk {
 	
 	protected Map<BlockPos, BlockEntity> blockentities;

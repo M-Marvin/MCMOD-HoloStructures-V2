@@ -9,6 +9,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
+/**
+ * Command used to print the status of the levelbound access level
+ * @author Marvin Koehler
+ */
 public class StatusCommand {
 	
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {

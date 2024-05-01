@@ -4,11 +4,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 
 import de.m_marvin.blueprints.api.RegistryName;
 
+/**
+ * This class represents an block's data.<br>
+ * It contains its registry name and its block state properties as string2string map.
+ * 
+ * @author Marvin Koehler
+ */
 public class BlockStateData {
 	
 	public static final List<RegistryName> AIR_BLOCKS = Arrays.asList(new RegistryName("minecraft:air"), new RegistryName("minecraft:void_air"), new RegistryName("minecraft:cave_air"));
@@ -36,16 +41,12 @@ public class BlockStateData {
 		return properties;
 	}
 	
+	/**
+	 * This method just checks if the blocks registry name is within the list {@link BlockStateData#AIR_BLOCKS}
+	 * @return
+	 */
 	public boolean isAir() {
 		return AIR_BLOCKS.contains(this.blockName);
-	}
-	
-	public BlockStateData copy() {
-		BlockStateData state = new BlockStateData(this.blockName.copy());
-		for (Entry<String, String> prop : this.properties.entrySet()) {
-			state.setValue(new String(prop.getKey()), new String(prop.getValue()));
-		}
-		return state;
 	}
 	
 	@Override

@@ -14,6 +14,12 @@ import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.univec.impl.Vec3i;
 
+/**
+ * This class is a container for the blocks, blockentities and entities of a section copied from the world.
+ * The data can be accessed trough the methods defined in {@link IStructAccessor}.
+ * @author marvi
+ *
+ */
 public class Blueprint implements IStructAccessor {
 
 	protected Vec3i boundsMin;
@@ -25,6 +31,9 @@ public class Blueprint implements IStructAccessor {
 	
 	protected List<String> parsingErrors;
 	
+	/**
+	 * Constructs a new empty blueprint with the dimensions 1x1x1
+	 */
 	public Blueprint() {
 		this.boundsMax = new Vec3i(1, 1, 1);
 		this.boundsMin = new Vec3i(0, 0, 0);
@@ -35,6 +44,10 @@ public class Blueprint implements IStructAccessor {
 		this.parsingErrors = new ArrayList<>();
 	}
 	
+	/**
+	 * Returns a list of errors generatedby the last parsing or writing operation of this blueprint from or to an file
+	 * @return A list of strings representing the individual error
+	 */
 	public List<String> getParsingErrors() {
 		return parsingErrors;
 	}

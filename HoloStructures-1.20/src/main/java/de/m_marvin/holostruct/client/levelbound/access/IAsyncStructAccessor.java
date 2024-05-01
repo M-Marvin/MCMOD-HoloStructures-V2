@@ -3,11 +3,16 @@ package de.m_marvin.holostruct.client.levelbound.access;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+import de.m_marvin.blueprints.api.IStructAccessor;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.univec.impl.Vec3i;
 
+/**
+ * Like the {@link IStructAccessor} but for the asynchron {@link IRemoteLevelAccessor}'s
+ * @author Marvin Koehler
+ */
 public interface IAsyncStructAccessor {
 	
 	public CompletableFuture<Boolean> setBlock(Vec3i position, BlockStateData state);

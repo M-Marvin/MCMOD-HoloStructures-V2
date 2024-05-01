@@ -9,6 +9,10 @@ import de.m_marvin.holostruct.client.event.ClientLanguageInjectEvent;
 import net.minecraft.locale.Language;
 import net.neoforged.neoforge.common.NeoForge;
 
+/**
+ * Mixin for the custom {@link ClientLanguageInjectEvent} event
+ * @author Marvin Koehler
+ */
 @Mixin(Language.class)
 public class ClientLanguageInjectDetection {
 	

@@ -1,6 +1,7 @@
 package de.m_marvin.holostruct.client;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -16,14 +17,14 @@ import de.m_marvin.holostruct.client.event.ClientBlockEvent;
 import de.m_marvin.holostruct.client.event.ClientLanguageInjectEvent;
 import de.m_marvin.holostruct.client.holograms.HologramManager;
 import de.m_marvin.holostruct.client.levelbound.Levelbound;
+import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientCommandDispatcher;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
 import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ClientLevelboundPackageHandler;
 import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ServerLevelAccessorImpl;
 import de.m_marvin.holostruct.client.rendering.HolographicRenderer;
-import de.m_marvin.holostruct.levelbound.network.GetAccessPermissions;
-import de.m_marvin.holostruct.levelbound.network.SendAccessPermissons;
+import de.m_marvin.holostruct.levelbound.network.QueryAccessPermissions;
 import de.m_marvin.holostruct.levelbound.network.SetBlockStatePackage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
@@ -37,16 +38,30 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
+/**
+ * The client side only instance of the mod.
+ * This does only exist on the client side.
+ * @author Marvin Koehler
+ */
 @Mod.EventBusSubscriber(modid=HoloStruct.MODID, value=Dist.CLIENT, bus=Bus.FORGE)
 public class HoloStructClient {
 	
+	/** The levelbound instance used to access the server level */
 	public final Levelbound LEVELBOUND = new Levelbound();
+	/** The command dispatcher instance used to execute server commands and get responses for the client {@link IRemoteLevelAccessor} implementation */
 	public final ClientCommandDispatcher COMMAND_DISPATCHER = new ClientCommandDispatcher();
-	public final BlueprintManager BLUEPRINTS = new BlueprintManager();
-	public final HologramManager HOLOGRAMS = new HologramManager();
-	public final HolographicRenderer HOLORENDERER = new HolographicRenderer();
+	/** The client side package handler for the sever {@link IRemoteLevelAccessor} implementation */
 	public final ClientLevelboundPackageHandler CLIENT_LEVELBOUND = new ClientLevelboundPackageHandler();
+	/** The blueprint manager instance used to manage loaded blueprints */
+	public final BlueprintManager BLUEPRINTS = new BlueprintManager();
+	/** The hologram manager instance used to manage all holograms */
+	public final HologramManager HOLOGRAMS = new HologramManager();
+	/** The holographic renderer instance used to render the holograms */
+	public final HolographicRenderer HOLORENDERER = new HolographicRenderer();
 	
+	/**
+	 * Executor used to execute {@link CompletableFuture} tasks on the render thread
+	 */
 	public final Executor RENDER_EXECUTOR = new Executor() {
 		@Override
 		public void execute(Runnable command) {
@@ -79,7 +94,7 @@ public class HoloStructClient {
 		HoloStruct.CLIENT.COMMAND_DISPATCHER.reloadReverseMap(event.getLanguage());
 	}
 	
-	public static void updateAccessPermisson() {
+	private static void updateAccessPermisson() {
 		if (ServerConfig.ALLOW_READ.get()) {
 			@SuppressWarnings("resource")
 			boolean serverMode = Minecraft.getInstance().player.connection.isConnected(SetBlockStatePackage.ID);
@@ -106,19 +121,19 @@ public class HoloStructClient {
 		updateAccessPermisson();
 		
 		boolean serverHasPermissonConfig = 
-				event.getPlayer().connection.isConnected(GetAccessPermissions.ID) &&
-				event.getPlayer().connection.isConnected(GetAccessPermissions.ID);
+				event.getPlayer().connection.isConnected(QueryAccessPermissions.ID) &&
+				event.getPlayer().connection.isConnected(QueryAccessPermissions.ID);
 		
 		if (serverHasPermissonConfig) {
 			HoloStruct.LOGGER.info("HS2/Permissons Querry access permissions from server");
 			String defaultConfig = ServerConfig.write();
-			event.getPlayer().connection.send(new GetAccessPermissions(defaultConfig)); 
+			event.getPlayer().connection.send(new QueryAccessPermissions(defaultConfig)); 
 		}
 	}
 	
-	public void onAccessPermissionsReceived(SendAccessPermissons pkg, PlayPayloadContext context) {
+	public void onAccessPermissionsReceived(QueryAccessPermissions pkg, PlayPayloadContext context) {
 		HoloStruct.LOGGER.info("HS2/Permissons Received configuation from server!");
-		String config = pkg.permissonConfig();
+		String config = pkg.config();
 		ServerConfig.load(config);
 		updateAccessPermisson();
 	}
@@ -128,6 +143,9 @@ public class HoloStructClient {
 		HoloStruct.CLIENT.LEVELBOUND.setAccess(new NoAccessAccessor());
 	}
 	
+	/**
+	 * Returns the name of the level folder of the currently loaded game on the client.
+	 */
 	public static Optional<String> getLocalLevelFolderName() {
 		IntegratedServer localServer = Minecraft.getInstance().getSingleplayerServer();
 		if (localServer == null) return Optional.empty();

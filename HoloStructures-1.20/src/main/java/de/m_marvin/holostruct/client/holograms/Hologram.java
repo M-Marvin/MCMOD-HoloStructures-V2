@@ -2,16 +2,19 @@ package de.m_marvin.holostruct.client.holograms;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.blueprints.api.IStructAccessor;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
+import de.m_marvin.holostruct.client.ClientConfig;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
-import de.m_marvin.holostruct.client.levelbound.Levelbound;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -30,6 +33,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+/**
+ * An hologram consists of {@link HologramChunk}'s which them self consist of {@link HologramSection}'s.
+ * They are an implementation of {@link IStructAccessor} and rendered in the world using the {@link HologramRenderer}.
+ * Unlike a {@link Blueprint}, a holograms internal structure matches the one of the real {@link Level} implementation.
+ * It also implements {@link IFakeLevelAccess} which allows the block the hologram to be rendered more realistic.
+ * @author Marvin Koehler
+ */
 public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	
 	public BlockPos boundsMax;
@@ -41,6 +51,11 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	public Int2ObjectMap<Entity> entities;
 	public Level level;
 	
+	/**
+	 * Creates an new empty hologram of the size 1x1x1
+	 * @param level The client level in which the hologram is located, used for calculate lightning and other rendering properties
+	 * @param position The initial position of the hologram
+	 */
 	public Hologram(Level level, BlockPos position) {
 		this.level = level;
 		this.position = position;
@@ -51,18 +66,31 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		this.entities = new Int2ObjectArrayMap<>();
 	}
 	
+	/**
+	 * Converts an hologram position into an real world position
+	 */
 	public BlockPos holoToWorldPosition(BlockPos holoPosition) {
 		return holoPosition.offset(getPosition().subtract(this.origin));
 	}
-	
+
+	/**
+	 * Converts an real world position into an hologram position
+	 */
 	public BlockPos worldToHoloPosition(BlockPos worldPosition) {
 		return worldPosition.subtract(getPosition().subtract(this.origin));
 	}
 
+	/**
+	 * Returns the position of the origin as hologram position
+	 */
 	public BlockPos getOrigin() {
 		return origin;
 	}
 	
+	/**
+	 * Sets the position of the holograms origin in hologram coordinates.<br>
+	 * <b>NOTE</b>: Changing the origin might alter the holograms position.
+	 */
 	public void setOrigin(BlockPos origin) {
 		this.origin = origin;
 	}
@@ -128,10 +156,16 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		return new Vec3i(this.origin.getX(), this.origin.getY(), this.origin.getZ());
 	}
 	
+	/**
+	 * Gets the position of this holograms's origin in the real world.
+	 */
 	public BlockPos getPosition() {
 		return position;
 	}
 	
+	/**
+	 * Sets the position of this holograms's origin in the real world.
+	 */
 	public void setPosition(BlockPos position) {
 		this.position = position;
 	}
@@ -175,10 +209,19 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		this.chunks.remove(chunk.getPosition().toLong());
 	}
 	
+	/**
+	 * Marks an individual section of this hologram to be redrawn.
+	 * @param pos The chunk position of the chunk in which the section is located
+	 * @param section The y index of the section
+	 */
 	public void markSectionDirty(ChunkPos pos, int section) {
 		HoloStruct.CLIENT.HOLORENDERER.markDirty(this, pos, section);
 	}
 	
+	/**
+	 * Marks an entire chunk to be redrawn.
+	 * @param pos The chunk position of the chunk in which the section is located
+	 */
 	public void markChunkDirty(ChunkPos pos) {
 		Optional<HologramChunk> chunk = getChunk(pos);
 		if (chunk.isPresent()) {
@@ -188,6 +231,9 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		}
 	}
 	
+	/**
+	 * Marks all chunks of this hologram to be redrawn.
+	 */
 	public void markDirtyAllChunks() {
 		this.chunks.keySet().forEach(lp -> markChunkDirty(new ChunkPos(lp)));
 	}
@@ -210,37 +256,87 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		if (chunk.isPresent()) return chunk.get().getHoloState(position);
 		return BlockHoloState.CORRECT_BLOCK;
 	}
-	
+
+	/**
+	 * Compares the target and the hologram at the specified hologram position and sets the hologram state accordingly.
+	 * Does always trigger an readraw by itself.
+	 * @param target The target to compare the hologram with, normally an level {@link IRemoteLevelAccessor} to the real world
+	 * @param holoPos The position to compare in hologram coordinates
+	 */
 	public void updateHoloStateAt(IRemoteLevelAccessor target, Vec3i holoPos) {
+		updateHoloStateAt(target, holoPos, true);
+	}
+	
+	/**
+	 * Compares the target and the hologram at the specified hologram position and sets the hologram state accordingly.
+	 * @param target The target to compare the hologram with, normally an level {@link IRemoteLevelAccessor} to the real world
+	 * @param holoPos The position to compare in hologram coordinates
+	 * @param markDirty If an redraw of the affected section should be triggered
+	 */
+	public void updateHoloStateAt(IRemoteLevelAccessor target, Vec3i holoPos, boolean markDirty) {
 		if (!target.getAccessLevel().hasRead()) {
 			setHoloState(holoPos, BlockHoloState.NO_BLOCK);
 			return;
 		}
 		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition()));
-		Levelbound.LEVEL_ACCESS_EXECUTOR.execute(() -> {
-			BlockStateData targetState = target.getBlock(targetPos).join();
+		
+		HoloStruct.CLIENT.LEVELBOUND.safeExecute(() -> {
+			CompletableFuture<BlockStateData> targetState = target.getBlock(targetPos);
 			BlockStateData holoState = getBlock(holoPos);
 			BlockEntityData holoBE = getBlockEntity(holoPos);
-			BlockEntityData targetBE = target.getBlockEntity(targetPos).join();
-			BlockHoloState state = BlockHoloState.getHoloState(targetState, holoState, targetBE, holoBE);
-			setHoloState(holoPos, state);
-			markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
+			CompletableFuture<BlockEntityData> targetBE = target.getBlockEntity(targetPos);
+			
+			CompletableFuture.allOf(targetState, targetBE)
+				.exceptionally(e -> {
+					HoloStruct.LOGGER.warn("failed to update hologram at {{} {} {}}: {}", targetPos.x, targetPos.y, targetPos.z, e.getMessage());
+					return null;
+				})
+				.thenRunAsync(() -> {
+					BlockHoloState state = BlockHoloState.getHoloState(targetState.join(), holoState, targetBE.join(), holoBE);
+					setHoloState(holoPos, state);
+
+					if (markDirty) markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
+				})
+				.exceptionally(e -> {
+					HoloStruct.LOGGER.warn("failed to update hologram at {{} {} {}}: {}", targetPos.x, targetPos.y, targetPos.z, e.getMessage());
+					return null;
+				}); 
 		});
 	}
 	
+	/**
+	 * Initiates an update of every single block inside this hologram using {@link Hologram#updateHoloStateAt(IRemoteLevelAccessor, Vec3i, boolean)}.
+	 * This process runs on an another thread and is delayed by the time configured in the client config file to prevent timeouts and server overload.
+	 * @param target The target to compare the hologram with, normally an level {@link IRemoteLevelAccessor} to the real world
+	 */
 	public void updateHoloStates(IRemoteLevelAccessor target) {
-		for (int y = this.boundsMin.getY(); y < this.boundsMax.getY(); y++) {
-			for (int z = this.boundsMin.getZ(); z < this.boundsMax.getZ(); z++) {
-				for (int x = this.boundsMin.getX(); x < this.boundsMax.getX(); x++) {
-					Vec3i holoPos = new Vec3i(x, y, z);
-					updateHoloStateAt(target, holoPos);
+		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
+		
+		CompletableFuture.runAsync(() -> {
+			for (HologramChunk chunk : this.chunks.values()) {
+				Vec3i chunkPos = new Vec3i(chunk.position.getMinBlockX(), 0, chunk.position.getMinBlockZ());
+				for (Entry<Integer, HologramSection> section : chunk.sections.int2ObjectEntrySet()) {
+					Vec3i sectionoPos = chunkPos.add(new Vec3i(0, section.getKey() << 4, 0));
+					
+					try { Thread.sleep(ClientConfig.SECTION_UPDATE_DELAY.get()); } catch (InterruptedException e) {}
+					
+					for (int y = 0; y < 16; y++) {
+						for (int z = 0; z < 16; z++) {
+							for (int x = 0; x < 16; x++) {
+								Vec3i holoPos = sectionoPos.add(new Vec3i(x, y, z));
+								if (this.isInBounds(holoPos)) updateHoloStateAt(target, holoPos, false);
+							}
+						}
+					}
+					markSectionDirty(chunk.position, section.getKey());
 				}
 			}
-		}
+		});
 	}
 	
 	/* standard level accessing methods */
-	
+
+	@Override
 	public void setBlock(BlockPos position, BlockState state) {
 		Optional<HologramChunk> chunk = getOrCreateChunkAt(position, !state.isAir());
 		if (chunk.isEmpty()) return;
@@ -249,7 +345,8 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 		markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 		this.updateBounds = true;
 	}
-	
+
+	@Override
 	public BlockState getBlock(BlockPos position) {
 		Optional<HologramChunk> chunk = getChunkAt(position);
 		if (chunk.isPresent()) return chunk.get().getBlock(position);
@@ -265,13 +362,15 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 			this.updateBounds = true;
 		}
 	}
-	
+
+	@Override
 	public BlockEntity getBlockEntity(BlockPos position) {
 		Optional<HologramChunk> chunk = getChunkAt(position);
 		if (chunk.isPresent()) return chunk.get().getBlockEntity(position).orElseGet(() -> null);
 		return null;
 	}
-	
+
+	@Override
 	public List<Entity> getEntitiesInBounds(AABB bounds) {
 		return this.entities.values().stream().filter(entity -> bounds.intersects(entity.getBoundingBox())).toList();
 	}

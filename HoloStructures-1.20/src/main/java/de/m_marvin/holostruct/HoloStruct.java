@@ -9,11 +9,10 @@ import de.m_marvin.holostruct.client.HoloStructClient;
 import de.m_marvin.holostruct.client.registries.CommandArguments;
 import de.m_marvin.holostruct.levelbound.ServerLevelboundPackageHandler;
 import de.m_marvin.holostruct.levelbound.network.AddEntityPackage;
-import de.m_marvin.holostruct.levelbound.network.GetAccessPermissions;
 import de.m_marvin.holostruct.levelbound.network.GetBlockEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.GetBlockStatePackage;
 import de.m_marvin.holostruct.levelbound.network.GetEntitiesPackage;
-import de.m_marvin.holostruct.levelbound.network.SendAccessPermissons;
+import de.m_marvin.holostruct.levelbound.network.QueryAccessPermissions;
 import de.m_marvin.holostruct.levelbound.network.SetBlockEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.SetBlockStatePackage;
 import net.neoforged.bus.api.IEventBus;
@@ -24,6 +23,10 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
 
+/*
+ * Main class of the mod, exists on server and client side.
+ * Mainly registers other classes to the mod bus.
+ */
 @Mod(HoloStruct.MODID)
 @Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.MOD)
 public class HoloStruct {
@@ -60,22 +63,23 @@ public class HoloStruct {
 		registrar.play(GetEntitiesPackage.ID, GetEntitiesPackage::new, handler -> handler
 				.server(SERVER_LEVELBOUND::handlerGetEntities)
 				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(GetAccessPermissions.ID, GetAccessPermissions::new, handler -> handler
-				.server(HoloStruct::handlePermissonRequest));
-		registrar.play(SendAccessPermissons.ID, SendAccessPermissons::new, handler -> handler
+		registrar.play(QueryAccessPermissions.ID, QueryAccessPermissions::new, handler -> handler
+				.server(HoloStruct::handlePermissonRequest)
 				.client(CLIENT::onAccessPermissionsReceived));
 	}
 	
-	public static void handlePermissonRequest(GetAccessPermissions pkg, PlayPayloadContext context) {
+	public static void handlePermissonRequest(QueryAccessPermissions pkg, PlayPayloadContext context) {
 		LOGGER.info("HS2/Permisson Access permissions requested!");
 		String config = ServerConfig.write();
-		context.replyHandler().send(new SendAccessPermissons(config));
+		context.replyHandler().send(new QueryAccessPermissions(config));
 	}
 	
-	/* TODO Feature liste  */
-	// Schem format mit Mod-Blöcken die fehlen
-	// Fehlende-Mods liste beim laden einer Blaupause
-	// Blaupausen rotieren/spiegeln
-	// In-Game editieren von Hologrammen
+	/** TODO Feature liste 
+	 * - .schematic parser
+	 * - rotieren/scalieren/spiegeln von blaupausen und hologrammen
+	 * - in-game editieren von hologrammen
+	 * - materialliste/vortschrittsanzeige von hologrammen
+	 * - pixel-art generator
+	 */
 	
 }

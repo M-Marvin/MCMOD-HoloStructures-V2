@@ -23,6 +23,11 @@ import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
+/**
+ * An implementation of {@link IBlueprintParser} for the vanilla .nbt format.
+ * 
+ * @author Marvin Koehler
+ */
 public class NBTStrructParser implements IBlueprintParser {
 
 	protected TagCompound nbtTag;

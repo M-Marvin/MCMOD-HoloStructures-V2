@@ -33,15 +33,38 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * This is the main class used to construct actual game instances of their respective blueprint data types and do the reverse.
+ * @author Marvin Koehler
+ */
 public class TypeConverter {
 	
+	/**
+	 * See {@link BlockEntityData#setData(TagCompound)}
+	 */
 	public static final Consumer<TagCompound> BLOCK_ENTITY_META_FILTER = tag -> {
 		tag.removeTag("x");
 		tag.removeTag("y");
 		tag.removeTag("z");
 		tag.removeTag("id");	
 	};
+
+	/**
+	 * See {@link EntityData#setData(TagCompound)}
+	 */
+	public static final Consumer<TagCompound> ENTITY_META_FILTER = tag -> {
+		// TODO check if this is correct
+		tag.removeTag("x");
+		tag.removeTag("y");
+		tag.removeTag("z");
+		tag.removeTag("id");	
+	};
 	
+	/**
+	 * Converts an actual blocks state to an data type.
+	 * @param state The block state instance
+	 * @return The block state data type or null if it was not possible to convert.
+	 */
 	public static BlockStateData blockState2data(BlockState state) {
 		if (state == null) return null;
 		RegistryName blockName = new RegistryName(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
@@ -52,6 +75,11 @@ public class TypeConverter {
 		return data;
 	}
 	
+	/**
+	 * Constructs an actual block state from an data type.
+	 * @param data The block state data type
+	 * @return The actual block state or null if it was not possible to convert.
+	 */
 	public static BlockState data2blockState(BlockStateData data) {
 		if (data == null) return null;
 		Block block = BuiltInRegistries.BLOCK.get(data2resLoc(data.getBlockName()));
@@ -72,6 +100,11 @@ public class TypeConverter {
 		return state;
 	}
 	
+	/**
+	 * Converts an actual block entity to and data type.
+	 * @param blockEntity The block entity instance
+	 * @return The block entity data type or null if it was not possible to convert
+	 */
 	public static BlockEntityData blockEntity2data(BlockEntity blockEntity) {
 		if (blockEntity == null) return null;
 		RegistryName typeName = resLoc2data(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()));
@@ -81,6 +114,12 @@ public class TypeConverter {
 		return data;
 	}
 	
+	/**
+	 * Constructs an actual block entity from an data type.
+	 * @param block The actual block state of the block entity, required for construction
+	 * @param data The block entity data type
+	 * @return The actual block entity instance or null if it was not possible to convert.
+	 */
 	public static BlockEntity data2blockEntity(BlockState block, BlockEntityData data) {
 		if (data == null) return null;
 		BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.get(data2resLoc(data.getTypeName()));
@@ -91,6 +130,11 @@ public class TypeConverter {
 		return blockEntity;
 	}
 	
+	/**
+	 * Converts an actual entity to and data type.
+	 * @param entity The entity instance
+	 * @return The entity data type or null if it was not possible to convert
+	 */
 	public static EntityData entity2data(Entity entity) {
 		if (entity == null) return null;
 		RegistryName entityName = resLoc2data(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
@@ -100,6 +144,11 @@ public class TypeConverter {
 		return data;
 	}
 	
+	/**
+	 * Constructs an actual entity from an data type.
+	 * @param data The entity data type
+	 * @return The actual entity instance or null if it was not possible to convert.
+	 */
 	public static Entity data2entity(EntityData data) {
 		if (data == null) return null;
 		EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(data2resLoc(data.getEntityName()));
@@ -112,6 +161,11 @@ public class TypeConverter {
 		return entity;
 	}
 	
+	/**
+	 * Converts an {@link TagCompound} to an {@link CompoundTag}
+	 * @param data The {@link TagCompound}
+	 * @return An identical {@link CompoundTag}, null if the parameter was null or an empty compound if an error occurred
+	 */
 	public static CompoundTag data2nbt(TagCompound data) {
 		if (data == null) return null;
 		try {
@@ -124,6 +178,11 @@ public class TypeConverter {
 		}
 	}
 	
+	/**
+	 * Converts an {@link CompoundTag} to an {@link TagCompound}
+	 * @param data The {@link CompoundTag}
+	 * @return An identical {@link TagCompound}, null if the parameter was null or an empty compound if an error occurred
+	 */
 	public static TagCompound nbt2data(CompoundTag nbt) {
 		if (nbt == null) return null;
 		try {
@@ -133,14 +192,24 @@ public class TypeConverter {
 		} catch (IOException e) {
 			System.err.println("failed to convert nbt data!");
 			e.printStackTrace();
-			return null;
+			return new TagCompound();
 		}
 	}
 	
+	/**
+	 * Converts an {@link RegistryName} to an {@link ResourceLocation}
+	 * @param data The {@link RegistryName}
+	 * @return An identical {@link ResourceLocation}
+	 */
 	public static ResourceLocation data2resLoc(RegistryName data) {
 		return new ResourceLocation(data.getNamespace(), data.getName());
 	}
 	
+	/**
+	 * Converts an {@link ResourceLocation} to an {@link RegistryName}
+	 * @param data The {@link ResourceLocation}
+	 * @return An identical {@link RegistryName}
+	 */
 	public static RegistryName resLoc2data(ResourceLocation resLoc) {
 		return new RegistryName(resLoc.getNamespace(), resLoc.getPath());
 	}

@@ -19,6 +19,11 @@ import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
+/**
+ * This is part of {@link SchemParser}, this class defines some functions used for the sub-format Sponge-1
+ * 
+ * @author Marvin Koehler
+ */
 public class SchemParserSponge1 {
 
 	public static final Pattern BLOCK_STATE_PARSE_PATTERN = Pattern.compile("([A-Za-z0-9_\\-\\:]{1,})\\[([A-Za-z0-9_\\-=\\,]{1,})\\]");

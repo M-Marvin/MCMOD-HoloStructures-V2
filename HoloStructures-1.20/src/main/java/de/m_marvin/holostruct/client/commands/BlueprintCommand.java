@@ -18,6 +18,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
+/**
+ * Command used to manage blueprints and their files
+ * @author Marvin Koehler
+ */
 public class BlueprintCommand {
 	
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {

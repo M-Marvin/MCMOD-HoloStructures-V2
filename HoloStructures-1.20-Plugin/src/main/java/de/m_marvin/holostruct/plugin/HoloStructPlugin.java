@@ -16,8 +16,8 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 
 public class HoloStructPlugin extends JavaPlugin implements Listener, PluginMessageListener {
 	
-	public static final String HOLOSTRUCT_GET_CONFIG = "holostruct:querry_access_permissions";
-	public static final String HOLOSTRUCT_SET_CONFIG = "holostruct:send_access_permissons";
+	public static final String HOLOSTRUCT_GET_CONFIG = "holostruct:query_access_permissions";
+	public static final String HOLOSTRUCT_SET_CONFIG = "holostruct:query_access_permissions";
 	public static final String CONFIG_FILE = "holostruct-server.toml";
 	
 	public Config configuration = new Config(new File(this.getDataFolder(), CONFIG_FILE));

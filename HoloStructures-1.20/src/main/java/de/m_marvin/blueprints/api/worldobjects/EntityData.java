@@ -3,9 +3,16 @@ package de.m_marvin.blueprints.api.worldobjects;
 import java.util.Objects;
 
 import de.m_marvin.blueprints.api.RegistryName;
+import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.nbtutility.nbt.TagCompound;
 import de.m_marvin.univec.impl.Vec3d;
 
+/**
+ * This class represents an entitiy's data.<br>
+ * It contains its position, its registry name and its nbt data compound
+ * 
+ * @author Marvin Koehler
+ */
 public class EntityData {
 	
 	protected Vec3d position;
@@ -16,8 +23,12 @@ public class EntityData {
 		this.position = position;
 		this.entityName = entityName;
 	}
-	
+
+	/**
+	 * <b>NOTE</b>: This method filters out some of the fields of the nbt data, since they would be duplicates of the {@link EntityData#position} and {@link EntityData#entityName} fields.
+	 */
 	public void setData(TagCompound data) {
+		TypeConverter.ENTITY_META_FILTER.accept(data);
 		this.data = data;
 	}
 	
@@ -36,20 +47,25 @@ public class EntityData {
 	public RegistryName getEntityName() {
 		return entityName;
 	}
-	
+
+	/**
+	 * <b>NOTE</b>: Position is ignored, only nbt and registry name are compared
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof EntityData other) {
 			return	other.entityName.equals(this.entityName) &&
-					other.position.equals(this.position) &&
 					other.data.equals(this.data);
 		}
 		return false;
 	}
-	
+
+	/**
+	 * <b>NOTE</b>: Position is ignored, only nbt and registry name are considered
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.position, this.entityName, this.data);
+		return Objects.hash(this.entityName, this.data);
 	}
 	
 	@Override

@@ -13,6 +13,10 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * An hologram section is the smallest unit of an hologram.
+ * @author Marvin Koehler
+ */
 public class HologramSection {
 	
 	protected int nonEmptyBlockCount = 0;
@@ -34,7 +38,7 @@ public class HologramSection {
 	}
 	
 	public void setState(int x, int y, int z, BlockState state) {
-		BlockState replaced = this.states.put(BlockPos.asLong(x, y, z),  state);
+		BlockState replaced = this.states.put(BlockPos.asLong(x & 15, y & 15, z & 15),  state);
 		if (replaced == null || replaced.isAir() != state.isAir()) {
 			if (state.isAir() && replaced != null) {
 				this.nonEmptyBlockCount--;
@@ -46,11 +50,12 @@ public class HologramSection {
 	}
 
 	public BlockHoloState getHoloState(int x, int y, int z) {
-		return this.holoState.getOrDefault(BlockPos.asLong(x & 15, y & 15, z & 15), BlockHoloState.NO_BLOCK);
+		BlockHoloState state = this.holoState.get(BlockPos.asLong(x & 15, y & 15, z & 15));
+		return state == null ? BlockHoloState.NO_BLOCK : state;
 	}
 
 	public void setHoloState(int x, int y, int z, BlockHoloState state) {
-		this.holoState.put(BlockPos.asLong(x & 15, y & 15, z & 15),  state);
+		this.holoState.put(BlockPos.asLong(x & 15, y & 15, z & 15), state);
 	}
 
 	public Long2ObjectMap<BlockState> getStates() {

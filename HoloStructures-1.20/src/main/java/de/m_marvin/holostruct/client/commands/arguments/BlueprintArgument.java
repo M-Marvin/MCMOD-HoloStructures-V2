@@ -14,6 +14,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.m_marvin.holostruct.HoloStruct;
 import net.minecraft.commands.SharedSuggestionProvider;
 
+/**
+ * Argument for blueprint a loaded blueprint name
+ * @author Marvin Koehler
+ */
 public class BlueprintArgument implements ArgumentType<String> {
 
 	private static final Collection<String> EXAMPLES = Arrays.asList("blueprint_name");

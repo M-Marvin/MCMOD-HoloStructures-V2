@@ -16,6 +16,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 
+/**
+ * Handles the levelbound packages received from the client
+ * @author Marvin Koehler
+ */
 public class ServerLevelboundPackageHandler {
 	
 	public void handlerSetBlockstate(SetBlockStatePackage pkg, PlayPayloadContext context) {

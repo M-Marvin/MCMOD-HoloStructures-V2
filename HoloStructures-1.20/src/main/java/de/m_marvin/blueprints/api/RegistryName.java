@@ -5,6 +5,12 @@ import java.util.Optional;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+/**
+ * Represents an entry in the game registry.
+ * Works the same as the ResourceLocation class
+
+ * @author Marvin Köhler
+ */
 public class RegistryName {
 	
 	public static final Pattern REGISTRY_NAME_PATTERN = Pattern.compile("([a-z0-9_\\-]{1,})\\:([a-z0-9_\\-\\\\\\/]{1,})");

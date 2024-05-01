@@ -6,15 +6,26 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import de.m_marvin.blueprints.api.Blueprint;
+import de.m_marvin.blueprints.parser.IBlueprintParser;
 import de.m_marvin.blueprints.parser.NBTStrructParser;
 import de.m_marvin.blueprints.parser.SchemParser;
 import de.m_marvin.blueprints.parser.SchemParser.SchemVersion;
 
+/**
+ * An class combining all imnplementations of {@link IBlueprintParser}.
+ * Automatically identifies the format of an file and selects the required parser.
+ * 
+ * @author Marvin Koehler
+ */
 public class BlueprintLoader {
 	
 	public static final NBTStrructParser NBT_PARSER = new NBTStrructParser();
 	public static final SchemParser	SCHEM_PARSER = new SchemParser();
 	
+	/**
+	 * The supported formats of {@link BluprintLoader}
+	 * @author Marvin Koehler
+	 */
 	public static enum BlueprintFormat {
 		NBT,
 		SCHEM_SPONGE1,
@@ -22,6 +33,12 @@ public class BlueprintLoader {
 		SCHEM_SPONGE3;
 	}
 	
+	/**
+	 * Returns the format used for the file extension.
+	 * In case multiple sup-formats exist for this extension, the newest one is returned.
+	 * @param The file name extension
+	 * @return extension The format used for this extension
+	 */
 	public static BlueprintFormat formatFromExtension(String extension) {
 		if (extension.equalsIgnoreCase("schem")) {
 			return BlueprintFormat.SCHEM_SPONGE3;
@@ -32,6 +49,11 @@ public class BlueprintLoader {
 		}
 	}
 	
+	/**
+	 * Tries to load the file as {@link Blueprint}.
+	 * @param blueprintFile The schematic file
+	 * @return The blueprint or null if an error occurred.
+	 */
 	public static Blueprint loadBlueprint(File blueprintFile) {
 		try {
 			if (blueprintFile.getName().endsWith("nbt") || blueprintFile.getName().endsWith("NBT")) {
@@ -66,6 +88,13 @@ public class BlueprintLoader {
 		}
 	}
 	
+	/**
+	 * Tries to write the blueprint to an file with the specified format.
+	 * @param blueprint The blueprint to save to the file
+	 * @param blueprintFile The file path and name
+	 * @param format The format for to save the blueprint with, should match the files extension for compatibility reasons.
+	 * @return true if the file could successfully been written
+	 */
 	public static boolean saveBlueprint(Blueprint blueprint, File blueprintFile, BlueprintFormat format) {
 		try {
 			switch (format) {

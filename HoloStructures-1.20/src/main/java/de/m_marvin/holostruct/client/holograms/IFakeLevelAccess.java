@@ -39,6 +39,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.ticks.LevelTickAccess;
 
+/**
+ * An interface used to access data required for rendering.
+ * Implemented by holograms to be able to be passed to vanilla render functions.
+ * @author Marvin Koehler
+ *
+ */
 public interface IFakeLevelAccess extends LevelAccessor {
 	
 	public List<Entity> getEntitiesInBounds(AABB bounds);

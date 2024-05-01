@@ -12,10 +12,11 @@ import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.holostruct.client.levelbound.access.AccessDeniedException;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
-import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.AddEntityCommand;
-import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.Command;
-import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.SetBlockEntityCommand;
-import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher.SetBlockStateCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.AddEntityCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.Command;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.SetBlockEntityCommand;
+import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.SetBlockStateCommand;
+import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ServerLevelAccessorImpl;
 import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;
@@ -30,6 +31,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+/**
+ * The client level accessor is used if the mod is not installed on the server side.
+ * It communicates with the server using various ways that are available without an server sided mod.
+ * This implementation is usually slower than the @link {@link ServerLevelAccessorImpl}
+ * @author Marvin Koehler
+ *
+ */
 public class ClientLevelAccessorImpl implements IRemoteLevelAccessor {
 
 	private final Minecraft minecraft;

@@ -14,6 +14,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.m_marvin.holostruct.HoloStruct;
 import net.minecraft.commands.SharedSuggestionProvider;
 
+/**
+ * Argument for an hologram name
+ * @author Marvin Koehler
+ */
 public class HologramArgument implements ArgumentType<String> {
 
 	private static final Collection<String> EXAMPLES = Arrays.asList("hologram_name");

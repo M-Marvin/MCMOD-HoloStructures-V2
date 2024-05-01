@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.levelbound.access.clientlevel.commanddispatcher;
+package de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,6 +6,12 @@ import java.util.concurrent.CompletableFuture;
 
 import de.m_marvin.holostruct.client.ClientConfig;
 
+/**
+ * An command send to the server and waiting for response.
+ * @author Marvin Koehler
+ *
+ * @param <T> Type of the result of this command
+ */
 public abstract class Command<T> {
 	
 	public static class Response {

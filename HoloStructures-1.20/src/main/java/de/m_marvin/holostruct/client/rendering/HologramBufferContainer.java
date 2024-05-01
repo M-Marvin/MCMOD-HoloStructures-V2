@@ -15,6 +15,10 @@ import de.m_marvin.holostruct.client.holograms.BlockHoloState;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
+/**
+ * The buffer contains holds the multi buffer sources for each {@link BlockHoloState}.
+ * @author Marvin Koehler
+ */
 public class HologramBufferContainer {
 
 	private static Set<RenderType> allocatedTypes = new CopyOnWriteArraySet<>();
@@ -35,6 +39,10 @@ public class HologramBufferContainer {
 		return allocatedTypes;
 	}
 	
+	/**
+	 * The holographic buffer source holds one buffer source for each {@link RenderType}
+	 * @author Marvin Koehler
+	 */
 	public static class HolographicBufferSource implements MultiBufferSource {
 		
 		private Map<RenderType, BufferBuilder> bufferBuilders;

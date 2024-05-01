@@ -3,6 +3,10 @@ package de.m_marvin.holostruct.client.commands.arguments;
 import de.m_marvin.holostruct.HoloStruct;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Argument for the viewmoder used for holograms
+ * @author Marvin Koehler
+ */
 public enum ViewMode {
 	
 	VANILLA("vanilla", null),

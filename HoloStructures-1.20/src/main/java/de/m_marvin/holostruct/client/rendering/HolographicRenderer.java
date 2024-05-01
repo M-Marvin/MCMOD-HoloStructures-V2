@@ -69,6 +69,10 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
+/**
+ * Manages the rendering of the holograms in the world.
+ * @author Marvin Koehler
+ */
 @Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
 public class HolographicRenderer {
 	
@@ -142,6 +146,11 @@ public class HolographicRenderer {
 		}
 	}
 	
+	/**
+	 * Loads the specified shader as post effect for the holograms
+	 * @param postEffect THe location of the shader to load.
+	 * @return true if the shader could be loaded
+	 */
 	public boolean loadPostEffect(ResourceLocation postEffect) {
 		if (RenderSystem.isOnGameThread()) {
 			return _loadPostEffect(postEffect);
@@ -177,6 +186,9 @@ public class HolographicRenderer {
 		}
 	}
 	
+	/**
+	 * Returns the currently active post effect
+	 */
 	public SelectivePostChain getActivePostEffect() {
 		return activePostEffect;
 	}
@@ -189,6 +201,12 @@ public class HolographicRenderer {
 		return hologramRenders;
 	}
 	
+	/**
+	 * Marks the specified chunk section to be redrawn
+	 * @param hologram The hologram to which the section belongs to
+	 * @param pos The position of the chunk in which the section is located
+	 * @param section The Y index of the section
+	 */
 	public void markDirty(Hologram hologram, ChunkPos pos, int section) {
 		if (hologram == null) return;
 		RenderSystem.recordRenderCall(() -> {
@@ -209,6 +227,9 @@ public class HolographicRenderer {
 		});
 	}
 	
+	/**
+	 * Adds an hologram to the list of holograms that are rendered
+	 */
 	public void addHologram(Hologram hologram) {
 		RenderSystem.recordRenderCall(() -> {
 			HologramRender holoRender = new HologramRender(hologram);
@@ -228,10 +249,14 @@ public class HolographicRenderer {
 		});
 	}
 	
+	/**
+	 * Removes an hologram from the list of holograms that are rendered.
+	 */
 	public void discardHologram(Hologram hologram) {
 		RenderSystem.recordRenderCall(() -> {
 			HologramRender holoRender = hologramRenders.remove(hologram.hashCode());
 			if (holoRender != null) {
+				holoRender.hologram = null;
 				holoRender.renderChunks.forEach((lp, chunk) -> {
 					chunk.compiled.values().forEach(HolographicSectionCompiled::discardBuffers);
 					chunk.discardBuffers();
@@ -252,6 +277,7 @@ public class HolographicRenderer {
 	}
 	
 	private void prerenderHolographicSection(HologramRender holoRender, HolographicChunk holoChunk, int sectionIndex) {
+		if (holoRender.hologram == null) return; // This hologram is currently being deleted
 		
 		Optional<HologramChunk> chunk = holoRender.hologram.getChunk(holoChunk.pos);
 		HologramSection section = chunk.isPresent() ? chunk.get().getSections().get(sectionIndex) : null;
@@ -266,11 +292,13 @@ public class HolographicRenderer {
 		IRemoteLevelAccessor level = HoloStruct.CLIENT.LEVELBOUND.getAccessor();
 		
 		CompletableFuture.runAsync(() -> {
+			if (holoRender.hologram == null) return; // This hologram is currently being deleted
+			
 			holoChunk.claimBuffers();
 			
-			RenderType.chunkBufferLayers().stream().forEach(renderLayer ->
-				renderChunkLayers(holoChunk.bufferContainer, renderLayer, holoRender.hologram, level, holoRender.hologram.position, holoChunk.pos, sectionIndex, section)
-			);
+			RenderType.chunkBufferLayers().stream().forEach(renderLayer -> {
+				renderChunkLayers(holoChunk.bufferContainer, renderLayer, holoRender.hologram, level, holoRender.hologram.position, holoChunk.pos, sectionIndex, section);
+			});
 			
 			List<BlockEntity> sectionBlockEntities = chunk.get().getBlockEntities().entrySet().stream()
 					.filter(entry -> entry.getKey().getY() >= sectionIndex << 4 && entry.getKey().getY() < (sectionIndex + 1) << 4)
@@ -286,6 +314,7 @@ public class HolographicRenderer {
 			return null;
 		})
 		.thenRunAsync(() -> {
+			if (holoRender.hologram == null) return; // This hologram is currently being deleted
 			
 			HolographicSectionCompiled compiled = new HolographicSectionCompiled();
 			compiled.genBuffers(HologramBufferContainer.getAlocatedRenderTypes());
@@ -293,6 +322,7 @@ public class HolographicRenderer {
 			BlockHoloState.renderedStates().forEach(holoState -> {
 				HologramBufferContainer.getAlocatedRenderTypes().forEach(renderLayer -> {
 					HolographicBufferSource bufferSource = holoChunk.bufferContainer.getBufferSource(holoState);
+					if (bufferSource == null) return; // This can happen if a hologram is deleted while a recompile task is executed
 					compiled.bindBuffer(holoState, renderLayer).upload(bufferSource.endBatch(renderLayer));
 				});
 			});
@@ -387,15 +417,16 @@ public class HolographicRenderer {
 		for (int y = 0; y < 16; y++) {
 			for (int z = 0; z < 16; z++) {
 				for (int x = 0; x < 16; x++) {
-					BlockPos holoPos = new BlockPos(chunkPos.getMinBlockX() + x, posY + y, chunkPos.getMinBlockX() + z);
+					BlockPos holoPos = new BlockPos(chunkPos.getMinBlockX() + x, posY + y, chunkPos.getMinBlockZ() + z);
 					BlockPos worldPos = hologramPosition.offset(holoPos);
 					
 					if (worldPos.getY() != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) continue;
 					
 					BlockState state = section.getState(x, y, z);
 					BlockHoloState holoState = section.getHoloState(x, y, z);
-
-					VertexConsumer builder = bufferContainer.getBufferSource(holoState).getBuffer(renderLayer);
+					HolographicBufferSource bufferSource = bufferContainer.getBufferSource(holoState);
+					
+					VertexConsumer builder = bufferSource.getBuffer(renderLayer);
 					
 					if (holoState != BlockHoloState.NO_BLOCK) 
 						state = realLevel.getBlockState(worldPos);
@@ -406,9 +437,6 @@ public class HolographicRenderer {
 					if (!state.isAir() && model.getRenderTypes(state, random, modelData).contains(renderLayer)) {
 						poseStack.pushPose();
 						poseStack.translate(x, y, z);
-//						if (holoState != BlockHoloState.NO_BLOCK) poseStack.scale(1.1F, 1.1F, 1.1F);
-//						poseStack.translate(-0.5F, -0.5F, -0.5F);
-						
 						blockRenderer.renderBatched(state, hologramPosition.offset(holoPos), holoLevel, poseStack, builder, false, random, modelData, renderLayer);
 						poseStack.popPose();
 					}

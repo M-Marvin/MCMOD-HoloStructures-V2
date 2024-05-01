@@ -11,6 +11,12 @@ import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.config.ModConfig.Type;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+/**
+ * The server side config file.
+ * Mostly called "permisson config"
+ * @author Marvin Koehler
+ *
+ */
 public class ServerConfig {
 	
 	private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();

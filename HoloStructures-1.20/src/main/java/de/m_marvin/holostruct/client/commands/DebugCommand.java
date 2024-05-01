@@ -17,6 +17,10 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Command used for debuging purposes
+ * @author Marvin Koehler
+ */
 public class DebugCommand {
 	
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {

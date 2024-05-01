@@ -17,6 +17,10 @@ import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
+/**
+ * Command used to manage holograms
+ * @author Marvin Koehler
+ */
 public class HologramCommand {
 	
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -139,10 +143,10 @@ public class HologramCommand {
 
 	public static int selectViewMode(CommandContext<CommandSourceStack> source, ViewMode viewMode) {
 		if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(viewMode.getPostEffect())) {
-			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.viewmode.failed", viewMode.name()));
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.viewmode.failed", viewMode.getName()));
 			return 0;
 		}
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.viewmode.enabled", viewMode.name()), false);
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.viewmode.enabled", viewMode.getName()), false);
 		return 1;
 	}
 	

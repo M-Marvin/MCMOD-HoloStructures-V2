@@ -11,6 +11,12 @@ import de.m_marvin.nbtutility.BinaryParser;
 import de.m_marvin.nbtutility.TagType;
 import de.m_marvin.nbtutility.nbt.TagCompound;
 
+/**
+ * An implementation of {@link IBlueprintParser} for the .schem format.
+ * Supports the sub-formats Sponge-1 up to Sponge-3
+ * 
+ * @author Marvin Koehler
+ */
 public class SchemParser implements IBlueprintParser {
 	
 	public static final Pattern BLOCK_STATE_PARSE_PATTERN = Pattern.compile("([a-z0-9_\\-\\:]{1,})\\[([a-z0-9_\\-=\\,]{1,})\\]");

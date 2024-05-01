@@ -22,6 +22,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 
+/**
+ * Argument for blueprint file path
+ * @author Marvin Koehler
+ */
 public class BlueprintPathArgument implements ArgumentType<String> {
 
 	private static final Collection<String> EXAMPLES = Arrays.asList("not_aviable");

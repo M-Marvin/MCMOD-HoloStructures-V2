@@ -15,6 +15,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.m_marvin.blueprints.BlueprintLoader.BlueprintFormat;
 import net.minecraft.commands.SharedSuggestionProvider;
 
+/**
+ * Argument for an blueprint file format
+ * @author Marvin Koehler
+ */
 public class BlueprintFormatArgument implements ArgumentType<BlueprintFormat> {
 
 	private static final Collection<String> EXAMPLES = Stream.of(BlueprintFormat.values()).map(format -> format.toString().toLowerCase()).toList();
