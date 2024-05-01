@@ -185,6 +185,7 @@ public class HologramCommand {
 		BlockPos diff = newOrigin.subtract(hologram.getPosition());
 		hologram.setOrigin(hologram.getOrigin().offset(diff));
 		hologram.setPosition(newOrigin);
+		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.origin.changed", hologramName, newOrigin.getX(), newOrigin.getY(), newOrigin.getZ()), false);
 		return 1;

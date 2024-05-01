@@ -79,7 +79,7 @@ public class HologramManager {
 	public void updateHoloSectionAt(BlockPos position) {
 		if (!HoloStruct.CLIENT.LEVELBOUND.getAccessLevel().hasRead()) return;
 		getHolograms().values().forEach(hologram -> {
-			Vec3i holoPosition = Vec3i.fromVec(position.subtract(hologram.getPosition()));
+			Vec3i holoPosition = Vec3i.fromVec(position.subtract(hologram.getPosition().subtract(hologram.getOrigin())));
 			if (!hologram.isInBounds(holoPosition)) return;
 			hologram.updateHoloStateAt(HoloStruct.CLIENT.LEVELBOUND.getAccessor(), holoPosition);
 		});

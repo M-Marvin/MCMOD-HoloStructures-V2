@@ -278,7 +278,7 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 			setHoloState(holoPos, BlockHoloState.NO_BLOCK);
 			return;
 		}
-		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition()));
+		Vec3i targetPos = holoPos.add(Vec3i.fromVec(getPosition().subtract(getOrigin())));
 		
 		HoloStruct.CLIENT.LEVELBOUND.safeExecute(() -> {
 			CompletableFuture<BlockStateData> targetState = target.getBlock(targetPos);
@@ -318,8 +318,6 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 				for (Entry<Integer, HologramSection> section : chunk.sections.int2ObjectEntrySet()) {
 					Vec3i sectionoPos = chunkPos.add(new Vec3i(0, section.getKey() << 4, 0));
 					
-					try { Thread.sleep(ClientConfig.SECTION_UPDATE_DELAY.get()); } catch (InterruptedException e) {}
-					
 					for (int y = 0; y < 16; y++) {
 						for (int z = 0; z < 16; z++) {
 							for (int x = 0; x < 16; x++) {
@@ -329,6 +327,8 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 						}
 					}
 					markSectionDirty(chunk.position, section.getKey());
+
+					try { Thread.sleep(ClientConfig.SECTION_UPDATE_DELAY.get()); } catch (InterruptedException e) {}
 				}
 			}
 		});
