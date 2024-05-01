@@ -82,7 +82,7 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 			path = folderPath + "/" + filePath;
 		}
 		if (allowOnlyExisting && !resolvePath(path).isFile()) {
-			throw new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage("Could not parse invalid blueprint file!")), Component.translatable("argument.blueprintpath.invalid"));
+			throw new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage("Could not parse invalid blueprint file!")), Component.translatable("holostruct.commands.argument.blueprintpath.invalid"));
 		}
 		return path;
 	}
@@ -135,6 +135,5 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 	public Collection<String> getExamples() {
 		 return EXAMPLES;
 	}
-	
 	
 }
