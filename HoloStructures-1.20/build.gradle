@@ -28,10 +28,9 @@ minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/
 minecraft.accessTransformers.entry "public net.minecraft.server.MinecraftServer storageSource # storageSource"
 
 configurations {
-    shade
-    implementation.extendsFrom shade
     libraries {}
     implementation.extendsFrom libraries
+    shade
 }
 
 configurations.all {
@@ -100,7 +99,7 @@ dependencies {
     // You can however also use the vanilla plugin (net.neoforged.gradle.vanilla) to use a version of Minecraft without the neoforge loader.
     // And its provides the option to then use net.minecraft as the group, and one of; client, server or joined as the module name, plus the game version as version.
     // For all intends and purposes: You can treat this dependency as if it is a normal library you would use.
-    implementation "net.neoforged:neoforge:${neo_version}"
+    compileOnly "net.neoforged:neoforge:${neo_version}"
 
 	// UnifiedVectors
 	shade("com.github.M-Marvin:LIBRARY-UnifiedVectors:$univec_version")

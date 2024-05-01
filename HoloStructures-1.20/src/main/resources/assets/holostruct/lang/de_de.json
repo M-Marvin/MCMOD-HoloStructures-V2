@@ -41,8 +41,8 @@
 "holostruct.commands.status.details.read.no": "§2 [§4✘§2] Lese-Zugriff (Keine validierung plazierter Blöcke)",
 "holostruct.commands.status.details.copy.yes": "§2 [§a✔§2] Kopier-Zugriff (Kopieren von Strukturen möglich)",
 "holostruct.commands.status.details.copy.no": "§2 [§4✘§2] Kopier-Zugriff (Kein kopieren von Strukturen möglich)",
-"holostruct.commands.status.details.write.yes": "§2 [§a✔§2] Schreib-Zugriff (Automatisches plazieren von Blöcken)",
-"holostruct.commands.status.details.write.no": "§2 [§4✘§2] Schreib-Zugriff (Kein automatisches plazieren von Blöcken)",
+"holostruct.commands.status.details.write.yes": "§2 [§a✔§2] Schreib-Zugriff (Platzieren von Blöcken)",
+"holostruct.commands.status.details.write.no": "§2 [§4✘§2] Schreib-Zugriff (Kein platzieren von Blöcken)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] Server-Modus (Direkter Zugriff durch Server, schnell)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] Client-Modus (Nur indirekter Zugriff durch Client, langsamer)",
 "holostruct.commands.argument.blueprintpath.invalid": "Der Bauplan-Pfad ist ungültig!"
