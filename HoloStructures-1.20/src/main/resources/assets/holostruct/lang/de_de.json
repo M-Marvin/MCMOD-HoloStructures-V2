@@ -2,10 +2,10 @@
 
 "holostruct.commands.blueprint.logs.invalidblueprint": "§2Bauplan '%1$s§2' nicht gefunden!",
 "holostruct.commands.blueprint.logs.listhead": "§2Lade- oder Speicher-Fehler:",
-"holostruct.commands.blueprint.logs.noentry": "§a- keine Eintr\u00e4ge -",
+"holostruct.commands.blueprint.logs.noentry": "§a- keine Einträge -",
 "holostruct.commands.blueprint.discard.invalidblueprint": "§2Bauplan '%1$s§2' exitiert nicht!",
 "holostruct.commands.blueprint.discard.discarded": "§2Bauplan '%1$s§2' verworfen",
-"holostruct.commands.blueprint.save.fileexists": "§2Datei '%1$s§2' exitiert bereits, benutze §f§ooverride§r§2 zum \u00dcberschreiben!",
+"holostruct.commands.blueprint.save.fileexists": "§2Datei '%1$s§2' exitiert bereits, benutze §f§ooverride§r§2 zum Überschreiben!",
 "holostruct.commands.blueprint.save.invalidblueprint": "§2Bauplan '%1$s§2' nicht gefunden!",
 "holostruct.commands.blueprint.save.failed": "§2Bauplan-Datei '%1$s§2' konnte nicht geschrieben werden!",
 "holostruct.commands.blueprint.save.saved": "§2Bauplan gespeichert in '%1$s§2'",
@@ -37,14 +37,14 @@
 "holostruct.commands.status.copy_server": "§2[§acopy server§2] (Lese-Zugriff auf die Welt mit Erlaubnis zum Kopieren durch den Server)",
 "holostruct.commands.status.full_server": "§2[§6full server§2] (Lese- und Schreib-Zugriff auf die Welt durch den Server)",
 "holostruct.commands.status.details": "§2Zugriffslevel-Details:",
-"holostruct.commands.status.details.read.yes": "§2 [§a✔§2] Lese-Zugriff (Validierung platzierter Bl\u00f6cke)",
-"holostruct.commands.status.details.read.no": "§2 [§4✘§2] Lese-Zugriff (Keine Validierung platzierter Bl\u00f6cke)",
-"holostruct.commands.status.details.copy.yes": "§2 [§a✔§2] Kopier-Zugriff (Kopieren von Strukturen m\u00f6glich)",
-"holostruct.commands.status.details.copy.no": "§2 [§4✘§2] Kopier-Zugriff (Kein Kopieren von Strukturen m\u00f6glich)",
-"holostruct.commands.status.details.write.yes": "§2 [§a✔§2] Schreib-Zugriff (Platzieren von Bl\u00f6cken)",
-"holostruct.commands.status.details.write.no": "§2 [§4✘§2] Schreib-Zugriff (Kein Platzieren von Bl\u00f6cken)",
+"holostruct.commands.status.details.read.yes": "§2 [§a✔§2] Lese-Zugriff (Validierung platzierter Blöcke)",
+"holostruct.commands.status.details.read.no": "§2 [§4✘§2] Lese-Zugriff (Keine Validierung platzierter Blöcke)",
+"holostruct.commands.status.details.copy.yes": "§2 [§a✔§2] Kopier-Zugriff (Kopieren von Strukturen möglich)",
+"holostruct.commands.status.details.copy.no": "§2 [§4✘§2] Kopier-Zugriff (Kein Kopieren von Strukturen möglich)",
+"holostruct.commands.status.details.write.yes": "§2 [§a✔§2] Schreib-Zugriff (Platzieren von Blöcken)",
+"holostruct.commands.status.details.write.no": "§2 [§4✘§2] Schreib-Zugriff (Kein Platzieren von Blöcken)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] Server-Modus (Direkter Zugriff durch Server, schnell)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] Client-Modus (Nur indirekter Zugriff durch Client, langsamer)",
-"holostruct.commands.argument.blueprintpath.invalid": "Bauplan-Pfad ist ung\u00fcltig!"
+"holostruct.commands.argument.blueprintpath.invalid": "Bauplan-Pfad ist ungültig!"
 
 }
