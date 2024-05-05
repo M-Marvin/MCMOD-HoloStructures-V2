@@ -2,7 +2,8 @@ package de.m_marvin.blueprints.parser;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import de.m_marvin.blueprints.api.IStructAccessor;
+
+import de.m_marvin.blueprints.api.IBlueprintAcessor;
 
 /**
  * An implementation of {@link IBlueprintParser} for the pre 1.13 .schematic format.
@@ -24,7 +25,7 @@ public class SchematicParser implements IBlueprintParser {
 	}
 
 	@Override
-	public boolean parse(IStructAccessor target) {
+	public boolean parse(IBlueprintAcessor target) {
 		return false;
 	}
 
@@ -33,7 +34,7 @@ public class SchematicParser implements IBlueprintParser {
 	}
 	
 	@Override
-	public boolean build(IStructAccessor source) {
+	public boolean build(IBlueprintAcessor source) {
 		return false;
 	}
 

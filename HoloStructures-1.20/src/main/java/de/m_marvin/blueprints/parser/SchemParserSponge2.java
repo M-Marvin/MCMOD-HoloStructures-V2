@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Function;
 
-import de.m_marvin.blueprints.api.IStructAccessor;
+import de.m_marvin.blueprints.api.IBlueprintAcessor;
 import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
@@ -37,7 +37,7 @@ public class SchemParserSponge2 {
 		return SchemParserSponge1.state2string(state);
 	}
 	
-	public static boolean parseSchem(TagCompound nbt, IStructAccessor target) {
+	public static boolean parseSchem(TagCompound nbt, IBlueprintAcessor target) {
 		try {
 			Vec3i size = new Vec3i(
 					nbt.getShort("Width"),
@@ -152,7 +152,7 @@ public class SchemParserSponge2 {
 		}
 	}
 
-	public static boolean buildSchem(TagCompound nbt, IStructAccessor source) {
+	public static boolean buildSchem(TagCompound nbt, IBlueprintAcessor source) {
 		try {
 			Vec3i size = source.getBoundsMax().sub(source.getBoundsMin());
 			nbt.putShort("Width", (short) size.x);

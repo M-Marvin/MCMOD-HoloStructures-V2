@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import de.m_marvin.blueprints.api.IStructAccessor;
+import de.m_marvin.blueprints.api.IBlueprintAcessor;
 import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
@@ -65,7 +65,7 @@ public class NBTStrructParser implements IBlueprintParser {
 	}
 
 	@Override
-	public boolean parse(IStructAccessor target) {
+	public boolean parse(IBlueprintAcessor target) {
 		target.clearParseLogs();
 		try {
 			Vec3i size = loadVectorI(this.nbtTag.getList("size", TagInt.class));
@@ -140,7 +140,7 @@ public class NBTStrructParser implements IBlueprintParser {
 	}
 	
 	@Override
-	public boolean build(IStructAccessor source) {
+	public boolean build(IBlueprintAcessor source) {
 		source.clearParseLogs();
 		try {
 			

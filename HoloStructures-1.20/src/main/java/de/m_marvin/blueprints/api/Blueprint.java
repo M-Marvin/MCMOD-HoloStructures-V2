@@ -20,7 +20,7 @@ import de.m_marvin.univec.impl.Vec3i;
  * @author marvi
  *
  */
-public class Blueprint implements IStructAccessor {
+public class Blueprint implements IBlueprintAcessor {
 
 	protected Vec3i boundsMin;
 	protected Vec3i boundsMax;
@@ -147,7 +147,7 @@ public class Blueprint implements IStructAccessor {
 	}
 	
 	@Override
-	public void copyTo(IStructAccessor target) {
+	public void copyTo(IBlueprintAcessor target) {
 		target.setBounds(this.boundsMin, this.boundsMax);
 		target.setOffset(this.offset);
 		for (Vec3i position : this.pos2state.keySet()) {

@@ -1,6 +1,8 @@
 package de.m_marvin.holostruct.client.holograms;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import net.minecraft.core.BlockPos;
@@ -21,6 +23,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -46,6 +49,47 @@ import net.minecraft.world.ticks.LevelTickAccess;
  *
  */
 public interface IFakeLevelAccess extends LevelAccessor {
+	
+	/**
+	 * Passed to render methods to redirect their requests for block and fluid states to other level instances
+	 * @author Marvin Koehler
+	 */
+	public static class FakeLevelRedirected implements IFakeLevelAccess {
+		
+		protected IFakeLevelAccess level;
+		protected Function<BlockPos, BlockPos> redirector;
+		
+		public FakeLevelRedirected(IFakeLevelAccess redirectedAccess, Function<BlockPos, BlockPos> posRedirector) {
+			this.level = redirectedAccess;
+			this.redirector = posRedirector;
+		}
+		
+		@Override
+		public BlockEntity getBlockEntity(BlockPos pPos) {
+			return this.level.getBlockEntity(this.redirector.apply(pPos));
+		}
+
+		@Override
+		public List<Entity> getEntitiesInBounds(AABB bounds) {
+			return new ArrayList<>();
+		}
+
+		@Override
+		public void setBlock(BlockPos pos, BlockState sate) {
+			this.level.setBlock(this.redirector.apply(pos), sate);
+		}
+
+		@Override
+		public BlockState getBlock(BlockPos pos) {
+			return this.level.getBlock(this.redirector.apply(pos));
+		}
+
+		@Override
+		public LevelAccessor getLevel() {
+			return this.level;
+		}
+		
+	}
 	
 	public List<Entity> getEntitiesInBounds(AABB bounds);
 	public void setBlock(BlockPos pos, BlockState sate);

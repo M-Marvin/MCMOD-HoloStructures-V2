@@ -3,6 +3,7 @@ package de.m_marvin.holostruct.client.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.math.OctahedralGroup;
 
 import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.holostruct.HoloStruct;
@@ -10,12 +11,16 @@ import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.HologramArgument;
 import de.m_marvin.holostruct.client.commands.arguments.ViewMode;
 import de.m_marvin.holostruct.client.holograms.Hologram;
+import de.m_marvin.holostruct.client.struktedit.StruktOrientator;
 import de.m_marvin.holostruct.utility.UtilHelper;
+import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 
 /**
  * Command used to manage holograms
@@ -92,6 +97,42 @@ public class HologramCommand {
 				)
 		)
 		.then(
+				Commands.literal("rotate")
+				.then(
+						Commands.argument("hologram", HologramArgument.hologram())
+						.then(
+								Commands.literal("clockwise")
+								.executes(source ->
+										rotateHologram(source, HologramArgument.getHologram(source, "hologram"), false)
+								)
+						)
+						.then(
+								Commands.literal("counterclockwise")
+								.executes(source ->
+										rotateHologram(source, HologramArgument.getHologram(source, "hologram"), true)
+								)
+						)
+				)
+		)
+		.then(
+				Commands.literal("mirror")
+				.then(
+						Commands.argument("hologram", HologramArgument.hologram())
+						.then(
+								Commands.literal("axis_x")
+								.executes(source ->
+										mirrorHologram(source, HologramArgument.getHologram(source, "hologram"), false)
+								)
+						)
+						.then(
+								Commands.literal("axis_z")
+								.executes(source ->
+										mirrorHologram(source, HologramArgument.getHologram(source, "hologram"), true)
+								)
+						)
+				)
+		)
+		.then(
 				Commands.literal("layermode")
 				.then(
 						Commands.literal("enable")
@@ -140,7 +181,7 @@ public class HologramCommand {
 				)
 		));
 	}
-
+	
 	public static int selectViewMode(CommandContext<CommandSourceStack> source, ViewMode viewMode) {
 		if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(viewMode.getPostEffect())) {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.viewmode.failed", viewMode.getName()));
@@ -174,7 +215,53 @@ public class HologramCommand {
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.position.changed", hologramName, position.getX(), position.getY(), position.getZ()), false);
 		return 1;
 	}
-	
+
+	public static int mirrorHologram(CommandContext<CommandSourceStack> source, String hologramName, boolean zaxis) {
+		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.getHologram(hologramName);
+		if (hologram == null) {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.position.invalidhologram", hologramName));
+			return 0;
+		}
+		
+		Mirror mirror = zaxis ? Mirror.LEFT_RIGHT : Mirror.FRONT_BACK;
+		BlockPos boundsMin = hologram.getBlockBoundsMin().subtract(hologram.getOrigin());
+		if (mirror.rotation() == OctahedralGroup.INVERT_X) {
+			boundsMin = new BlockPos(-boundsMin.getX(), boundsMin.getY(), boundsMin.getZ()).offset(hologram.getOrigin());
+		} else if (mirror.rotation() == OctahedralGroup.INVERT_Z) {
+			boundsMin = new BlockPos(boundsMin.getX(), boundsMin.getY(), -boundsMin.getZ()).offset(hologram.getOrigin());
+		}
+		BlockPos boundsMax = hologram.getBlockBoundsMax().subtract(hologram.getOrigin());
+		if (mirror.rotation() == OctahedralGroup.INVERT_X) {
+			boundsMax = new BlockPos(-boundsMax.getX(), boundsMax.getY(), boundsMax.getZ()).offset(hologram.getOrigin());
+		} else if (mirror.rotation() == OctahedralGroup.INVERT_Z) {
+			boundsMax = new BlockPos(boundsMax.getX(), boundsMax.getY(), -boundsMax.getZ()).offset(hologram.getOrigin());
+		}
+		StruktOrientator.mirror(hologram, hologram.getOrigin(), hologram.getBlockBoundsMin(), hologram.getBlockBoundsMax(), mirror);
+		hologram.setBounds(Vec3i.fromVec(boundsMin), Vec3i.fromVec(boundsMax).add(new Vec3i(1, 1, 1)));
+		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
+		
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.mirror.mirrored", hologramName), false);
+		return 1;
+	}
+
+	public static int rotateHologram(CommandContext<CommandSourceStack> source, String hologramName, boolean counterclockwise) {
+		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.getHologram(hologramName);
+		if (hologram == null) {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.position.invalidhologram", hologramName));
+			return 0;
+		}
+		
+		Rotation rot = counterclockwise ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_90;
+		BlockPos boundsMin = hologram.getBlockBoundsMin().subtract(hologram.getOrigin()).rotate(rot).offset(hologram.getOrigin());
+		BlockPos boundsMax = hologram.getBlockBoundsMax().subtract(hologram.getOrigin()).rotate(rot).offset(hologram.getOrigin());
+		StruktOrientator.rotate(hologram, hologram.getOrigin(), hologram.getBlockBoundsMin(), hologram.getBlockBoundsMax(), rot);
+		hologram.setBounds(Vec3i.fromVec(boundsMin), Vec3i.fromVec(boundsMax).add(new Vec3i(1, 1, 1)));
+		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
+		
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.rotate.rotated", hologramName), false);
+		return 1;
+	}
+
 	public static int changeOrigin(CommandContext<CommandSourceStack> source, String hologramName, BlockPos newOrigin) {
 		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.getHologram(hologramName);
 		if (hologram == null) {

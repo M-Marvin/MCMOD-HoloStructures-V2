@@ -39,8 +39,10 @@ public class HologramSection {
 	
 	public void setState(int x, int y, int z, BlockState state) {
 		BlockState replaced = this.states.put(BlockPos.asLong(x & 15, y & 15, z & 15),  state);
-		if (replaced == null || replaced.isAir() != state.isAir()) {
-			if (state.isAir() && replaced != null) {
+		boolean ra = replaced == null || replaced.isAir();
+		boolean na = state.isAir();
+		if (ra != na) {
+			if (na) {
 				this.nonEmptyBlockCount--;
 				this.holoState.remove(BlockPos.asLong(x & 15, y & 15, z & 15));
 			} else {
@@ -75,11 +77,11 @@ public class HologramSection {
 	}
 
 	public int getLowestAxis(Axis axis) {
-		return LongStream.of(this.states.keySet().toLongArray()).mapToInt((p) -> BlockPos.of(p).get(axis)).min().getAsInt();
+		return LongStream.of(this.states.keySet().toLongArray()).filter(k -> !this.states.get(k).isAir()).mapToInt((p) -> BlockPos.of(p).get(axis)).min().orElseGet(() -> -1);
 	}
 
 	public int getHighestAxis(Axis axis) {
-		return LongStream.of(this.states.keySet().toLongArray()).mapToInt((p) -> BlockPos.of(p).get(axis)).max().getAsInt();
+		return LongStream.of(this.states.keySet().toLongArray()).filter(k -> !this.states.get(k).isAir()).mapToInt((p) -> BlockPos.of(p).get(axis)).max().orElseGet(() -> -1);
 	}
 	
 }

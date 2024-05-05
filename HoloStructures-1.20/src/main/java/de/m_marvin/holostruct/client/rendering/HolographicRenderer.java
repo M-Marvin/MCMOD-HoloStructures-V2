@@ -25,6 +25,7 @@ import de.m_marvin.holostruct.client.holograms.Hologram;
 import de.m_marvin.holostruct.client.holograms.HologramChunk;
 import de.m_marvin.holostruct.client.holograms.HologramManager;
 import de.m_marvin.holostruct.client.holograms.HologramSection;
+import de.m_marvin.holostruct.client.holograms.IFakeLevelAccess;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.rendering.HologramBufferContainer.HolographicBufferSource;
 import de.m_marvin.holostruct.client.rendering.HologramRender.HolographicChunk;
@@ -213,9 +214,9 @@ public class HolographicRenderer {
 			HologramRender holoRender = hologramRenders.get(hologram.hashCode());
 			if (holoRender != null) {
 				Optional<HologramChunk> hchunk = hologram.getChunk(pos);
-				if (hchunk.isEmpty()) return;
+				boolean removed = hchunk.isEmpty();
 				HolographicChunk chunk = holoRender.renderChunks.get(pos.toLong());
-				if (chunk == null) {
+				if (chunk == null && !removed) {
 					chunk = new HolographicChunk(new ChunkPos(pos.toLong()));
 					holoRender.renderChunks.put(pos.toLong(), chunk);
 
@@ -297,16 +298,16 @@ public class HolographicRenderer {
 			holoChunk.claimBuffers();
 			
 			RenderType.chunkBufferLayers().stream().forEach(renderLayer -> {
-				renderChunkLayers(holoChunk.bufferContainer, renderLayer, holoRender.hologram, level, holoRender.hologram.position, holoRender.hologram.origin, holoChunk.pos, sectionIndex, section);
+				renderChunkLayers(holoChunk.bufferContainer, renderLayer, holoRender.hologram, level, holoChunk.pos, sectionIndex, section);
 			});
 			
 			List<BlockEntity> sectionBlockEntities = chunk.get().getBlockEntities().entrySet().stream()
 					.filter(entry -> entry.getKey().getY() >= sectionIndex << 4 && entry.getKey().getY() < (sectionIndex + 1) << 4)
 					.map(Map.Entry::getValue).toList();
-			renderBlockEntities(holoChunk.bufferContainer, holoRender.hologram, holoRender.hologram.position, holoRender.hologram.origin, holoChunk.pos, sectionIndex, section, sectionBlockEntities);
+			renderBlockEntities(holoChunk.bufferContainer, holoRender.hologram, holoChunk.pos, sectionIndex, section, sectionBlockEntities);
 			
 			List<Entity> sectionEntities = holoRender.hologram.getEntitiesInSection(chunk.get().getPosition(), sectionIndex);
-			renderEntities(holoChunk.bufferContainer, holoRender.hologram, holoRender.hologram.position, holoRender.hologram.origin, holoChunk.pos, sectionIndex, section, sectionEntities);
+			renderEntities(holoChunk.bufferContainer, holoRender.hologram, holoChunk.pos, sectionIndex, section, sectionEntities);
 		})
 		.exceptionally(e -> { 
 			HoloStruct.LOGGER.error("holographic renderer/prerender stage failed!");
@@ -342,7 +343,7 @@ public class HolographicRenderer {
 		
 	}
 	
-	private void renderBlockEntities(HologramBufferContainer bufferContainer, LevelAccessor level, BlockPos hologramPosition, BlockPos origin, ChunkPos chunkPos, int yindex, HologramSection section, List<BlockEntity> blockEntities) {
+	private void renderBlockEntities(HologramBufferContainer bufferContainer, Hologram hologramLevel, ChunkPos chunkPos, int yindex, HologramSection section, List<BlockEntity> blockEntities) {
 		
 		PoseStack poseStack = new PoseStack();
 		BlockEntityRenderDispatcher blockEntityRenderer = BLOCK_ENTITY_RENDERER.get();
@@ -351,7 +352,7 @@ public class HolographicRenderer {
 		blockEntities.forEach(blockEntity -> {
 			
 			BlockPos holoPos = blockEntity.getBlockPos();
-			BlockPos worldPos = hologramPosition.offset(holoPos).subtract(origin);
+			BlockPos worldPos = hologramLevel.holoToWorldPosition(holoPos);
 			
 			if (worldPos.getY() != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) return;
 			
@@ -362,10 +363,9 @@ public class HolographicRenderer {
 			
 			if (renderer != null) {
 				
-				int light = LevelRenderer.getLightColor(level, worldPos);
+				int light = LevelRenderer.getLightColor(hologramLevel, worldPos);
 				
 				poseStack.pushPose();
-				poseStack.translate(-origin.getX(), -origin.getY(), -origin.getZ());
 				poseStack.translate(holoPos.getX(), holoPos.getY(), holoPos.getZ());
 				renderer.render(blockEntity, 0, poseStack, bufferSource, light, OverlayTexture.NO_OVERLAY);
 				poseStack.popPose();
@@ -376,7 +376,7 @@ public class HolographicRenderer {
 		
 	}
 	
-	private void renderEntities(HologramBufferContainer bufferContainer, LevelAccessor level, BlockPos hologramPosition, BlockPos origin, ChunkPos chunkPos, int yindex, HologramSection section, List<Entity> entities) {
+	private void renderEntities(HologramBufferContainer bufferContainer, Hologram hologramLevel, ChunkPos chunkPos, int yindex, HologramSection section, List<Entity> entities) {
 		
 		PoseStack poseStack = new PoseStack();
 		EntityRenderDispatcher entityRenderer = ENTITY_RENDERER.get();
@@ -385,7 +385,7 @@ public class HolographicRenderer {
 		entities.forEach(entity -> {
 			
 			Vec3 holoPos = entity.position();
-			Vec3 worldPos = holoPos.add(hologramPosition.getX() - origin.getX(), hologramPosition.getY() - origin.getY(), hologramPosition.getZ() - origin.getZ());
+			Vec3 worldPos = holoPos.add(hologramLevel.getPosition().getX() - hologramLevel.getOrigin().getX(), hologramLevel.getPosition().getY() - hologramLevel.getOrigin().getY(), hologramLevel.getPosition().getZ() - hologramLevel.getOrigin().getZ());
 			
 			if ((int) Math.floor(worldPos.y) != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) return;
 			
@@ -394,11 +394,10 @@ public class HolographicRenderer {
 			
 			if (renderer != null) {
 
-				int light = LevelRenderer.getLightColor(level, UtilHelper.toBlockPos(worldPos));
+				int light = LevelRenderer.getLightColor(hologramLevel, UtilHelper.toBlockPos(worldPos));
 				poseStack.pushPose();
-				poseStack.translate(-origin.getX(), -origin.getY(), -origin.getZ());
 				poseStack.translate(holoPos.x, holoPos.y, holoPos.z);
-				renderer.render(entity, entity.getYRot(), 0, poseStack, bufferSource, light);
+				renderer.render(entity, entity.getYRot(), 1, poseStack, bufferSource, light);
 				poseStack.popPose();
 				
 			}
@@ -407,12 +406,13 @@ public class HolographicRenderer {
 		
 	}
 	
-	private void renderChunkLayers(HologramBufferContainer bufferContainer, RenderType renderLayer, LevelAccessor holoLevel, IRemoteLevelAccessor realLevel, BlockPos hologramPosition, BlockPos origin, ChunkPos chunkPos, int yindex, HologramSection section) {
+	private void renderChunkLayers(HologramBufferContainer bufferContainer, RenderType renderLayer, Hologram hologramLevel, LevelAccessor realLevel, ChunkPos chunkPos, int yindex, HologramSection section) {
 		
 		PoseStack poseStack = new PoseStack();
 		BlockRenderDispatcher blockRenderer = BLOCK_RENDERER.get();
 		HologramManager hologramManager = HOLOGRAM_MANAGER.get();
 		RandomSource random = RandomSource.create();
+		IFakeLevelAccess fluidReaderWorld = new IFakeLevelAccess.FakeLevelRedirected(hologramLevel, hologramLevel::holoToWorldPosition);
 		
 		int posY = yindex << 4;
 		
@@ -420,7 +420,7 @@ public class HolographicRenderer {
 			for (int z = 0; z < 16; z++) {
 				for (int x = 0; x < 16; x++) {
 					BlockPos holoPos = new BlockPos(chunkPos.getMinBlockX() + x, posY + y, chunkPos.getMinBlockZ() + z);
-					BlockPos worldPos = hologramPosition.offset(holoPos).subtract(origin);
+					BlockPos worldPos = hologramLevel.holoToWorldPosition(holoPos);
 					
 					if (worldPos.getY() != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) continue;
 					
@@ -434,19 +434,19 @@ public class HolographicRenderer {
 						state = realLevel.getBlockState(worldPos);
 					
 					BakedModel model = blockRenderer.getBlockModel(state);
-					ModelData modelData = model.getModelData(holoLevel, hologramPosition, state, ModelData.EMPTY);
+					ModelData modelData = model.getModelData(hologramLevel, holoPos, state, ModelData.EMPTY);
 					
 					if (!state.isAir() && model.getRenderTypes(state, random, modelData).contains(renderLayer)) {
 						poseStack.pushPose();
-						poseStack.translate(-origin.getX(), -origin.getY(), -origin.getZ());
 						poseStack.translate(x, y, z);
-						blockRenderer.renderBatched(state, hologramPosition.offset(holoPos).subtract(origin), holoLevel, poseStack, builder, false, random, modelData, renderLayer);
+						blockRenderer.renderBatched(state, worldPos, hologramLevel, poseStack, builder, false, random, modelData, renderLayer);
 						poseStack.popPose();
 					}
 					
 					FluidState fluidState = state.getFluidState();
+					
 					if (!fluidState.isEmpty() && ItemBlockRenderTypes.getRenderLayer(fluidState) == renderLayer) {
-						blockRenderer.renderLiquid(holoPos, holoLevel, builder, state, fluidState);
+						blockRenderer.renderLiquid(holoPos, holoState != BlockHoloState.NO_BLOCK ? fluidReaderWorld : hologramLevel, builder, state, fluidState);
 					}
 					
 				}
@@ -466,6 +466,7 @@ public class HolographicRenderer {
 		if (this.activePostEffect != null) {
 			framebuffer = this.activePostEffect.getTempTarget(HOLOGRAPHIC_TARGET.get(BlockHoloState.NO_BLOCK).toString());
 			if (framebuffer != null) PostEffectUtil.bindFramebuffer(framebuffer);
+			PostEffectUtil.forceRunOnCurrentFramebuffer();
 		}
 		
 		hologramRenders.forEach((hid, hologram) -> {
@@ -481,9 +482,9 @@ public class HolographicRenderer {
 			int lx = position0.getX();
 			int ly = position0.getY();
 			int lz = position0.getZ();
-			int hx = position1.getX();
-			int hy = position1.getY();
-			int hz = position1.getZ();
+			int hx = position1.getX() + 1;
+			int hy = position1.getY() + 1;
+			int hz = position1.getZ() + 1;
 			
 			renderHologramLine(poseStack, buffer, lx, ly, lz, 1, 1, 1, 1);
 			renderHologramLine(poseStack, buffer, hx, ly, lz, 1, 1, 1, 1);
@@ -508,8 +509,6 @@ public class HolographicRenderer {
 			renderHologramLine(poseStack, buffer, lx, hy, hz, 1, 1, 1, 1);
 			
 			renderHologramLine(poseStack, buffer, lx, hy, lz, 1, 1, 1, 1);
-			
-			// TODO render origin
 			
 			staticSource.endBatch(RenderType.lineStrip());
 			
@@ -542,6 +541,8 @@ public class HolographicRenderer {
 			renderHologramLine(poseStack, buffer, 0, 1, 1, 1, 0, 1, 1);
 			
 			renderHologramLine(poseStack, buffer, 0, 1, 0, 1, 0, 1, 1);
+
+			staticSource.endBatch(RenderType.lineStrip());
 			
 			poseStack.popPose();
 			poseStack.popPose();
@@ -550,6 +551,7 @@ public class HolographicRenderer {
 
 		if (this.activePostEffect != null) {
 			if (framebuffer != null) PostEffectUtil.unbindFramebuffer(framebuffer);
+			PostEffectUtil.resetRunOnCurrentFramebuffer();
 		}
 		
 	}
@@ -571,7 +573,7 @@ public class HolographicRenderer {
 		RenderSystem.polygonOffset(-1F, -1F);
 		
 		for (HologramRender hologramRender : hologramRenders.values()) {
-			BlockPos origin = hologramRender.hologram.getPosition();
+			BlockPos origin = hologramRender.hologram.getPosition().subtract(hologramRender.hologram.getOrigin());
 			
 			poseStack.pushPose();
 			poseStack.translate(origin.getX(), origin.getY(), origin.getZ());
@@ -597,12 +599,14 @@ public class HolographicRenderer {
 							if (this.activePostEffect != null) {
 								framebuffer = this.activePostEffect.getTempTarget(HOLOGRAPHIC_TARGET.get(holoState).toString());
 								if (framebuffer != null) PostEffectUtil.bindFramebuffer(framebuffer);
+								PostEffectUtil.forceRunOnCurrentFramebuffer();
 							}
 							
 							section.bindBuffer(holoState, renderLayer).draw();
 							
 							if (this.activePostEffect != null) {
 								if (framebuffer != null) PostEffectUtil.unbindFramebuffer(framebuffer);
+								PostEffectUtil.resetRunOnCurrentFramebuffer();
 							}
 							
 						});

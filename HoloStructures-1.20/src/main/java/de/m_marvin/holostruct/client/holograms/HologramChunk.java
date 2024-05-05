@@ -33,19 +33,19 @@ public class HologramChunk {
 	
 	public int getLowestAxis(Axis axis) {
 		if (axis == Axis.Y) {
-			int minSection = IntStream.of(this.sections.keySet().toIntArray()).min().getAsInt();
+			int minSection = IntStream.of(this.sections.keySet().toIntArray()).filter(h -> !this.sections.get(h).isEmpty()).min().getAsInt();
 			return getSections().get(minSection).getLowestAxis(axis) | minSection << 4;
 		} else {
-			return Stream.of(getSections().values().toArray((l) -> new HologramSection[l])).mapToInt((h) -> h.getLowestAxis(axis)).min().getAsInt() | (axis == Axis.X ? position.x : position.z) << 4;
+			return Stream.of(getSections().values().toArray((l) -> new HologramSection[l])).filter(h -> !h.isEmpty()).mapToInt((h) -> h.getLowestAxis(axis)).min().getAsInt() | (axis == Axis.X ? position.x : position.z) << 4;
 		}
 	}
 	
 	public int getHighestAxis(Axis axis) {
 		if (axis == Axis.Y) {
-			int maxSection = IntStream.of(this.sections.keySet().toIntArray()).max().getAsInt();
+			int maxSection = IntStream.of(this.sections.keySet().toIntArray()).filter(h -> !this.sections.get(h).isEmpty()).max().getAsInt();
 			return getSections().get(maxSection).getHighestAxis(axis) | maxSection << 4;
 		} else {
-			return Stream.of(getSections().values().toArray((l) -> new HologramSection[l])).mapToInt((h) -> h.getHighestAxis(axis)).max().getAsInt() | (axis == Axis.X ? position.x : position.z) << 4;
+			return Stream.of(getSections().values().toArray((l) -> new HologramSection[l])).filter(h -> !h.isEmpty()).mapToInt((h) -> h.getHighestAxis(axis)).max().getAsInt() | (axis == Axis.X ? position.x : position.z) << 4;
 		}
 	}
 	

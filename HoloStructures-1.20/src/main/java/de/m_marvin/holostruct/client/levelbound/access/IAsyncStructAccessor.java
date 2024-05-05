@@ -10,7 +10,7 @@ import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.univec.impl.Vec3i;
 
 /**
- * Like the {@link IStructAccessor} but for the asynchron {@link IRemoteLevelAccessor}'s
+ * Like the {@link IStructAccessor} but asynchronous
  * @author Marvin Koehler
  */
 public interface IAsyncStructAccessor {

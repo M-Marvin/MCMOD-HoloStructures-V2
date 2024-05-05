@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
-import de.m_marvin.blueprints.api.IStructAccessor;
+import de.m_marvin.blueprints.api.IBlueprintAcessor;
 import de.m_marvin.nbtutility.BinaryParser;
 import de.m_marvin.nbtutility.TagType;
 import de.m_marvin.nbtutility.nbt.TagCompound;
@@ -28,10 +28,10 @@ public class SchemParser implements IBlueprintParser {
 		SPONGE3(3, SchemParserSponge3::parseSchem, SchemParserSponge3::buildSchem);
 		
 		private final int version;
-		private final BiFunction<TagCompound, IStructAccessor, Boolean> parser;
-		private final BiFunction<TagCompound, IStructAccessor, Boolean> builder;
+		private final BiFunction<TagCompound, IBlueprintAcessor, Boolean> parser;
+		private final BiFunction<TagCompound, IBlueprintAcessor, Boolean> builder;
 		
-		private SchemVersion(int version, BiFunction<TagCompound, IStructAccessor, Boolean> parser, BiFunction<TagCompound, IStructAccessor, Boolean> builder) {
+		private SchemVersion(int version, BiFunction<TagCompound, IBlueprintAcessor, Boolean> parser, BiFunction<TagCompound, IBlueprintAcessor, Boolean> builder) {
 			this.version = version;
 			this.parser = parser;
 			this.builder = builder;
@@ -41,11 +41,11 @@ public class SchemParser implements IBlueprintParser {
 			return version;
 		}
 		
-		public BiFunction<TagCompound, IStructAccessor, Boolean> getParser() {
+		public BiFunction<TagCompound, IBlueprintAcessor, Boolean> getParser() {
 			return parser;
 		}
 		
-		public BiFunction<TagCompound, IStructAccessor, Boolean> getBuilder() {
+		public BiFunction<TagCompound, IBlueprintAcessor, Boolean> getBuilder() {
 			return builder;
 		}
 		
@@ -103,7 +103,7 @@ public class SchemParser implements IBlueprintParser {
 	}
 	
 	@Override
-	public boolean parse(IStructAccessor target) {
+	public boolean parse(IBlueprintAcessor target) {
 		target.clearParseLogs();
 		if (this.version == null) {
 			System.err.println("no schem version set!");
@@ -119,7 +119,7 @@ public class SchemParser implements IBlueprintParser {
 	}
 	
 	@Override
-	public boolean build(IStructAccessor source) {
+	public boolean build(IBlueprintAcessor source) {
 		source.clearParseLogs();
 		if (this.version == null) {
 			System.err.println("no schem version set!");

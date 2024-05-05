@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import de.m_marvin.blueprints.api.Blueprint;
+import de.m_marvin.blueprints.api.IBlueprintAcessor;
 import de.m_marvin.blueprints.api.IStructAccessor;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
@@ -40,10 +41,10 @@ import net.minecraft.world.phys.AABB;
  * It also implements {@link IFakeLevelAccess} which allows the block the hologram to be rendered more realistic.
  * @author Marvin Koehler
  */
-public class Hologram implements IStructAccessor, IFakeLevelAccess {
+public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 	
-	public BlockPos boundsMax;
-	public BlockPos boundsMin;
+	public Vec3i boundsMax;
+	public Vec3i boundsMin;
 	public BlockPos position;
 	private boolean updateBounds;
 	public BlockPos origin;
@@ -59,8 +60,8 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	public Hologram(Level level, BlockPos position) {
 		this.level = level;
 		this.position = position;
-		this.boundsMin = BlockPos.ZERO;
-		this.boundsMax = BlockPos.ZERO.offset(1, 1, 1);
+		this.boundsMin = new Vec3i(0, 0, 0);
+		this.boundsMax = new Vec3i(1, 1, 1);
 		this.origin = BlockPos.ZERO;
 		this.chunks = new Long2ObjectArrayMap<HologramChunk>();
 		this.entities = new Int2ObjectArrayMap<>();
@@ -97,8 +98,8 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 
 	@Override
 	public void setBounds(Vec3i min, Vec3i max) {
-		this.boundsMax = new BlockPos(max.x, max.y, max.z);
-		this.boundsMin = new BlockPos(min.x, min.y, min.z);
+		this.boundsMax = max;
+		this.boundsMin = min;
 		ensureMinBounds();
 	}
 	
@@ -116,32 +117,32 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	
 	public BlockPos getBlockBoundsMax() {
 		if (updateBounds) ensureMinBounds();
-		return this.boundsMax;
+		return this.boundsMax.sub(new Vec3i(1, 1, 1)).writeTo(new BlockPos(0, 0, 0));
 	}
 	
 	public BlockPos getBlockBoundsMin() {
 		if (updateBounds) ensureMinBounds();
-		return this.boundsMin;
+		return this.boundsMin.writeTo(new BlockPos(0, 0, 0));
 	}
 	
 	protected void ensureMinBounds() {
 		if (this.chunks.isEmpty()) {
-			this.boundsMax = Vec3i.fromVec(this.boundsMax).max(Vec3i.fromVec(this.boundsMin).add(new Vec3i(1, 1, 1))).writeTo(new BlockPos(0, 0, 0));
+			this.boundsMax.maxI(Vec3i.fromVec(this.boundsMin).add(new Vec3i(1, 1, 1)));
 		} else {
 			int maxChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().x).max().getAsInt();
 			int maxChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().z).max().getAsInt();
 			int minChunkX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().x).min().getAsInt();
 			int minChunkZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getPosition().z).min().getAsInt();
 			
-			int minBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().x == minChunkX).mapToInt((chunk) -> chunk.getLowestAxis(Axis.X)).min().getAsInt();
-			int maxBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().x == maxChunkX).mapToInt((chunk) -> chunk.getHighestAxis(Axis.X)).max().getAsInt();
-			int minBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().z == minChunkZ).mapToInt((chunk) -> chunk.getLowestAxis(Axis.Z)).min().getAsInt();
-			int maxBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((c) -> c.getPosition().z == maxChunkZ).mapToInt((chunk) -> chunk.getHighestAxis(Axis.Z)).max().getAsInt();
-			int minBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getLowestAxis(Axis.Y)).min().getAsInt();
-			int maxBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).mapToInt((chunk) -> chunk.getHighestAxis(Axis.Y)).max().getAsInt();
+			int minBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).filter((c) -> c.getPosition().x == minChunkX).mapToInt((chunk) -> chunk.getLowestAxis(Axis.X)).min().getAsInt();
+			int maxBlockX = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).filter((c) -> c.getPosition().x == maxChunkX).mapToInt((chunk) -> chunk.getHighestAxis(Axis.X)).max().getAsInt();
+			int minBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).filter((c) -> c.getPosition().z == minChunkZ).mapToInt((chunk) -> chunk.getLowestAxis(Axis.Z)).min().getAsInt();
+			int maxBlockZ = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).filter((c) -> c.getPosition().z == maxChunkZ).mapToInt((chunk) -> chunk.getHighestAxis(Axis.Z)).max().getAsInt();
+			int minBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getLowestAxis(Axis.Y)).min().getAsInt();
+			int maxBlockY = Stream.of(this.chunks.values().toArray((l) -> new HologramChunk[l])).filter((h) -> !h.isEmpty()).mapToInt((chunk) -> chunk.getHighestAxis(Axis.Y)).max().getAsInt();
 			
-			this.boundsMin = Vec3i.fromVec(this.boundsMin).min(new Vec3i(minBlockX, minBlockY, minBlockZ)).writeTo(new BlockPos(0, 0, 0));
-			this.boundsMax = Vec3i.fromVec(this.boundsMax).max(new Vec3i(maxBlockX, maxBlockY, maxBlockZ)).writeTo(new BlockPos(0, 0, 0));
+			this.boundsMin.minI(new Vec3i(minBlockX, minBlockY, minBlockZ));
+			this.boundsMax.maxI(new Vec3i(maxBlockX + 1, maxBlockY + 1, maxBlockZ + 1));
 		}
 		this.updateBounds = false;
 	}
@@ -322,12 +323,12 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 						for (int z = 0; z < 16; z++) {
 							for (int x = 0; x < 16; x++) {
 								Vec3i holoPos = sectionoPos.add(new Vec3i(x, y, z));
-								if (this.isInBounds(holoPos)) updateHoloStateAt(target, holoPos, false);
+								if (this.isInBounds(holoPos)) updateHoloStateAt(target, holoPos, true);
 							}
 						}
 					}
-					markSectionDirty(chunk.position, section.getKey());
-
+					HoloStruct.CLIENT.LEVELBOUND.safeExecute(() -> markSectionDirty(chunk.position, section.getKey()));
+					
 					try { Thread.sleep(ClientConfig.SECTION_UPDATE_DELAY.get()); } catch (InterruptedException e) {}
 				}
 			}
@@ -452,7 +453,7 @@ public class Hologram implements IStructAccessor, IFakeLevelAccess {
 	}
 
 	@Override
-	public void copyTo(IStructAccessor target) {
+	public void copyTo(IBlueprintAcessor target) {
 		target.setBounds(getBoundsMin(), getBoundsMax());
 		target.setOffset(getOffset());
 		this.chunks.forEach((lp, chunk) -> {

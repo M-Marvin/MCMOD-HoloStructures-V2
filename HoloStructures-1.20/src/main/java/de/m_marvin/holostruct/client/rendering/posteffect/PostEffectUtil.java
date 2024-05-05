@@ -24,5 +24,15 @@ public class PostEffectUtil {
 		framebuffer.unbindWrite();
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 	}
+
+	@SuppressWarnings("resource")
+	public static void forceRunOnCurrentFramebuffer() {
+		Minecraft.getInstance().gameRenderer.setPanoramicMode(true);
+	}
+
+	@SuppressWarnings("resource")
+	public static void resetRunOnCurrentFramebuffer() {
+		Minecraft.getInstance().gameRenderer.setPanoramicMode(false);
+	}
 	
 }

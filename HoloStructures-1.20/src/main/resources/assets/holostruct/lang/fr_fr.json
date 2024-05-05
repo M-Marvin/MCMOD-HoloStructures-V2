@@ -5,7 +5,7 @@
 "holostruct.commands.blueprint.logs.noentry": "§a- aucunes entrées -",
 "holostruct.commands.blueprint.discard.invalidblueprint": "§2Plan de construction '%1$s§2' n'existe pas!",
 "holostruct.commands.blueprint.discard.discarded": "§2Plan de construction '%1$s§2' abandonné",
-"holostruct.commands.blueprint.save.fileexists": "§2Fichier '%1$s§2' déjà existe, utilise §f§ooverride§r§2 pour l'écraser!",
+"holostruct.commands.blueprint.save.fileexists": "§2Fichier '%1$s§2' déjà existe, utilise §foverride§2 pour l'écraser!",
 "holostruct.commands.blueprint.save.invalidblueprint": "§2Plan de construction '%1$s§2' introuvable!",
 "holostruct.commands.blueprint.save.failed": "§2Fichier du plan de construction '%1$s§2' ne pourrait pas être écrit!",
 "holostruct.commands.blueprint.save.saved": "§2Plan de construction enregistré en '%1$s§2'",
