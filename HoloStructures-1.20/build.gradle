@@ -153,6 +153,14 @@ tasks.withType(ProcessResources).configureEach {
     }
 }
 
+jar {
+    manifest {
+        attributes 'Implementation-Version': version
+        attributes 'Implementation-Title': project.name
+        attributes 'Implementation-Vendor-Id': 'de.m_marvin'
+    }
+}
+
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {

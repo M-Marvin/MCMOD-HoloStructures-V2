@@ -15,9 +15,9 @@
 
 "holostruct.commands.hologram.position.invalidhologram": "§2Hologramme '%1$s§2' n'existe pas!",
 "holostruct.commands.hologram.position.changed": "§2Hologramme '%1$s§2' positionné à %2$d %3$d %4$d",
-"holostruct.commands.hologram.origin.invalidhologram": "§2Hologramme '%1%s§2' n'existe pas!",
+"holostruct.commands.hologram.origin.invalidhologram": "§2Hologramme '%1$s§2' n'existe pas!",
 "holostruct.commands.hologram.origin.changed": "§2Hologramme '%1$s§2': Point d'origine défini comme %2$d %3$d %4$d",
-"holostruct.commands.hologram.remove.invalidhologram": "§2Hologramme '%1%s§2' n'existe pas!",
+"holostruct.commands.hologram.remove.invalidhologram": "§2Hologramme '%1$s§2' n'existe pas!",
 "holostruct.commands.hologram.remove.removed": "§2Hologramme '%1$s§2' supprimé",
 "holostruct.commands.hologram.blueprint.invalidhologram": "§2Hologramme '%1$s§2' n'existe pas!",
 "holostruct.commands.hologram.blueprint.stored": "§2Hologramme '%1$s§2' exporté en plan de construction '%2$s§2'",

@@ -684,7 +684,7 @@ public class HolographicRenderer {
 	
 	@SuppressWarnings("resource")
 	protected void setupPostEffectShader(EffectInstance shader) {
-		shader.safeGetUniform("GameTime").set((float) Minecraft.getInstance().level.getGameTime() + Minecraft.getInstance().getFrameTime());
+		shader.safeGetUniform("GameTime").set((float) (Minecraft.getInstance().level.getGameTime() & 0xFFFF) + Minecraft.getInstance().getFrameTime());
 	}
 	
 }

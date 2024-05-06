@@ -67,7 +67,6 @@ public class StruktOrientator {
 			Vec3d originRelative = pos.sub(originv);
 			Vec3d newPos = UtilHelper.rotate(originRelative, rotation).add(originv);
 			
-			// TODO entity rotation and mirror
 			entity.setPos(newPos.writeTo(new Vec3(0, 0, 0)));
 			
 		}
@@ -132,7 +131,6 @@ public class StruktOrientator {
 			}
 			Vec3d newPos = originRelative.add(originv);
 			
-			// TODO entity rotation and mirror
 			entity.setPos(newPos.writeTo(new Vec3(0, 0, 0)));
 			
 		}

@@ -26,10 +26,10 @@ public class BinaryParser {
 		return tag;
 	}
 	
-	public static void write(ITagBase tag, DataOutput output) throws IOException {
+	public static void write(ITagBase tag, String rootName, DataOutput output) throws IOException {
 		TagType type = tag.getType();
 		output.write(tag.getType().getId());
-		if (type != TagType.END) output.writeUTF("");
+		if (type != TagType.END) output.writeUTF(rootName);
 		tag.write(output);
 	}
 	
@@ -55,20 +55,20 @@ public class BinaryParser {
 		}
 	}
 	
-	public static void writeCompressed(ITagBase tag, OutputStream output) throws IOException {
+	public static void writeCompressed(ITagBase tag, String rootName, OutputStream output) throws IOException {
 		DataOutputStream doutput = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(output)));
-		write(tag, doutput);
+		write(tag, rootName, doutput);
 		doutput.close();
 	}
 
-	public static byte[] toBytes(ITagBase tag, boolean compressed) {
+	public static byte[] toBytes(ITagBase tag, String rootName, boolean compressed) {
 		try {
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			if (compressed) {
-				writeCompressed(tag, buffer);
+				writeCompressed(tag, rootName, buffer);
 				return buffer.toByteArray();
 			} else {
-				write(tag, new DataOutputStream(buffer));
+				write(tag, rootName, new DataOutputStream(buffer));
 				return buffer.toByteArray();
 			}
 		} catch (IOException e) {

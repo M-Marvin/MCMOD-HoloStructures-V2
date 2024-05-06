@@ -52,7 +52,7 @@ public class NBTStrructParser implements IBlueprintParser {
 		if (!this.nbtTag.has("palette", TagType.TAG_LIST)) return false;
 		if (!this.nbtTag.has("entities", TagType.TAG_LIST)) return false;
 		if (!this.nbtTag.has("blocks", TagType.TAG_LIST)) return false;
-		BinaryParser.writeCompressed(this.nbtTag, ostream);
+		BinaryParser.writeCompressed(this.nbtTag, "", ostream);
 		return true;
 	}
 	

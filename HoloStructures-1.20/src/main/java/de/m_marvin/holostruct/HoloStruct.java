@@ -1,9 +1,15 @@
 package de.m_marvin.holostruct;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import org.slf4j.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 
+import de.m_marvin.blueprints.BlueprintLoader;
 import de.m_marvin.holostruct.client.ClientConfig;
 import de.m_marvin.holostruct.client.HoloStructClient;
 import de.m_marvin.holostruct.client.registries.CommandArguments;
@@ -40,6 +46,17 @@ public class HoloStruct {
 		ClientConfig.register();
 		ServerConfig.register();
 		CommandArguments.register(bus);
+		
+		try {
+			InputStream lagacyMappings = HoloStruct.class.getClassLoader().getResourceAsStream("legacy.json");
+			JsonObject mappingJson = new Gson().fromJson(new InputStreamReader(lagacyMappings), JsonObject.class);
+			mappingJson.keySet().forEach(index -> BlueprintLoader.LAGACY_STATE_MAP.put(Integer.parseInt(index), mappingJson.get(index).getAsString()));
+			LOGGER.info("loaded " + BlueprintLoader.LAGACY_STATE_MAP.size() + " lagacy block ids");
+		} catch (Throwable e) {
+			LOGGER.warn("could not load lagacy block id mappings!");
+			e.printStackTrace();
+		}
+		
 	}
 
 	@SubscribeEvent

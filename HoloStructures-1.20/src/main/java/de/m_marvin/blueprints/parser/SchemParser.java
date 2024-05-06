@@ -82,7 +82,7 @@ public class SchemParser implements IBlueprintParser {
 		rootTag.putInt("DataVersion", this.dataVersion);
 		rootTag.putInt("Version", this.version.getVersion());
 		rootTag.putTag("Metadata", makeMetaTag());
-		BinaryParser.writeCompressed(this.nbtTag, ostream);
+		BinaryParser.writeCompressed(this.nbtTag, "", ostream);
 		return true;
 	}
 	

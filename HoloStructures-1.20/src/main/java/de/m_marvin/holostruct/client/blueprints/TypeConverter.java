@@ -53,10 +53,6 @@ public class TypeConverter {
 	 * See {@link EntityData#setData(TagCompound)}
 	 */
 	public static final Consumer<TagCompound> ENTITY_META_FILTER = tag -> {
-		// TODO check if this is correct
-		tag.removeTag("x");
-		tag.removeTag("y");
-		tag.removeTag("z");
 		tag.removeTag("id");	
 	};
 	
@@ -169,7 +165,7 @@ public class TypeConverter {
 	public static CompoundTag data2nbt(TagCompound data) {
 		if (data == null) return null;
 		try {
-			byte[] nbtBin = BinaryParser.toBytes(data, false);
+			byte[] nbtBin = BinaryParser.toBytes(data, "", false);
 			return NbtIo.read(new DataInputStream(new ByteArrayInputStream(nbtBin)), NbtAccounter.unlimitedHeap());
 		} catch (IOException e) {
 			HoloStruct.LOGGER.warn("failed to convert nbt data!");
