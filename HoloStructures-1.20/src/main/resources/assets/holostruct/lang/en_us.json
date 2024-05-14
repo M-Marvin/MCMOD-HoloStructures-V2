@@ -47,6 +47,27 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] write access (No placing of blocks)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] server mode (Direct access through server, fast)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] client mode (Only indirect access through client, slower)",
+"holostruct.commands.pixelart.image.nofile": "§2Image '%1$s§2' does not exist!",
+"holostruct.commands.pixelart.image.failed": "§2Failed to load image '%1$s§2'!",
+"holostruct.commands.pixelart.image.loaded": "§2Image '%1$s§2' loaded",
+"holostruct.commands.pixelart.export.fileexists": "§2File '%1$s§2' already exists, use §foverride§2 to override!",
+"holostruct.commands.pixelart.export.failed": "§2Image '%1$s§2' could not be saved!",
+"holostruct.commands.pixelart.export.saved": "§2Image '%1$s§2' saved",
+"holostruct.commands.pixelart.blocklist.empty": "§2No block list available!",
+"holostruct.commands.pixelart.blocklist.head": "§2List of needed blocks:",
+"holostruct.commands.pixelart.blacklist.empty": "§2No forbidden blocks specified!",
+"holostruct.commands.pixelart.blacklist.head": "§2List of forbidden blocks:",
+"holostruct.commands.pixelart.blacklist.added": "§2Block '%1$s§2' added to list of forbidden blocks",
+"holostruct.commands.pixelart.blacklist.removed": "§2Block '%1$s§2' removed from list of forbidden blocks",
+"holostruct.commands.pixelart.whitelist.empty": "§2No preferred blocks specified!",
+"holostruct.commands.pixelart.whitelist.head": "§2List of preferred blocks:",
+"holostruct.commands.pixelart.whitelist.added": "§2Block '%1$s§2' added to list of preferred blocks",
+"holostruct.commands.pixelart.whitelist.removed": "§2Block '%1$s§2' removed from list of preferred blocks",
+"holostruct.commands.pixelart.preview.hide": "§2PixelArt preview hidden",
+"holostruct.commands.pixelart.preview.update": "§2PixelArt preview updated",
+"holostruct.commands.pixelart.build.saved": "§2Blueprint '%1$s§2' created",
+"holostruct.commands.pixelart.build.failed": "§Blueprint could not be created!",
+
 "holostruct.commands.argument.filepath.invalid": "File path is invalid!"
 
 }

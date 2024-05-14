@@ -2,7 +2,7 @@
 
 "holostruct.commands.blueprint.logs.invalidblueprint": "§2Plan de construction '%1$s§2' introuvable!",
 "holostruct.commands.blueprint.logs.listhead": "§2Erreurs de chargement ou d'enregistrement:",
-"holostruct.commands.blueprint.logs.noentry": "§a- aucunes entrées -",
+"holostruct.commands.blueprint.logs.noentry": "§a- aucune entrée -",
 "holostruct.commands.blueprint.discard.invalidblueprint": "§2Plan de construction '%1$s§2' n'existe pas!",
 "holostruct.commands.blueprint.discard.discarded": "§2Plan de construction '%1$s§2' abandonné",
 "holostruct.commands.blueprint.save.fileexists": "§2Fichier '%1$s§2' déjà existe, utilise §foverride§2 pour l'écraser!",
@@ -10,7 +10,7 @@
 "holostruct.commands.blueprint.save.failed": "§2Fichier du plan de construction '%1$s§2' ne pourrait pas être écrit!",
 "holostruct.commands.blueprint.save.saved": "§2Plan de construction enregistré en '%1$s§2'",
 "holostruct.commands.blueprint.load.nofile": "§2Fichier '%1$s§2' n'existe pas!",
-"holostruct.commands.blueprint.load.invalidfile": "§2Plan de construction '%1$s§2' kne pourrait pas être chargé!",
+"holostruct.commands.blueprint.load.invalidfile": "§2Plan de construction '%1$s§2' ne pourrait pas être chargé!",
 "holostruct.commands.blueprint.load.loaded": "§2Plan de construction '%1$s§2' chargé",
 
 "holostruct.commands.hologram.position.invalidhologram": "§2Hologramme '%1$s§2' n'existe pas!",
@@ -45,6 +45,27 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] Accès d'écriture (Aucun placement des blocs)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] Mode du serveur (Accès direct via le serveur, vite)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] Mode de client (Accès seulement indirect via le client, plus lente)",
-"holostruct.commands.argument.filepath.invalid": "Chemin du plan de construction n'est pas valide!"
+"holostruct.commands.pixelart.image.nofile": "§2Image '%1$s§2' n'existe pas!",
+"holostruct.commands.pixelart.image.failed": "§2Image '%1$s§2' ne pourrait pas être chargé!",
+"holostruct.commands.pixelart.image.loaded": "§2Image '%1$s§2' chargé",
+"holostruct.commands.pixelart.export.fileexists": "§Fichier '%1$s§2' déjà existe, utilise §foverride§2 pour l'écraser!",
+"holostruct.commands.pixelart.export.failed": "§2Image '%1$s§2' ne pourrait pas être enregistré!",
+"holostruct.commands.pixelart.export.saved": "§2Image '%1$s§2' enregistré",
+"holostruct.commands.pixelart.blocklist.empty": "§2Aucune liste de blocs disponible!",
+"holostruct.commands.pixelart.blocklist.head": "§2Liste de blocs requis:",
+"holostruct.commands.pixelart.blacklist.empty": "§2Aucun bloc interdit défini!",
+"holostruct.commands.pixelart.blacklist.head": "§2Liste des blocs interdits:",
+"holostruct.commands.pixelart.blacklist.added": "§2Bloc '%1$s§2' ajouté à la liste des blocs interdits",
+"holostruct.commands.pixelart.blacklist.removed": "§2Bloc '%1$s§2' supprimé de la liste des blocs interdits",
+"holostruct.commands.pixelart.whitelist.empty": "§2Aucun bloc préféré défini!",
+"holostruct.commands.pixelart.whitelist.head": "§2Liste des blocs préférés:",
+"holostruct.commands.pixelart.whitelist.added": "§2Bloc '%1$s§2' ajouté à la liste des blocs préférés",
+"holostruct.commands.pixelart.whitelist.removed": "§2Bloc '%1$s§2' supprimé de la liste des blocs préférés",
+"holostruct.commands.pixelart.preview.hide": "§2Aperçu du PixelArt caché",
+"holostruct.commands.pixelart.preview.update": "§2Aperçu du PixelArt actualisé",
+"holostruct.commands.pixelart.build.saved": "§2Plan de construction '%1$s§2' créé",
+"holostruct.commands.pixelart.build.failed": "§2Plan de construction ne pourrait pas être créé!",
+
+"holostruct.commands.argument.filepath.invalid": "Chemin du fichier n'est pas valide!"
 
 }
