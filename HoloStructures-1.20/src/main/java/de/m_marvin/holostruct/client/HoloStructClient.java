@@ -12,10 +12,12 @@ import de.m_marvin.holostruct.client.blueprints.BlueprintManager;
 import de.m_marvin.holostruct.client.commands.BlueprintCommand;
 import de.m_marvin.holostruct.client.commands.DebugCommand;
 import de.m_marvin.holostruct.client.commands.HologramCommand;
+import de.m_marvin.holostruct.client.commands.PixelArtCommand;
 import de.m_marvin.holostruct.client.commands.StatusCommand;
 import de.m_marvin.holostruct.client.event.ClientBlockEvent;
 import de.m_marvin.holostruct.client.event.ClientLanguageInjectEvent;
 import de.m_marvin.holostruct.client.holograms.HologramManager;
+import de.m_marvin.holostruct.client.holograms.rendering.HolographicRenderer;
 import de.m_marvin.holostruct.client.levelbound.Levelbound;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.holostruct.client.levelbound.access.NoAccessAccessor;
@@ -23,7 +25,8 @@ import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientCommand
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.ClientLevelAccessorImpl;
 import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ClientLevelboundPackageHandler;
 import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ServerLevelAccessorImpl;
-import de.m_marvin.holostruct.client.rendering.HolographicRenderer;
+import de.m_marvin.holostruct.client.pixelart.PixelArtGenerator;
+import de.m_marvin.holostruct.client.pixelart.rendering.PreviewRenderer;
 import de.m_marvin.holostruct.levelbound.network.QueryAccessPermissions;
 import de.m_marvin.holostruct.levelbound.network.SetBlockStatePackage;
 import net.minecraft.client.Minecraft;
@@ -58,6 +61,10 @@ public class HoloStructClient {
 	public final HologramManager HOLOGRAMS = new HologramManager();
 	/** The holographic renderer instance used to render the holograms */
 	public final HolographicRenderer HOLORENDERER = new HolographicRenderer();
+	/** The pixelart generator instance used when creating pixel arts */
+	public final PixelArtGenerator PIXELART_GENERATOR = new PixelArtGenerator();
+	/** The pixelart preview renderer used to render an image of the pixel art */
+	public final PreviewRenderer PIXELART_PREVIEW = new PreviewRenderer();
 	
 	/**
 	 * Executor used to execute {@link CompletableFuture} tasks on the render thread
@@ -75,6 +82,7 @@ public class HoloStructClient {
 		HologramCommand.register(event.getDispatcher());
 		DebugCommand.register(event.getDispatcher());
 		StatusCommand.register(event.getDispatcher());
+		PixelArtCommand.register(event.getDispatcher(), event.getBuildContext());
 	}
 	
 	@SubscribeEvent

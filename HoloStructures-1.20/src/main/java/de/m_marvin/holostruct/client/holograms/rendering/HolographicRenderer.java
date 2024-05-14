@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.rendering;
+package de.m_marvin.holostruct.client.holograms.rendering;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,12 +26,12 @@ import de.m_marvin.holostruct.client.holograms.HologramChunk;
 import de.m_marvin.holostruct.client.holograms.HologramManager;
 import de.m_marvin.holostruct.client.holograms.HologramSection;
 import de.m_marvin.holostruct.client.holograms.IFakeLevelAccess;
+import de.m_marvin.holostruct.client.holograms.rendering.HologramBufferContainer.HolographicBufferSource;
+import de.m_marvin.holostruct.client.holograms.rendering.HologramRender.HolographicChunk;
+import de.m_marvin.holostruct.client.holograms.rendering.HologramRender.HolographicChunk.HolographicSectionCompiled;
+import de.m_marvin.holostruct.client.holograms.rendering.posteffect.PostEffectUtil;
+import de.m_marvin.holostruct.client.holograms.rendering.posteffect.SelectivePostChain;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
-import de.m_marvin.holostruct.client.rendering.HologramBufferContainer.HolographicBufferSource;
-import de.m_marvin.holostruct.client.rendering.HologramRender.HolographicChunk;
-import de.m_marvin.holostruct.client.rendering.HologramRender.HolographicChunk.HolographicSectionCompiled;
-import de.m_marvin.holostruct.client.rendering.posteffect.PostEffectUtil;
-import de.m_marvin.holostruct.client.rendering.posteffect.SelectivePostChain;
 import de.m_marvin.holostruct.utility.UtilHelper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -93,7 +93,7 @@ public class HolographicRenderer {
 	
 	@SubscribeEvent
 	public static void onRenderLevelLast(RenderLevelStageEvent event) {
-
+		
 		HolographicRenderer renderer = HoloStruct.CLIENT.HOLORENDERER;
 		
 		if (event.getStage() == Stage.AFTER_SKY) {
@@ -167,6 +167,7 @@ public class HolographicRenderer {
 	private boolean _loadPostEffect(ResourceLocation postEffect) {
 		if (this.activePostEffect != null) {
 			this.activePostEffect.close();
+			this.activePostEffect = null;
 		}
 		
 		if (postEffect == null) {
@@ -571,50 +572,53 @@ public class HolographicRenderer {
 		
 		RenderSystem.enablePolygonOffset();
 		RenderSystem.polygonOffset(-1F, -1F);
-		
-		for (HologramRender hologramRender : hologramRenders.values()) {
-			BlockPos origin = hologramRender.hologram.getPosition().subtract(hologramRender.hologram.getOrigin());
-			
-			poseStack.pushPose();
-			poseStack.translate(origin.getX(), origin.getY(), origin.getZ());
-			
-			if (modelViewMatrix != null) {
-				modelViewMatrix.set(poseStack.last().pose());
-				modelViewMatrix.upload();
+
+		BlockHoloState.renderedStates().forEach((holoState) -> {
+
+			RenderTarget framebuffer = null;
+			if (this.activePostEffect != null) {
+				framebuffer = this.activePostEffect.getTempTarget(HOLOGRAPHIC_TARGET.get(holoState).toString());
+				if (framebuffer != null) PostEffectUtil.bindFramebuffer(framebuffer);
+				PostEffectUtil.forceRunOnCurrentFramebuffer();
 			}
 			
-			for (HolographicChunk chunkRender : hologramRender.renderChunks.values()) {
-				chunkRender.compiled.forEach((yi, section) -> {
-					
-					if (chunkRender.compiled.containsKey((int) yi)) {
-						if (chunkOffset != null) {
-							chunkOffset.set((float) (chunkRender.pos.x << 4), (float) (yi << 4), (float) (chunkRender.pos.z << 4));
-							chunkOffset.upload();
-						}
-						BlockHoloState.renderedStates().forEach((holoState) -> {
-							
-							if (!section.hasBufferFor(holoState, renderLayer)) return;
-							
-							RenderTarget framebuffer = null;
-							if (this.activePostEffect != null) {
-								framebuffer = this.activePostEffect.getTempTarget(HOLOGRAPHIC_TARGET.get(holoState).toString());
-								if (framebuffer != null) PostEffectUtil.bindFramebuffer(framebuffer);
-								PostEffectUtil.forceRunOnCurrentFramebuffer();
+			for (HologramRender hologramRender : hologramRenders.values()) {
+				BlockPos origin = hologramRender.hologram.getPosition().subtract(hologramRender.hologram.getOrigin());
+				
+				poseStack.pushPose();
+				poseStack.translate(origin.getX(), origin.getY(), origin.getZ());
+				
+				if (modelViewMatrix != null) {
+					modelViewMatrix.set(poseStack.last().pose());
+					modelViewMatrix.upload();
+				}
+				
+				for (HolographicChunk chunkRender : hologramRender.renderChunks.values()) {
+					chunkRender.compiled.forEach((yi, section) -> {
+						
+						if (chunkRender.compiled.containsKey((int) yi)) {
+							if (chunkOffset != null) {
+								chunkOffset.set((float) (chunkRender.pos.x << 4), (float) (yi << 4), (float) (chunkRender.pos.z << 4));
+								chunkOffset.upload();
 							}
+								
+							if (!section.hasBufferFor(holoState, renderLayer)) return;
 							
 							section.bindBuffer(holoState, renderLayer).draw();
 							
-							if (this.activePostEffect != null) {
-								if (framebuffer != null) PostEffectUtil.unbindFramebuffer(framebuffer);
-								PostEffectUtil.resetRunOnCurrentFramebuffer();
-							}
-							
-						});
-					}
-				});
+						}
+						
+					});
+				}
+				poseStack.popPose();
 			}
-			poseStack.popPose();
-		}
+
+			if (this.activePostEffect != null) {
+				if (framebuffer != null) PostEffectUtil.unbindFramebuffer(framebuffer);
+				PostEffectUtil.resetRunOnCurrentFramebuffer();
+			}
+			
+		});
 		
 		RenderSystem.disablePolygonOffset();
 		

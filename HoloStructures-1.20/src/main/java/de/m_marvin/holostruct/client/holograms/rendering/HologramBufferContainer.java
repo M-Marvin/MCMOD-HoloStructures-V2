@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.rendering;
+package de.m_marvin.holostruct.client.holograms.rendering;
 
 import java.util.HashMap;
 import java.util.Map;

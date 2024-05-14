@@ -1,9 +1,10 @@
 package de.m_marvin.holostruct.client.commands.arguments;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -26,35 +27,55 @@ import net.minecraft.network.chat.Component;
  * Argument for blueprint file path
  * @author Marvin Koehler
  */
-public class BlueprintPathArgument implements ArgumentType<String> {
+public class FilePathArgument implements ArgumentType<String> {
 
-	private static final Collection<String> EXAMPLES = Arrays.asList("not_aviable");
+	private static final Collection<String> EXAMPLES = Collections.emptyList();
 	
+	private final String defaultFolder;
+	private final Map<String, String> pathSuggestions;
 	private final boolean suggestExistingFiles;
 	private final boolean allowOnlyExisting;
 	
-	private BlueprintPathArgument(boolean suggestExistingFiles, boolean allowOnlyExisting) {
+	private FilePathArgument(Map<String, String> pathSuggestions, String defaultFolder, boolean suggestExistingFiles, boolean allowOnlyExisting) {
 		 this.suggestExistingFiles = suggestExistingFiles;
 		 this.allowOnlyExisting = allowOnlyExisting;
+		 this.pathSuggestions = pathSuggestions;
+		 this.defaultFolder = defaultFolder;
 	}
 	
 	@SuppressWarnings("resource")
 	public static File resolvePath(String path) {
-		return new File(Minecraft.getInstance().gameDirectory, path);
+		return new File(Minecraft.getInstance().gameDirectory, path).getAbsoluteFile();
 	}
 	
-	public static BlueprintPathArgument save() {
-		return new BlueprintPathArgument(false, false);
+	public static FilePathArgument saveBlueprint() {
+		return new FilePathArgument(
+				ClientConfig.getAdditionalBlueprintFolders(), 
+				ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get(), 
+				false, false);
 	}
 	
-	public static BlueprintPathArgument load() {
-		return new BlueprintPathArgument(true, false);
+	public static FilePathArgument loadBlueprint() {
+		return new FilePathArgument(
+				ClientConfig.getAdditionalBlueprintFolders(), 
+				ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get(), 
+				true, true);
+	}
+	
+	public static FilePathArgument saveImage() {
+		return new FilePathArgument(
+				ClientConfig.getAdditionalImageFolders(), 
+				ClientConfig.DEFAULT_IMAGE_FOLDER.get(), 
+				false, false);
 	}
 
-	public static BlueprintPathArgument loadOnlyExisting() {
-		return new BlueprintPathArgument(true, true);
+	public static FilePathArgument loadImage() {
+		return new FilePathArgument(
+				ClientConfig.getAdditionalImageFolders(), 
+				ClientConfig.DEFAULT_IMAGE_FOLDER.get(), 
+				true, true);
 	}
-
+	
 	public static String getPath(final CommandContext<?> context, final String name) {
 		return context.getArgument(name, String.class);
 	}
@@ -73,16 +94,16 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 		String[] inputSplit = input.endsWith(":") ? new String[] {input.substring(0, input.length() - 1), ""} : input.split(":");
 		String path;
 		if (inputSplit.length > 1) {
-			String folderPath = ClientConfig.getFolder(inputSplit[0]);
+			String folderPath = this.pathSuggestions.getOrDefault(inputSplit[0], this.defaultFolder);
 			String filePath = input.substring(inputSplit[0].length() + 1, input.length());
 			path = folderPath + "/" + filePath;
 		} else {
-			String folderPath = ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get();
+			String folderPath = this.defaultFolder;
 			String filePath = input;
 			path = folderPath + "/" + filePath;
 		}
 		if (allowOnlyExisting && !resolvePath(path).isFile()) {
-			throw new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage("Could not parse invalid blueprint file!")), Component.translatable("holostruct.commands.argument.blueprintpath.invalid"));
+			throw new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage("Could not find file!")), Component.translatable("holostruct.commands.argument.filepath.invalid"));
 		}
 		return path;
 	}
@@ -90,7 +111,7 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 	@Override
 	public boolean equals(final Object o) {
 		 if (this == o) return true;
-		 if (o instanceof BlueprintPathArgument other) {
+		 if (o instanceof FilePathArgument other) {
 		 	return other.isAllowOnlyExisting() == isAllowOnlyExisting() && isSuggestExistingFiles() == isSuggestExistingFiles();
 		 }
 		 return false;
@@ -110,10 +131,10 @@ public class BlueprintPathArgument implements ArgumentType<String> {
 			return Suggestions.empty();
 		} else {
 			Set<String> pathList = new HashSet<>();
-			ClientConfig.getAdditionalFolders().forEach((folderName, path) -> {
+			this.pathSuggestions.forEach((folderName, path) -> {
 				listPaths(resolvePath(path), folderName + ":", pathList, suggestExistingFiles);
 			});
-			listPaths(resolvePath(ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get()), "", pathList, suggestExistingFiles);
+			listPaths(resolvePath(this.defaultFolder), "", pathList, suggestExistingFiles);
 			return SharedSuggestionProvider.suggest(Stream.of(pathList.toArray()).map((s) -> "\"" + s + "\""), p_118251_);
 		}
 	}

@@ -3,7 +3,7 @@ package de.m_marvin.holostruct.client.registries;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintFormatArgument;
-import de.m_marvin.holostruct.client.commands.arguments.BlueprintPathArgument;
+import de.m_marvin.holostruct.client.commands.arguments.FilePathArgument;
 import de.m_marvin.holostruct.client.commands.arguments.HologramArgument;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
@@ -24,9 +24,9 @@ public class CommandArguments {
 		COMMAND_ARGUMENT_TYPES.register(bus);
 	}
 	
-	public static final DeferredHolder<ArgumentTypeInfo<?, ?>, SingletonArgumentInfo<BlueprintPathArgument>> BLUEPRINT_PATH = COMMAND_ARGUMENT_TYPES.register("blueprint_path", () -> 
-		ArgumentTypeInfos.registerByClass(BlueprintPathArgument.class, SingletonArgumentInfo.contextFree(BlueprintPathArgument::load)));
-
+	public static final DeferredHolder<ArgumentTypeInfo<?, ?>, SingletonArgumentInfo<FilePathArgument>> FILE_PATH = COMMAND_ARGUMENT_TYPES.register("file_path", () -> 
+		ArgumentTypeInfos.registerByClass(FilePathArgument.class, SingletonArgumentInfo.contextFree(FilePathArgument::loadBlueprint)));
+	
 	public static final DeferredHolder<ArgumentTypeInfo<?, ?>, SingletonArgumentInfo<BlueprintFormatArgument>> BLUEPRINT_FORMAT = COMMAND_ARGUMENT_TYPES.register("blueprint_format", () -> 
 		ArgumentTypeInfos.registerByClass(BlueprintFormatArgument.class, SingletonArgumentInfo.contextFree(BlueprintFormatArgument::format)));
 	

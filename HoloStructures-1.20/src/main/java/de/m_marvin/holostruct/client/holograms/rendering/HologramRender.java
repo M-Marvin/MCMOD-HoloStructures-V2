@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.rendering;
+package de.m_marvin.holostruct.client.holograms.rendering;
 
 import java.util.Collection;
 import java.util.Map;
@@ -11,7 +11,7 @@ import de.m_marvin.holostruct.client.holograms.BlockHoloState;
 import de.m_marvin.holostruct.client.holograms.Hologram;
 import de.m_marvin.holostruct.client.holograms.HologramChunk;
 import de.m_marvin.holostruct.client.holograms.HologramSection;
-import de.m_marvin.holostruct.client.rendering.HologramBufferContainer.HolographicBufferSource;
+import de.m_marvin.holostruct.client.holograms.rendering.HologramBufferContainer.HolographicBufferSource;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;

@@ -12,7 +12,7 @@ import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.ClientConfig;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintFormatArgument;
-import de.m_marvin.holostruct.client.commands.arguments.BlueprintPathArgument;
+import de.m_marvin.holostruct.client.commands.arguments.FilePathArgument;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -29,11 +29,11 @@ public class BlueprintCommand {
 		.then(
 				Commands.literal("load")
 				.then(
-						Commands.argument("file", BlueprintPathArgument.loadOnlyExisting())
+						Commands.argument("file", FilePathArgument.loadBlueprint())
 						.then(
 								Commands.argument("name", BlueprintArgument.blueprint())
 								.executes(source ->
-										loadBlueprint(source, BlueprintPathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "name"))
+										loadBlueprint(source, FilePathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "name"))
 								)
 						)
 				)
@@ -42,16 +42,16 @@ public class BlueprintCommand {
 				.then(
 						Commands.argument("blueprint", BlueprintArgument.blueprint())
 						.then(
-								Commands.argument("file", BlueprintPathArgument.save())
+								Commands.argument("file", FilePathArgument.saveBlueprint())
 								.then(
 										Commands.argument("format", BlueprintFormatArgument.format())
 										.executes(source ->
-												saveBlueprint(source, BlueprintPathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "blueprint"), BlueprintFormatArgument.getFormat(source, "format"), false)
+												saveBlueprint(source, FilePathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "blueprint"), BlueprintFormatArgument.getFormat(source, "format"), false)
 										)
 										.then(
 												Commands.literal("override")
 												.executes(source ->
-														saveBlueprint(source, BlueprintPathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "blueprint"), BlueprintFormatArgument.getFormat(source, "format"), true)
+														saveBlueprint(source, FilePathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "blueprint"), BlueprintFormatArgument.getFormat(source, "format"), true)
 												)
 										)
 								)
@@ -71,9 +71,9 @@ public class BlueprintCommand {
 							openFolder(source, ClientConfig.DEFAULT_BLUEPRINT_FOLDER.get())
 						)
 						.then(
-								Commands.argument("folder", BlueprintPathArgument.save())
+								Commands.argument("folder", FilePathArgument.saveBlueprint())
 								.executes(source -> 
-									openFolder(source, BlueprintPathArgument.getPath(source, "folder")
+									openFolder(source, FilePathArgument.getPath(source, "folder")
 								)
 						)
 				)
@@ -108,7 +108,7 @@ public class BlueprintCommand {
 	}
 	
 	public static int openFolder(CommandContext<CommandSourceStack> source, String folder) {
-		File folderPath = BlueprintPathArgument.resolvePath(folder);
+		File folderPath = FilePathArgument.resolvePath(folder);
 		if (folderPath.isFile()) folderPath = folderPath.getParentFile();
 		Util.getPlatform().openFile(folderPath);
 		return 1;
@@ -128,7 +128,7 @@ public class BlueprintCommand {
 	}
 	
 	public static int saveBlueprint(CommandContext<CommandSourceStack> source, String blueprintPath, String blueprintName, BlueprintFormat format, boolean overrideExisting) {
-		File blueprintFile = BlueprintPathArgument.resolvePath(blueprintPath);
+		File blueprintFile = FilePathArgument.resolvePath(blueprintPath);
 		if (blueprintFile.exists() && !overrideExisting) {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.save.fileexists", blueprintPath));
 			return 0;
@@ -150,7 +150,7 @@ public class BlueprintCommand {
 	}
 	
 	public static int loadBlueprint(CommandContext<CommandSourceStack> source, String blueprintPath, String blueprintName) {
-		File blueprintFile = BlueprintPathArgument.resolvePath(blueprintPath);
+		File blueprintFile = FilePathArgument.resolvePath(blueprintPath);
 		if (!blueprintFile.exists()) {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.load.nofile", blueprintPath));
 			return 0;

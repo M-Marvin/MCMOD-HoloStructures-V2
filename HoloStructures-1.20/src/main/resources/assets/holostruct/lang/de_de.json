@@ -12,7 +12,6 @@
 "holostruct.commands.blueprint.load.nofile": "§2Datei '%1$s§2' existiert nicht!",
 "holostruct.commands.blueprint.load.invalidfile": "§2Bauplan '%1$s§2' konnte nicht geladen werden!",
 "holostruct.commands.blueprint.load.loaded": "§2Bauplan '%1$s§2' geladen",
-
 "holostruct.commands.hologram.position.invalidhologram": "§2Hologramm '%1$s§2' existiert nicht!",
 "holostruct.commands.hologram.position.changed": "§2Hologramm '%1$s§2' positioniert bei %2$d %3$d %4$d",
 "holostruct.commands.hologram.mirror.mirrored": "§2Hologramm '%1$s§2' gespiegelt",
@@ -47,6 +46,27 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] Schreib-Zugriff (Kein Platzieren von Blöcken)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] Server-Modus (Direkter Zugriff durch Server, schnell)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] Client-Modus (Nur indirekter Zugriff durch Client, langsamer)",
-"holostruct.commands.argument.blueprintpath.invalid": "Bauplan-Pfad ist ungültig!"
+"holostruct.commands.pixelart.image.nofile": "§2Bild '%1$s§2' existiert nicht!",
+"holostruct.commands.pixelart.image.failed": "§2Bild '%1$s§2' konnte nicht geladen werden!",
+"holostruct.commands.pixelart.image.loaded": "§2Bild '%1$s§2' geladen",
+"holostruct.commands.pixelart.export.fileexists": "§2Datei '%1$s§2' exitiert bereits, benutze §foverride§2 zum Überschreiben!",
+"holostruct.commands.pixelart.export.failed": "§2Bild '%1$s§2' konnte nicht gespeichert werden!",
+"holostruct.commands.pixelart.export.saved": "§2Bild '%1$s§2' gespeichert",
+"holostruct.commands.pixelart.blocklist.empty": "§2Keine Blockliste verfügbar!",
+"holostruct.commands.pixelart.blocklist.head": "§2Liste der benötigten Blöcke:",
+"holostruct.commands.pixelart.blacklist.empty": "§2Keine verbotenen Blöcke festgelegt!",
+"holostruct.commands.pixelart.blacklist.head": "§2Liste der verbotenen Blöcke:",
+"holostruct.commands.pixelart.blacklist.added": "§2Block '%1$s§2' zur Liste verbotenen Blöcke hinzugefügt",
+"holostruct.commands.pixelart.blacklist.removed": "§2Block '%1$s§2' von der Liste verbotener Blöcke entfernt",
+"holostruct.commands.pixelart.whitelist.empty": "§2Keine beforzugten Blöcke festgelegt!",
+"holostruct.commands.pixelart.whitelist.head": "§2Liste der beforzugten Blöcke:",
+"holostruct.commands.pixelart.whitelist.added": "§2Block '%1$s§2' zur Liste beforzugter Blöcke hinzugefügt",
+"holostruct.commands.pixelart.whitelist.removed": "§2Block '%1$s§2' von der Liste beforzugter Blöcke entfernt",
+"holostruct.commands.pixelart.preview.hide": "§2PixelArt Vorschau ausgeblendet",
+"holostruct.commands.pixelart.preview.update": "§2PixelArt Vorschau aktualisiert",
+"holostruct.commands.pixelart.build.saved": "§2Bauplan '%1$s§2' erzeugt",
+"holostruct.commands.pixelart.build.failed": "§2Bauplan konnte nicht erzeugt werden!",
+
+"holostruct.commands.argument.filepath.invalid": "§2Datei-Pfad ist ungültig!"
 
 }

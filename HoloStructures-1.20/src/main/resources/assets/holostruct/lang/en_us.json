@@ -47,6 +47,6 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] write access (No placing of blocks)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] server mode (Direct access through server, fast)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] client mode (Only indirect access through client, slower)",
-"holostruct.commands.argument.blueprintpath.invalid": "Blueprint path is invalid!"
+"holostruct.commands.argument.filepath.invalid": "File path is invalid!"
 
 }

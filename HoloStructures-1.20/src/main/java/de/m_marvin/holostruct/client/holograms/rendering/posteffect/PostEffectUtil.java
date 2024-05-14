@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.rendering.posteffect;
+package de.m_marvin.holostruct.client.holograms.rendering.posteffect;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 

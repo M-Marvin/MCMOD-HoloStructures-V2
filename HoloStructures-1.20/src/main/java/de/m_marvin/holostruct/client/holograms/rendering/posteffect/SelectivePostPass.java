@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.rendering.posteffect;
+package de.m_marvin.holostruct.client.holograms.rendering.posteffect;
 
 import java.io.IOException;
 import java.util.List;

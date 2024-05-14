@@ -45,6 +45,6 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] Accès d'écriture (Aucun placement des blocs)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] Mode du serveur (Accès direct via le serveur, vite)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] Mode de client (Accès seulement indirect via le client, plus lente)",
-"holostruct.commands.argument.blueprintpath.invalid": "Chemin du plan de construction n'est pas valide!"
+"holostruct.commands.argument.filepath.invalid": "Chemin du plan de construction n'est pas valide!"
 
 }

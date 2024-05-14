@@ -10,7 +10,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.holostruct.HoloStruct;
-import de.m_marvin.holostruct.client.rendering.posteffect.SelectivePostChain;
+import de.m_marvin.holostruct.client.holograms.rendering.posteffect.SelectivePostChain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
