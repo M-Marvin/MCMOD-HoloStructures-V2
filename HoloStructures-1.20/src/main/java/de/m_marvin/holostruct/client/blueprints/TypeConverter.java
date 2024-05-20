@@ -39,22 +39,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class TypeConverter {
 	
-	/**
-	 * See {@link BlockEntityData#setData(TagCompound)}
-	 */
-	public static final Consumer<TagCompound> BLOCK_ENTITY_META_FILTER = tag -> {
-		tag.removeTag("x");
-		tag.removeTag("y");
-		tag.removeTag("z");
-		tag.removeTag("id");	
-	};
-
-	/**
-	 * See {@link EntityData#setData(TagCompound)}
-	 */
-	public static final Consumer<TagCompound> ENTITY_META_FILTER = tag -> {
-		tag.removeTag("id");	
-	};
+	public static final BlockStateData AIR_STATE = new BlockStateData(new RegistryName("minecraft:air"));
 	
 	/**
 	 * Converts an actual blocks state to an data type.

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -42,9 +41,13 @@ public class PixelArtGenerator {
 	/** Resulting image using the available map colors */
 	protected BufferedImage outputImage;
 	/** List of blocks that the user wants not to use */
-	protected Set<Block> blacklist = new HashSet<>();
+	protected List<Block> blacklistConfig = new ArrayList<>();
+	protected List<Block> blacklistUser = new ArrayList<>();
 	/** List of blocks that the user wants to prefer */
-	protected Set<Block> whitelist = new HashSet<>();
+	protected List<Block> whitelistConfig = new ArrayList<>();
+	protected List<Block> whitelistUser = new ArrayList<>();
+	/** If the current pixel art should be build using 3D shading */
+	protected boolean useShadowing = false;
 	/** List of blocks required for this image */
 	protected Map<Block, Integer> blockList = new HashMap<>();
 	/** Image color to block configuration map */
@@ -145,27 +148,72 @@ public class PixelArtGenerator {
 		}
 	}
 	
-	public Blueprint buildBlueprint() {
+	protected void placePixelBlocks(Blueprint target, int pxX, int pxZ, int pxY, BlockStateData state, BlockStateData fillerState, int heightChange, int scale) {
+		
+		for (int bX = 0; bX < scale / 2; bX++) {
+			for (int bZ = 0; bZ < scale; bZ++) {
+				
+				target.setBlock(new Vec3i(pxX * scale + bX, pxY * scale, pxZ * scale + bZ), state);
+				target.setBlock(new Vec3i(pxX * scale + bX, pxY * scale - 1, pxZ * scale + bZ), fillerState);
+				
+			}
+		}
+		
+		if (heightChange != 0 || scale == 1) {
+
+			target.setBlock(new Vec3i(pxX * scale + scale / 2, pxY * scale, pxZ * scale), state);
+			target.setBlock(new Vec3i(pxX * scale + scale / 2, pxY * scale - 1, pxZ * scale), fillerState);
+			
+		}
+		
+	}
+	
+	public Blueprint buildBlueprint(int mapScale) {
 		
 		if (this.inputImage != null && this.imageMap != null) {
+
+			int scale = (int) Math.pow(2, mapScale - 1);
 			
 			Blueprint blueprint = new Blueprint();
 			int minY = 0;
 			int maxY = 0;
 			
+			BlockStateData stoneState = new BlockStateData(new RegistryName("minecraft:stone"));
+			BlockStateData airState = TypeConverter.AIR_STATE;
+			
+			int[] compressionOffset = new int[128];
 			for (int x = 0; x < 128; x++) {
 				int y = 0;
+				int ly = 0;
+				int hy = 0;
+				for (int z = 0; z < 128; z++) {
+
+					int pixelColor = this.inputImage.getRGB(x, z);
+					BlockConfiguration config = this.imageMap.get(pixelColor);
+					int heightChange = config.brightness() == Brightness.NORMAL ? 0 : config.brightness() == Brightness.HIGH ? 1 : -1;
+					y += heightChange;
+					
+					if (y > hy) hy = y;
+					if (y < ly) ly = y;
+					
+				}
 				
-				blueprint.setBlock(new Vec3i(x, y, -1), new BlockStateData(new RegistryName("minecraft:stone")));
+				compressionOffset[x] = -(hy - ly) / 2 - ly;
+			}
+			
+			for (int x = 0; x < 128; x++) {
+				int y = compressionOffset[x];
+				
+				placePixelBlocks(blueprint, x, -1, y, stoneState, airState, 0, scale);
+				
 				for (int z = 0; z < 128; z++) {
 					int pixelColor = this.inputImage.getRGB(x, z);
 					BlockConfiguration config = this.imageMap.get(pixelColor);
-					y += config.brightness() == Brightness.NORMAL ? 0 : config.brightness() == Brightness.HIGH ? -1 : 1;
+					BlockStateData block = TypeConverter.blockState2data(config.state());
+					int heightChange = config.brightness() == Brightness.NORMAL ? 0 : config.brightness() == Brightness.HIGH ? 1 : -1;
+					y += heightChange;
 					
-					// TODO better states for placement
-//					config.state().getBlock().getStateForPlacement(new BlockPlaceContext(null, InteractionHand.MAIN_HAND, ItemStack.EMPTY, new BlockHit))
-					
-					blueprint.setBlock(new Vec3i(x, y, z), TypeConverter.blockState2data(config.state()));
+					placePixelBlocks(blueprint, x, z, y, block, stoneState, heightChange, scale);
 					
 					if (y < minY) minY = y;
 					if (y > maxY) maxY = y;
@@ -182,14 +230,17 @@ public class PixelArtGenerator {
 		
 	}
 	
-	protected BlockConfiguration findConfigurationForColor(int rgb, boolean useWhitelist) {
+	protected BlockConfiguration findConfigurationForColor(int rgb) {
 		BlockConfiguration configuration = null;
 		double div = Double.MAX_VALUE;
 		
-		for (Entry<Block, List<BlockConfiguration>> entry : this.blockColors.entrySet()) {
-			if (this.blacklist.contains(entry.getKey())) continue;
-			if (!this.whitelist.contains(entry.getKey()) && useWhitelist) continue;
-			for (BlockConfiguration config : entry.getValue()) {
+		for (Block prefered : this.whitelistUser) {
+			if (this.blacklistUser.contains(prefered)) continue;
+			
+			for (BlockConfiguration config : this.blockColors.get(prefered)) {
+				
+				if (config.brightness() != Brightness.NORMAL && !this.useShadowing) continue;
+				
 				double mapDiv = (
 						Math.abs((rgb >> 16 & 0xFF) - (config.rgb() >> 16 & 0xFF)) + 
 						Math.abs((rgb >> 8 & 0xFF) - (config.rgb() >> 8 & 0xFF)) + 
@@ -200,6 +251,32 @@ public class PixelArtGenerator {
 					div = mapDiv;
 					configuration = config;
 				}
+				
+			}
+			
+		}
+		
+		for (Block prefered : this.whitelistConfig) {
+			if (this.blacklistConfig.contains(prefered)) continue;
+			if (this.blacklistUser.contains(prefered)) continue;
+
+			for (BlockConfiguration config : this.blockColors.get(prefered)) {
+
+				if (config.brightness() != Brightness.NORMAL && !this.useShadowing) continue;
+				
+				double mapDiv = (
+						Math.abs((rgb >> 16 & 0xFF) - (config.rgb() >> 16 & 0xFF)) + 
+						Math.abs((rgb >> 8 & 0xFF) - (config.rgb() >> 8 & 0xFF)) + 
+						Math.abs((rgb & 0xFF) - (config.rgb() & 0xFF))
+					) / 3.0;
+				
+				if (mapDiv < div) {
+					div = mapDiv;
+					configuration = config;
+				} else if (Math.abs(div - mapDiv) < 0.0001) {
+					if (config.state().equals(prefered.defaultBlockState())) configuration = config;
+				}
+				
 			}
 		}
 		
@@ -210,31 +287,36 @@ public class PixelArtGenerator {
 					break;
 				}
 			}
-		} else if (configuration == null && useWhitelist) 
-			configuration = findConfigurationForColor(rgb, false);
+		}
 		
 		return configuration;
-	}
-	
-	protected BlockConfiguration findConfigurationForColor(int rgb) {
-		return findConfigurationForColor(rgb, true);
 	}
 	
 	public Map<Block, Integer> getBlockList() {
 		return blockList;
 	}
 	
-	public Set<Block> getBlacklist() {
-		return blacklist;
+	public List<Block> getBlacklist() {
+		return blacklistUser;
 	}
 	
-	public Set<Block> getWhitelist() {
-		return whitelist;
+	public List<Block> getWhitelist() {
+		return whitelistUser;
+	}
+	
+	public void setUseShadowing(boolean useShadowing) {
+		this.useShadowing = useShadowing;
+	}
+	
+	public boolean isUseShadowing() {
+		return useShadowing;
 	}
 	
 	public void resetLists() {
-		this.whitelist.addAll(ClientConfig.DEFAULT_BLOCK_WHITELIST.get().stream().map(name -> BuiltInRegistries.BLOCK.get(new ResourceLocation(name))).toList());
-		this.blacklist.addAll(ClientConfig.DEFAULT_BLOCK_BLACKLIST.get().stream().map(name -> BuiltInRegistries.BLOCK.get(new ResourceLocation(name))).toList());
+		this.whitelistConfig.clear();
+		this.whitelistConfig.addAll(ClientConfig.DEFAULT_BLOCK_WHITELIST.get().stream().map(name -> BuiltInRegistries.BLOCK.get(new ResourceLocation(name))).toList());
+		this.blacklistConfig.clear();
+		this.blacklistConfig.addAll(ClientConfig.DEFAULT_BLOCK_BLACKLIST.get().stream().map(name -> BuiltInRegistries.BLOCK.get(new ResourceLocation(name))).toList());
 	}
 	
 	public void updatePreview() {

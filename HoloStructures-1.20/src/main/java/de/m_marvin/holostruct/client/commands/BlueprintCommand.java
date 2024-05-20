@@ -1,6 +1,7 @@
 package de.m_marvin.holostruct.client.commands;
 
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -43,6 +44,15 @@ public class BlueprintCommand {
 						Commands.argument("blueprint", BlueprintArgument.blueprint())
 						.then(
 								Commands.argument("file", FilePathArgument.saveBlueprint())
+								.executes(source ->
+										saveBlueprint(source, FilePathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "blueprint"), null, false)
+								)
+								.then(
+										Commands.literal("override")
+										.executes(source ->
+												saveBlueprint(source, FilePathArgument.getPath(source, "file"), BlueprintArgument.getBlueprint(source, "blueprint"), null, true)
+										)
+								)
 								.then(
 										Commands.argument("format", BlueprintFormatArgument.format())
 										.executes(source ->
@@ -139,13 +149,20 @@ public class BlueprintCommand {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.save.invalidblueprint", blueprintName));
 			return 0;
 		}
+
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.save.started", blueprintName), false);
 		
-		if (!BlueprintLoader.saveBlueprint(blueprint, blueprintFile, format)) {
-			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.save.failed", blueprintPath));
-			return 0;
-		}
-		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.save.saved", blueprintName), false);
+		CompletableFuture.runAsync(() -> {
+			if (!BlueprintLoader.saveBlueprint(blueprint, blueprintFile, format)) {
+				source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.save.failed", blueprintPath));
+				return;
+			}
+			
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.save.saved", blueprintPath), false);
+			if (!blueprint.getParsingErrors().isEmpty()) {
+				source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.save.parsewarning"), false);
+			}
+		});
 		return 1;
 	}
 	
@@ -155,16 +172,24 @@ public class BlueprintCommand {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.load.nofile", blueprintPath));
 			return 0;
 		}
+
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.load.started", blueprintName), false);
 		
-		Blueprint blueprint = BlueprintLoader.loadBlueprint(blueprintFile);
-		if (blueprint == null) {
-			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.load.invalidfile", blueprintPath));
-			return 0;
-		}
-		
-		HoloStruct.CLIENT.BLUEPRINTS.setLoadedBlueprint(blueprintName, blueprint);
-		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.load.loaded", blueprintName), false);
+		CompletableFuture.runAsync(() -> {
+			Blueprint blueprint = BlueprintLoader.loadBlueprint(blueprintFile);
+			if (blueprint == null) {
+				source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.load.invalidfile", blueprintPath));
+				return;
+			}
+			
+			HoloStruct.CLIENT.BLUEPRINTS.setLoadedBlueprint(blueprintName, blueprint);
+			
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.load.loaded", blueprintName), false);
+			if (!blueprint.getParsingErrors().isEmpty()) {
+				source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.load.parsewarning"), false);
+			}
+		});
+
 		return 1;
 	}
 	

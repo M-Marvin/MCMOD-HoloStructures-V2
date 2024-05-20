@@ -1,5 +1,7 @@
 package de.m_marvin.holostruct.client.commands;
 
+import java.util.concurrent.CompletableFuture;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -295,12 +297,17 @@ public class HologramCommand {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.blueprint.invalidhologram", hologramName));
 			return 0;
 		}
+
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.blueprint.started", hologramName), false);
 		
-		Blueprint blueprint = new Blueprint();
-		hologram.copyTo(blueprint);
-		HoloStruct.CLIENT.BLUEPRINTS.setLoadedBlueprint(blueprintName, blueprint);
+		CompletableFuture.runAsync(() -> {
+			Blueprint blueprint = new Blueprint();
+			hologram.copyTo(blueprint);
+			HoloStruct.CLIENT.BLUEPRINTS.setLoadedBlueprint(blueprintName, blueprint);
+			
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.blueprint.stored", hologramName, blueprintName), false);
+		});
 		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.blueprint.stored", hologramName, blueprintName), false);
 		return 1;
 	}
 	
@@ -313,18 +320,24 @@ public class HologramCommand {
 				return 0;
 			}
 		}
+
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.started", hologramName), false);
 		
-		BlockPos position = UtilHelper.toBlockPos(source.getSource().getPosition());
-		Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.createHologram(blueprint, position, hologramName);
+		final Blueprint blueprintF = blueprint;
+		CompletableFuture.runAsync(() -> {
+			BlockPos position = UtilHelper.toBlockPos(source.getSource().getPosition());
+			Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.createHologram(blueprintF, position, hologramName);
+			
+			if (hologram == null) {
+				source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.create.failed", hologramName));
+				return;
+			}
+			
+			hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
+			
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.created", hologramName), false);
+		});
 		
-		if (hologram == null) {
-			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.create.failed", hologramName));
-			return 0;
-		}
-		
-		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
-		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.created", hologramName), false);
 		return 1;
 	}
 	

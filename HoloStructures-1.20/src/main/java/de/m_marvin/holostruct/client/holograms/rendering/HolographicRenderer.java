@@ -13,6 +13,7 @@ import org.joml.Matrix4f;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -568,11 +569,13 @@ public class HolographicRenderer {
 		Uniform chunkOffset = shader.CHUNK_OFFSET;
 		Uniform modelViewMatrix = shader.MODEL_VIEW_MATRIX;
 
+		RenderSystem.setShaderFogShape(FogShape.SPHERE);
+		
 		setupSectionShader(projectionMatrix, shader);
 		
 		RenderSystem.enablePolygonOffset();
 		RenderSystem.polygonOffset(-1F, -1F);
-
+		
 		BlockHoloState.renderedStates().forEach((holoState) -> {
 
 			RenderTarget framebuffer = null;

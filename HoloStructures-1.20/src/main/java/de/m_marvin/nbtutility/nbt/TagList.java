@@ -10,22 +10,33 @@ import de.m_marvin.nbtutility.TagType;
 
 public class TagList implements ITagBase {
 
+	private TagType fallback;
 	private TagType type;
 	private List<ITagBase> data; 
 	
 	public TagList() {
 		this(new ArrayList<>());
 	}
-	
+
+	public TagList(TagType fallbackType) {
+		this(new ArrayList<>(), fallbackType);
+	}
+
 	public TagList(List<? extends ITagBase> data) {
+		this(data, TagType.END);
+	}
+	
+	public TagList(List<? extends ITagBase> data, TagType fallbackType) {
 		this.data = new ArrayList<>();
 		this.data.addAll(data);
-		assert checkConsistency() : "inconsistent list types!";
+		this.fallback = fallbackType;
+		boolean b = checkConsistency();
+		assert b : "inconsistent list types!";
 	}
 	
 	protected boolean checkConsistency() {
 		if (this.data.isEmpty()) {
-			this.type = TagType.END;
+			this.type = this.fallback;
 			return true;
 		} else {
 			this.type = this.data.get(0).getType();

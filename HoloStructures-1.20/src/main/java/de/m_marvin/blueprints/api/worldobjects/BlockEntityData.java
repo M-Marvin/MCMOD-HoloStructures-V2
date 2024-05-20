@@ -1,9 +1,9 @@
 package de.m_marvin.blueprints.api.worldobjects;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import de.m_marvin.blueprints.api.RegistryName;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.nbtutility.nbt.TagCompound;
 import de.m_marvin.univec.impl.Vec3i;
 
@@ -14,6 +14,14 @@ import de.m_marvin.univec.impl.Vec3i;
  * @author Marvin Koehler
  */
 public class BlockEntityData {
+	
+	public static final Function<TagCompound, TagCompound> BLOCK_ENTITY_META_FILTER = tag -> {
+		tag.removeTag("x");
+		tag.removeTag("y");
+		tag.removeTag("z");
+		tag.removeTag("id");	
+		return tag;
+	};
 	
 	protected Vec3i position;
 	protected RegistryName typeName;
@@ -37,8 +45,7 @@ public class BlockEntityData {
 	 * <b>NOTE</b>: This method filters out some of the fields of the nbt data, since they would be duplicates of the {@link BlockEntityData#position} and {@link BlockEntityData#registryName} fields.
 	 */
 	public void setData(TagCompound data) {
-		TypeConverter.BLOCK_ENTITY_META_FILTER.accept(data);
-		this.data = data;
+		this.data = BLOCK_ENTITY_META_FILTER.apply(data);
 	}
 	
 	public TagCompound getData() {

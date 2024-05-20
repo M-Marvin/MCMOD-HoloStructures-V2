@@ -22,6 +22,7 @@ import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import net.minecraft.SharedConstants;
 
 /**
  * An implementation of {@link IBlueprintParser} for the vanilla .nbt format.
@@ -137,6 +138,7 @@ public class NBTStrructParser implements IBlueprintParser {
 	@Override
 	public void reset() {
 		this.nbtTag = new TagCompound();
+		this.dataVersion = SharedConstants.getCurrentVersion().getDataVersion().getVersion();
 	}
 	
 	@Override

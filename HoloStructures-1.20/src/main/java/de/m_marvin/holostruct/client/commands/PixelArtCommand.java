@@ -1,16 +1,11 @@
 package de.m_marvin.holostruct.client.commands;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.blueprints.api.Blueprint;
@@ -23,10 +18,8 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.material.MapColor.Brightness;
 
 public class PixelArtCommand {
 	
@@ -123,21 +116,59 @@ public class PixelArtCommand {
 						)
 				)
 		).then(
+				Commands.literal("shadowing")
+				.executes(source ->
+						printShadowingState(source)
+				).then(
+						Commands.argument("enable", BoolArgumentType.bool())
+						.executes(source ->
+								setShadowingState(source, BoolArgumentType.getBool(source, "enable"))
+						)
+				)
+		).then(
 				Commands.literal("build")
 				.then(
 						Commands.argument("blueprint", BlueprintArgument.blueprint())
 						.executes(source -> 
-								buildBlueprint(source, BlueprintArgument.getBlueprint(source, "blueprint"))
+								buildBlueprint(source, BlueprintArgument.getBlueprint(source, "blueprint"), 1)
+						)
+						.then(
+								Commands.argument("scale", IntegerArgumentType.integer(1, 3))
+								.executes(source ->
+										buildBlueprint(source, BlueprintArgument.getBlueprint(source, "blueprint"), IntegerArgumentType.getInteger(source, "scale"))
+								)
 						)
 				)
 		));
 	}
 	
-	// TODO better command usage
-	
-	public static int buildBlueprint(CommandContext<CommandSourceStack> source, String blueprintName) {
+	public static int printShadowingState(CommandContext<CommandSourceStack> source) {
 		
-		Blueprint blueprint = HoloStruct.CLIENT.PIXELART_GENERATOR.buildBlueprint();
+		if (HoloStruct.CLIENT.PIXELART_GENERATOR.isUseShadowing()) {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.pixelart.shadowing.enabled"));
+		} else {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.pixelart.shadowing.disabled"));
+		}
+		return 1;
+		
+	}
+	
+	public static int setShadowingState(CommandContext<CommandSourceStack> source, boolean enable) {
+		
+		HoloStruct.CLIENT.PIXELART_GENERATOR.setUseShadowing(enable);
+		HoloStruct.CLIENT.PIXELART_GENERATOR.rebuild();
+		if (HoloStruct.CLIENT.PIXELART_GENERATOR.isUseShadowing()) {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.pixelart.shadowing.enabled"));
+		} else {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.pixelart.shadowing.disabled"));
+		}
+		return 1;
+		
+	}
+	
+	public static int buildBlueprint(CommandContext<CommandSourceStack> source, String blueprintName, int mapScale) {
+		
+		Blueprint blueprint = HoloStruct.CLIENT.PIXELART_GENERATOR.buildBlueprint(mapScale);
 		if (blueprint == null) {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.pixelart.build.failed"));
 			return 0;
@@ -173,36 +204,36 @@ public class PixelArtCommand {
 			source.getSource().sendSuccess(() -> Component.literal("- ").append(block.getKey().getName()).append(Component.literal(" x " + block.getValue())), false);
 		}
 		
-		File f = new File("C:\\Users\\marvi\\Desktop\\dump.txt");
-		
-		try {
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)));
-			
-			Map<Integer, Set<Block>> items = new HashMap<>();
-			HoloStruct.CLIENT.PIXELART_GENERATOR.colorMap.forEach((rgb, config) -> {
-				if (config.brightness() != Brightness.HIGH) return;
-				if (!items.containsKey(rgb)) items.put(rgb, new HashSet<>());
-				items.get(rgb).add(config.state().getBlock());
-			});
-			
-			items.forEach((rgb, blocks) -> {
-				try {
-					int red = rgb >> 16 & 0xFF;
-					int green = rgb >> 8 & 0xFF;
-					int blue = rgb & 0xFF;
-					
-					writer.write(red + " " + green + " " + blue + "\t");
-					for (Block s : blocks) {
-						writer.write(BuiltInRegistries.BLOCK.getKey(s).toString() + "\t");
-					}
-					
-					writer.write("\n");
-					
-				} catch (Throwable e) {}
-			});
-			
-			writer.close();
-		} catch (Throwable e) {}
+//		File f = new File("C:\\Users\\marvi\\Desktop\\dump.txt");
+//		
+//		try {
+//			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)));
+//			
+//			Map<Integer, Set<Block>> items = new HashMap<>();
+//			HoloStruct.CLIENT.PIXELART_GENERATOR.colorMap.forEach((rgb, config) -> {
+//				if (config.brightness() != Brightness.HIGH) return;
+//				if (!items.containsKey(rgb)) items.put(rgb, new HashSet<>());
+//				items.get(rgb).add(config.state().getBlock());
+//			});
+//			
+//			items.forEach((rgb, blocks) -> {
+//				try {
+//					int red = rgb >> 16 & 0xFF;
+//					int green = rgb >> 8 & 0xFF;
+//					int blue = rgb & 0xFF;
+//					
+//					writer.write(red + " " + green + " " + blue + "\t");
+//					for (Block s : blocks) {
+//						writer.write(BuiltInRegistries.BLOCK.getKey(s).toString() + "\t");
+//					}
+//					
+//					writer.write("\n");
+//					
+//				} catch (Throwable e) {}
+//			});
+//			
+//			writer.close();
+//		} catch (Throwable e) {}
 		
 		return 1;
 	}

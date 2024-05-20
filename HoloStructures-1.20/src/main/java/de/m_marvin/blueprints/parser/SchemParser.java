@@ -10,6 +10,7 @@ import de.m_marvin.blueprints.api.IBlueprintAcessor;
 import de.m_marvin.nbtutility.BinaryParser;
 import de.m_marvin.nbtutility.TagType;
 import de.m_marvin.nbtutility.nbt.TagCompound;
+import net.minecraft.SharedConstants;
 
 /**
  * An implementation of {@link IBlueprintParser} for the .schem format.
@@ -82,7 +83,7 @@ public class SchemParser implements IBlueprintParser {
 		rootTag.putInt("DataVersion", this.dataVersion);
 		rootTag.putInt("Version", this.version.getVersion());
 		rootTag.putTag("Metadata", makeMetaTag());
-		BinaryParser.writeCompressed(this.nbtTag, "", ostream);
+		BinaryParser.writeCompressed(this.nbtTag, this.version == SchemVersion.SPONGE3 ? "" : "Schematic", ostream);
 		return true;
 	}
 	
@@ -116,6 +117,7 @@ public class SchemParser implements IBlueprintParser {
 	@Override
 	public void reset() {
 		this.nbtTag = new TagCompound();
+		this.dataVersion = SharedConstants.getCurrentVersion().getDataVersion().getVersion();
 	}
 	
 	@Override

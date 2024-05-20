@@ -33,11 +33,21 @@ public class BlueprintLoader {
 	 * @author Marvin Koehler
 	 */
 	public static enum BlueprintFormat {
-		NBT,
-		SCHEMATIC_LAGACY,
-		SCHEM_SPONGE1,
-		SCHEM_SPONGE2,
-		SCHEM_SPONGE3;
+		NBT("nbt"),
+		SCHEMATIC_LAGACY("schematic"),
+		SCHEM_SPONGE1("schem"),
+		SCHEM_SPONGE2("schem"),
+		SCHEM_SPONGE3("schem");
+		
+		private final String extension;
+		
+		private BlueprintFormat(String extenstion) {
+			this.extension = extenstion;
+		}
+		
+		public String getExtension() {
+			return extension;
+		}
 	}
 	
 	/**
@@ -47,11 +57,11 @@ public class BlueprintLoader {
 	 * @return extension The format used for this extension
 	 */
 	public static BlueprintFormat formatFromExtension(String extension) {
-		if (extension.equalsIgnoreCase("schem")) {
+		if (extension.equalsIgnoreCase(BlueprintFormat.SCHEM_SPONGE3.getExtension())) {
 			return BlueprintFormat.SCHEM_SPONGE3;
-		} else if (extension.equalsIgnoreCase("nbt")) {
+		} else if (extension.equalsIgnoreCase(BlueprintFormat.NBT.getExtension())) {
 			return BlueprintFormat.NBT;
-		} else if (extension.equalsIgnoreCase("schematic")) {
+		} else if (extension.equalsIgnoreCase(BlueprintFormat.SCHEMATIC_LAGACY.getExtension())) {
 			return BlueprintFormat.SCHEMATIC_LAGACY;
 		} else {
 			return null;
@@ -65,40 +75,52 @@ public class BlueprintLoader {
 	 */
 	public static Blueprint loadBlueprint(File blueprintFile) {
 		try {
-			if (blueprintFile.getName().endsWith("nbt") || blueprintFile.getName().endsWith("NBT")) {
-				if (!NBT_PARSER.load(new FileInputStream(blueprintFile))) {
-					System.err.println("failed to load nbt structure file!");
-					return null;
+			String[] s = blueprintFile.getName().split("\\.");
+			BlueprintFormat format = s.length > 0 ? formatFromExtension(s[s.length - 1]) : null;
+			
+			if (format != null) {
+				switch (format) {
+				case NBT: {
+					if (!NBT_PARSER.load(new FileInputStream(blueprintFile))) {
+						System.err.println("failed to load nbt structure file!");
+						return null;
+					}
+					Blueprint blueprint = new Blueprint();
+					if (!NBT_PARSER.parse(blueprint)) {
+						System.err.println("failed to parse blueprint nbt!");
+						return null;
+					}
+					return blueprint;
 				}
-				Blueprint blueprint = new Blueprint();
-				if (!NBT_PARSER.parse(blueprint)) {
-					System.err.println("failed to parse blueprint nbt!");
-					return null;
+				case SCHEM_SPONGE1:
+				case SCHEM_SPONGE2:
+				case SCHEM_SPONGE3: {
+					if (!SCHEM_PARSER.load(new FileInputStream(blueprintFile))) {
+						System.err.println("failed to load schem structure file!");
+						return null;
+					}
+					Blueprint blueprint = new Blueprint();
+					if (!SCHEM_PARSER.parse(blueprint)) {
+						System.err.println("failed to parse blueprint nbt!");
+						return null;
+					}
+					return blueprint;
 				}
-				return blueprint;
-			} else if (blueprintFile.getName().endsWith("schem") || blueprintFile.getName().endsWith("SCHEM")) {
-				if (!SCHEM_PARSER.load(new FileInputStream(blueprintFile))) {
-					System.err.println("failed to load schem structure file!");
-					return null;
+				case SCHEMATIC_LAGACY: {
+					if (!SCHEMATIC_PARSER.load(new FileInputStream(blueprintFile))) {
+						System.err.println("failed to load schematic structure file!");
+						return null;
+					}
+					Blueprint blueprint = new Blueprint();
+					if (!SCHEMATIC_PARSER.parse(blueprint)) {
+						System.err.println("failed to parse blueprint nbt!");
+						return null;
+					}
+					return blueprint;
 				}
-				Blueprint blueprint = new Blueprint();
-				if (!SCHEM_PARSER.parse(blueprint)) {
-					System.err.println("failed to parse blueprint nbt!");
-					return null;
 				}
-				return blueprint;
-			} else if (blueprintFile.getName().endsWith("schematic") || blueprintFile.getName().endsWith("SCHEMATIC")) {
-				if (!SCHEMATIC_PARSER.load(new FileInputStream(blueprintFile))) {
-					System.err.println("failed to load schematic structure file!");
-					return null;
-				}
-				Blueprint blueprint = new Blueprint();
-				if (!SCHEMATIC_PARSER.parse(blueprint)) {
-					System.err.println("failed to parse blueprint nbt!");
-					return null;
-				}
-				return blueprint;
 			}
+			
 			System.err.println("unknown file extension!");
 			return null;
 		} catch (IOException e) {
@@ -117,50 +139,65 @@ public class BlueprintLoader {
 	 */
 	public static boolean saveBlueprint(Blueprint blueprint, File blueprintFile, BlueprintFormat format) {
 		try {
-			switch (format) {
-			case NBT:
-				NBT_PARSER.reset();
-				if (!NBT_PARSER.build(blueprint)) {
-					System.err.println("failed to build nbt structure nbt!");
-					return false;
+			if (format == null) {
+				String[] s = blueprintFile.getName().split("\\.");
+				format = s.length > 0 ? formatFromExtension(s[s.length - 1]) : null;
+			} else {
+				String[] s = blueprintFile.getName().split("\\.");
+				if (!s[s.length - 1].equalsIgnoreCase(format.getExtension())) {
+					blueprintFile = new File(blueprintFile.toString() + "." + format.getExtension());
 				}
-				if (!NBT_PARSER.write(new FileOutputStream(blueprintFile))) {
-					System.err.println("failed to write schem structure file!");
-					return false;
-				}
-				break;
-			case SCHEM_SPONGE1:
-			case SCHEM_SPONGE2:
-			case SCHEM_SPONGE3:
-				switch (format) {
-				case SCHEM_SPONGE1: SCHEM_PARSER.setSchemVersion(SchemVersion.SPONGE1); break;
-				case SCHEM_SPONGE2: SCHEM_PARSER.setSchemVersion(SchemVersion.SPONGE2); break;
-				case SCHEM_SPONGE3: SCHEM_PARSER.setSchemVersion(SchemVersion.SPONGE3); break;
-				default: return false;
-				}
-				SCHEM_PARSER.reset();
-				if (!SCHEM_PARSER.build(blueprint)) {
-					System.err.println("failed to build schem nbt!");
-					return false;
-				}
-				if (!SCHEM_PARSER.write(new FileOutputStream(blueprintFile))) {
-					System.err.println("failed to write schem file!");
-					return false;
-				}
-				break;
-			case SCHEMATIC_LAGACY:
-				SCHEMATIC_PARSER.reset();
-				if (!SCHEMATIC_PARSER.build(blueprint)) {
-					System.err.println("failed to build nbt structure nbt!");
-					return false;
-				}
-				if (!SCHEMATIC_PARSER.write(new FileOutputStream(blueprintFile))) {
-					System.err.println("failed to write schematic structure file!");
-					return false;
-				}
-				break;
 			}
-			return true;
+			
+			if (format != null) {
+				switch (format) {
+				case NBT:
+					NBT_PARSER.reset();
+					if (!NBT_PARSER.build(blueprint)) {
+						System.err.println("failed to build nbt structure nbt!");
+						return false;
+					}
+					if (!NBT_PARSER.write(new FileOutputStream(blueprintFile))) {
+						System.err.println("failed to write schem structure file!");
+						return false;
+					}
+					break;
+				case SCHEM_SPONGE1:
+				case SCHEM_SPONGE2:
+				case SCHEM_SPONGE3:
+					switch (format) {
+					case SCHEM_SPONGE1: SCHEM_PARSER.setSchemVersion(SchemVersion.SPONGE1); break;
+					case SCHEM_SPONGE2: SCHEM_PARSER.setSchemVersion(SchemVersion.SPONGE2); break;
+					case SCHEM_SPONGE3: SCHEM_PARSER.setSchemVersion(SchemVersion.SPONGE3); break;
+					default: return false;
+					}
+					SCHEM_PARSER.reset();
+					if (!SCHEM_PARSER.build(blueprint)) {
+						System.err.println("failed to build schem nbt!");
+						return false;
+					}
+					if (!SCHEM_PARSER.write(new FileOutputStream(blueprintFile))) {
+						System.err.println("failed to write schem file!");
+						return false;
+					}
+					break;
+				case SCHEMATIC_LAGACY:
+					SCHEMATIC_PARSER.reset();
+					if (!SCHEMATIC_PARSER.build(blueprint)) {
+						System.err.println("failed to build nbt structure nbt!");
+						return false;
+					}
+					if (!SCHEMATIC_PARSER.write(new FileOutputStream(blueprintFile))) {
+						System.err.println("failed to write schematic structure file!");
+						return false;
+					}
+					break;
+				}
+				return true;
+			}
+
+			System.err.println("unspecified file extension!");
+			return false;
 		} catch (IOException e) {
 			System.err.println("io error while writing blueprint file!");
 			e.printStackTrace();

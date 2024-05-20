@@ -194,7 +194,9 @@ public class TagCompound implements ITagBase {
 	@SuppressWarnings("unchecked")
 	public <T extends ITagBase> List<T> getList(String key, Class<T> listTagClass) {
 		TagList tag = get(key, TagList.class);
-		if (listTagClass.isInstance(tag.getListType().create())) {
+		if (tag == null) {
+			return null;
+		} else if (listTagClass.isInstance(tag.getListType().create())) {
 			return (List<T>) tag.getList();
 		} else if (tag.getListType() == TagType.END) {
 			return new ArrayList<>();
@@ -209,6 +211,10 @@ public class TagCompound implements ITagBase {
 	
 	public <T extends ITagBase> void putList(String key, List<T> list) {
 		this.data.put(key, new TagList(list));
+	}
+
+	public <T extends ITagBase> void putList(String key, List<T> list, TagType fallbackType) {
+		this.data.put(key, new TagList(list, fallbackType));
 	}
 	
 	@Override

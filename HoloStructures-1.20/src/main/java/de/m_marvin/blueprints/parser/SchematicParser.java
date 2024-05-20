@@ -223,7 +223,7 @@ public class SchematicParser implements IBlueprintParser {
 			this.nbtTag.putShort("Height", (short) size.y);
 			this.nbtTag.putShort("Length", (short) size.z);
 			
-			Vec3i offset = source.getOffset();
+			Vec3i offset = source.getOffset().sub(source.getBoundsMin());
 			this.nbtTag.putInt("WEOffsetX", offset.x);
 			this.nbtTag.putInt("WEOffsetY", offset.y);
 			this.nbtTag.putInt("WEOffsetZ", offset.z);
@@ -271,10 +271,10 @@ public class SchematicParser implements IBlueprintParser {
 			
 			this.nbtTag.putByteArray("Blocks", blockBytes);
 			this.nbtTag.putByteArray("Data", metaBytes);
-			this.nbtTag.putList("TileEntities", blockEntityTags);
+			this.nbtTag.putList("TileEntities", blockEntityTags, TagType.COMPOUND);
 			
 			// Entities can't be saved easily, since the registry names work different before 1.13
-			this.nbtTag.putList("Entities", new ArrayList<TagCompound>());
+			this.nbtTag.putList("Entities", new ArrayList<TagCompound>(), TagType.COMPOUND);
 			
 			this.nbtTag.putString("Materials", "Alpha");
 			
