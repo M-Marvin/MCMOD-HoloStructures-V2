@@ -6,7 +6,7 @@
 "holostruct.commands.blueprint.discard.invalidblueprint": "§2Blueprint '%1$s§2' does not exist!",
 "holostruct.commands.blueprint.discard.discarded": "§2Blueprint '%1$s§2' discarded",
 "holostruct.commands.blueprint.save.fileexists": "§2File '%1$s§2' already exists, use §foverride§2 to override!",
-"holostruct.commands.blueprint.save.invalidblueprint": "§2Blueprint '%1$s§2' not found!",
+"holostruct.commands.blueprint.save.invalidblueprint": "§2Blueprint '%1$s§2' not saved!",
 "holostruct.commands.blueprint.save.failed": "§2Failed to write blueprint file '%1$s§2'!",
 "holostruct.commands.blueprint.save.started": "§2Saving blueprint '%1$s§2' ...",
 "holostruct.commands.blueprint.save.saved": "§2Blueprint saved to '%1$s§2'",
@@ -36,6 +36,7 @@
 "holostruct.commands.hologram.layermode.disabled": "§2Layermode deactivated, entirely showing holograms",
 "holostruct.commands.hologram.viewmode.failed": "§2Failed to enable view mode '%1$s§2'!",
 "holostruct.commands.hologram.viewmode.enabled": "§2View mode '%1$s§2' activated",
+
 "holostruct.commands.status.title": "§2HoloStruct access level status:",
 "holostruct.commands.status.no_access": "§2[§4no access§2] (No access to the world)",
 "holostruct.commands.status.read_client": "§2[§eread client§2] (Reading access to the game level through client)",
@@ -53,6 +54,7 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] write access (No placing of blocks)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] server mode (Direct access through server, fast)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] client mode (Only indirect access through client, slower)",
+
 "holostruct.commands.pixelart.image.nofile": "§2Image '%1$s§2' does not exist!",
 "holostruct.commands.pixelart.image.failed": "§2Failed to load image '%1$s§2'!",
 "holostruct.commands.pixelart.image.loaded": "§2Image '%1$s§2' loaded",
@@ -73,6 +75,8 @@
 "holostruct.commands.pixelart.preview.update": "§2PixelArt preview updated",
 "holostruct.commands.pixelart.build.saved": "§2Blueprint '%1$s§2' created",
 "holostruct.commands.pixelart.build.failed": "§Blueprint could not be created!",
+"holostruct.commands.pixelart.shadowing.enabled": "§23D shading is §fenabled",
+"holostruct.commands.pixelart.shadowing.disabled": "§23D shading is §fdisabled",
 
 "holostruct.commands.argument.filepath.invalid": "File path is invalid!"
 

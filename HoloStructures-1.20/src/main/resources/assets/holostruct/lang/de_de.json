@@ -10,12 +10,13 @@
 "holostruct.commands.blueprint.save.failed": "§2Bauplan-Datei '%1$s§2' konnte nicht geschrieben werden!",
 "holostruct.commands.blueprint.save.started": "§2Bauplan '%1$s§2' wird gespeichert ...",
 "holostruct.commands.blueprint.save.saved": "§2Bauplan gespeichert in '%1$s§2'",
-"holostruct.commands.blueprint.save.parsewarning": "§2Warnung: beim speichern sind einige Fehler aufgetreten, nutze §fshow_logs§2 für Details!",
+"holostruct.commands.blueprint.save.parsewarning": "§2Warnung: beim Speichern sind Fehler aufgetreten, benutze §fshow_logs§2 für Details!",
 "holostruct.commands.blueprint.load.nofile": "§2Datei '%1$s§2' existiert nicht!",
 "holostruct.commands.blueprint.load.invalidfile": "§2Bauplan '%1$s§2' konnte nicht geladen werden!",
 "holostruct.commands.blueprint.load.started": "§2Bauplan '%1$s§2' wird geladen ...",
 "holostruct.commands.blueprint.load.loaded": "§2Bauplan '%1$s§2' geladen",
-"holostruct.commands.blueprint.load.parsewarning": "§2Warnung: beim laden sind einige Fehler aufgetreten, nutze §fshow_logs§2 für Details!",
+"holostruct.commands.blueprint.load.parsewarning": "§2Warnung: beim Laden sind Fehler aufgetreten, benutze §fshow_logs§2 für Details!",
+
 "holostruct.commands.hologram.position.invalidhologram": "§2Hologramm '%1$s§2' existiert nicht!",
 "holostruct.commands.hologram.position.changed": "§2Hologramm '%1$s§2' positioniert bei %2$d %3$d %4$d",
 "holostruct.commands.hologram.mirror.mirrored": "§2Hologramm '%1$s§2' gespiegelt",
@@ -35,6 +36,7 @@
 "holostruct.commands.hologram.layermode.disabled": "§2Schicht-Modus deaktiviert, zeige komplette Holograme",
 "holostruct.commands.hologram.viewmode.failed": "§2Ansichts-Modus '%1$s§2' konnte nicht aktiviert werden!",
 "holostruct.commands.hologram.viewmode.enabled": "§2Ansichts-Modus '%1$s§2' aktiviert",
+
 "holostruct.commands.status.title": "§2HoloStruct Zugriffslevel-Status:",
 "holostruct.commands.status.no_access": "§2[§4no access§2] (Kein Zugriff auf die Welt)",
 "holostruct.commands.status.read_client": "§2[§eread client§2] (Lese-Zugriff auf die Welt durch den Client)",
@@ -52,6 +54,7 @@
 "holostruct.commands.status.details.write.no": "§2 [§4✘§2] Schreib-Zugriff (Kein Platzieren von Blöcken)",
 "holostruct.commands.status.details.server.yes": "§2 [§a✔§2] Server-Modus (Direkter Zugriff durch Server, schnell)",
 "holostruct.commands.status.details.server.no": "§2 [§4✘§2] Client-Modus (Nur indirekter Zugriff durch Client, langsamer)",
+
 "holostruct.commands.pixelart.image.nofile": "§2Bild '%1$s§2' existiert nicht!",
 "holostruct.commands.pixelart.image.failed": "§2Bild '%1$s§2' konnte nicht geladen werden!",
 "holostruct.commands.pixelart.image.loaded": "§2Bild '%1$s§2' geladen",
@@ -72,8 +75,8 @@
 "holostruct.commands.pixelart.preview.update": "§2PixelArt Vorschau aktualisiert",
 "holostruct.commands.pixelart.build.saved": "§2Bauplan '%1$s§2' erzeugt",
 "holostruct.commands.pixelart.build.failed": "§2Bauplan konnte nicht erzeugt werden!",
-"holostruct.commands.pixelart.shadowing.enabled": "§23D-Shattierungen sind §faktiviert",
-"holostruct.commands.pixelart.shadowing.disabled": "§23D-Shattierungen sind §fdekativiert",
+"holostruct.commands.pixelart.shadowing.enabled": "§23D-Schattierungen sind §faktiviert",
+"holostruct.commands.pixelart.shadowing.disabled": "§23D-Schattierungen sind §fdekativiert",
 
 "holostruct.commands.argument.filepath.invalid": "§2Datei-Pfad ist ungültig!"
 
