@@ -212,6 +212,7 @@ public class HologramCommand {
 		}
 		
 		hologram.setPosition(position);
+		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
 		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.position.changed", hologramName, position.getX(), position.getY(), position.getZ()), false);
@@ -240,6 +241,7 @@ public class HologramCommand {
 		}
 		StruktOrientator.mirror(hologram, hologram.getOrigin(), hologram.getBlockBoundsMin(), hologram.getBlockBoundsMax(), mirror);
 		hologram.setBounds(Vec3i.fromVec(boundsMin), Vec3i.fromVec(boundsMax).add(new Vec3i(1, 1, 1)));
+		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
 		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.mirror.mirrored", hologramName), false);
@@ -258,6 +260,7 @@ public class HologramCommand {
 		BlockPos boundsMax = hologram.getBlockBoundsMax().subtract(hologram.getOrigin()).rotate(rot).offset(hologram.getOrigin());
 		StruktOrientator.rotate(hologram, hologram.getOrigin(), hologram.getBlockBoundsMin(), hologram.getBlockBoundsMax(), rot);
 		hologram.setBounds(Vec3i.fromVec(boundsMin), Vec3i.fromVec(boundsMax).add(new Vec3i(1, 1, 1)));
+		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
 		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.rotate.rotated", hologramName), false);
@@ -274,6 +277,7 @@ public class HologramCommand {
 		BlockPos diff = newOrigin.subtract(hologram.getPosition());
 		hologram.setOrigin(hologram.getOrigin().offset(diff));
 		hologram.setPosition(newOrigin);
+		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
 		hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.origin.changed", hologramName, newOrigin.getX(), newOrigin.getY(), newOrigin.getZ()), false);
@@ -286,6 +290,7 @@ public class HologramCommand {
 			return 0;
 		}
 		HoloStruct.CLIENT.HOLOGRAMS.removeHologram(hologramName);
+		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.remove.removed", hologramName), false);
 		return 1;

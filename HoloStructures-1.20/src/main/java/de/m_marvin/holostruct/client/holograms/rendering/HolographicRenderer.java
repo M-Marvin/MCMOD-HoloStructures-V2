@@ -256,16 +256,29 @@ public class HolographicRenderer {
 	 * Removes an hologram from the list of holograms that are rendered.
 	 */
 	public void discardHologram(Hologram hologram) {
-		RenderSystem.recordRenderCall(() -> {
+		CompletableFuture.supplyAsync(() -> {
 			HologramRender holoRender = hologramRenders.remove(hologram.hashCode());
-			if (holoRender != null) {
-				holoRender.hologram = null;
-				holoRender.renderChunks.forEach((lp, chunk) -> {
-					chunk.compiled.values().forEach(HolographicSectionCompiled::discardBuffers);
-					chunk.discardBuffers();
-				});
+			for (HolographicChunk chunk : holoRender.renderChunks.values()) {
+				chunk.claimBuffers();
 			}
-		});
+			return holoRender;
+		}).thenAcceptAsync(holoRender -> {
+			holoRender.hologram = null;
+			holoRender.renderChunks.forEach((lp, chunk) -> {
+				chunk.compiled.values().forEach(HolographicSectionCompiled::discardBuffers);
+				chunk.discardBuffers();
+			});
+		}, HoloStruct.CLIENT.RENDER_EXECUTOR);
+//		RenderSystem.recordRenderCall(() -> {
+//			HologramRender holoRender = hologramRenders.remove(hologram.hashCode());
+//			if (holoRender != null) {
+//				holoRender.hologram = null;
+//				holoRender.renderChunks.forEach((lp, chunk) -> {
+//					chunk.compiled.values().forEach(HolographicSectionCompiled::discardBuffers);
+//					chunk.discardBuffers();
+//				});
+//			}
+//		});
 	}
 	
 	private void recompileDirtyChunks() {
@@ -280,8 +293,6 @@ public class HolographicRenderer {
 	}
 	
 	private void prerenderHolographicSection(HologramRender holoRender, HolographicChunk holoChunk, int sectionIndex) {
-		if (holoRender.hologram == null) return; // This hologram is currently being deleted
-		
 		Optional<HologramChunk> chunk = holoRender.hologram.getChunk(holoChunk.pos);
 		HologramSection section = chunk.isPresent() ? chunk.get().getSections().get(sectionIndex) : null;
 		
@@ -295,8 +306,6 @@ public class HolographicRenderer {
 		IRemoteLevelAccessor level = HoloStruct.CLIENT.LEVELBOUND.getAccessor();
 		
 		CompletableFuture.runAsync(() -> {
-			if (holoRender.hologram == null) return; // This hologram is currently being deleted
-			
 			holoChunk.claimBuffers();
 			
 			RenderType.chunkBufferLayers().stream().forEach(renderLayer -> {
@@ -317,15 +326,12 @@ public class HolographicRenderer {
 			return null;
 		})
 		.thenRunAsync(() -> {
-			if (holoRender.hologram == null) return; // This hologram is currently being deleted
-			
 			HolographicSectionCompiled compiled = new HolographicSectionCompiled();
 			compiled.genBuffers(HologramBufferContainer.getAlocatedRenderTypes());
 			
 			BlockHoloState.renderedStates().forEach(holoState -> {
 				HologramBufferContainer.getAlocatedRenderTypes().forEach(renderLayer -> {
 					HolographicBufferSource bufferSource = holoChunk.bufferContainer.getBufferSource(holoState);
-					if (bufferSource == null) return; // This can happen if a hologram is deleted while a recompile task is executed
 					compiled.bindBuffer(holoState, renderLayer).upload(bufferSource.endBatch(renderLayer));
 				});
 			});

@@ -201,39 +201,8 @@ public class PixelArtCommand {
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blocklist.head"), false);
 		for (Entry<Block, Integer> block : HoloStruct.CLIENT.PIXELART_GENERATOR.getBlockList().entrySet()) {
-			source.getSource().sendSuccess(() -> Component.literal("- ").append(block.getKey().getName()).append(Component.literal(" x " + block.getValue())), false);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blocklist.entry", block.getKey().getName(), block.getValue()), false);
 		}
-		
-//		File f = new File("C:\\Users\\marvi\\Desktop\\dump.txt");
-//		
-//		try {
-//			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)));
-//			
-//			Map<Integer, Set<Block>> items = new HashMap<>();
-//			HoloStruct.CLIENT.PIXELART_GENERATOR.colorMap.forEach((rgb, config) -> {
-//				if (config.brightness() != Brightness.HIGH) return;
-//				if (!items.containsKey(rgb)) items.put(rgb, new HashSet<>());
-//				items.get(rgb).add(config.state().getBlock());
-//			});
-//			
-//			items.forEach((rgb, blocks) -> {
-//				try {
-//					int red = rgb >> 16 & 0xFF;
-//					int green = rgb >> 8 & 0xFF;
-//					int blue = rgb & 0xFF;
-//					
-//					writer.write(red + " " + green + " " + blue + "\t");
-//					for (Block s : blocks) {
-//						writer.write(BuiltInRegistries.BLOCK.getKey(s).toString() + "\t");
-//					}
-//					
-//					writer.write("\n");
-//					
-//				} catch (Throwable e) {}
-//			});
-//			
-//			writer.close();
-//		} catch (Throwable e) {}
 		
 		return 1;
 	}
@@ -247,7 +216,7 @@ public class PixelArtCommand {
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.head"), false);
 		for (Block block : HoloStruct.CLIENT.PIXELART_GENERATOR.getWhitelist()) {
-			source.getSource().sendSuccess(() -> Component.literal("- ").append(block.getName()), false);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.entry", block.getName()), false);
 		}
 		
 		return 1;
@@ -282,7 +251,7 @@ public class PixelArtCommand {
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blacklist.head"), false);
 		for (Block block : HoloStruct.CLIENT.PIXELART_GENERATOR.getBlacklist()) {
-			source.getSource().sendSuccess(() -> Component.literal("- ").append(block.getName()), false);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.entry", block.getName()), false);
 		}
 		
 		return 1;

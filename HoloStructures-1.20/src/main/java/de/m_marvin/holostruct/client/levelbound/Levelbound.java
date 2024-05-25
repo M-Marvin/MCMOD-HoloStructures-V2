@@ -136,7 +136,10 @@ public class Levelbound {
 					if (this.tasks.isEmpty()) this.tasks.wait();
 					task = this.tasks.poll();
 				}
-				if (task != null) task.run();
+				if (task != null) {
+					task.run();
+					System.out.println("Run task"); // TODO task problem
+				}
 			} catch (Throwable e) {
 				HoloStruct.LOGGER.warn("Error while executing levelbound task: {}", e);
 				e.printStackTrace();

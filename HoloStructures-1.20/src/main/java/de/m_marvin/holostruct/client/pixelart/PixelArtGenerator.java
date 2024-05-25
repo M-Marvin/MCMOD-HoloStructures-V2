@@ -31,6 +31,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.MapColor.Brightness;
 
@@ -281,12 +282,26 @@ public class PixelArtGenerator {
 		}
 		
 		if (configuration != null) {
+
+			BlockConfiguration fconfig = configuration;
+			@SuppressWarnings("resource")
+			BlockState preferedStableState = PlacementHelperFakeLevel.getStablePlacementState(
+					Minecraft.getInstance().level, 
+					configuration.state().getBlock(), 
+					state -> {
+						for (BlockConfiguration config : this.blockColors.get(fconfig.state().getBlock())) {
+							if (config.state().equals(state)) return true;
+						}
+						return false;
+					});
+			
 			for (BlockConfiguration config : this.blockColors.get(configuration.state().getBlock())) {
-				if (config.state().equals(configuration.state().getBlock().defaultBlockState()) && config.color() == configuration.color() && config.brightness() == configuration.brightness()) {
+				if (config.state().equals(preferedStableState) && config.color() == configuration.color() && config.brightness() == configuration.brightness()) {
 					configuration = config;
 					break;
 				}
 			}
+			
 		}
 		
 		return configuration;

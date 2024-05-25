@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
+import de.m_marvin.holostruct.client.ClientConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,7 +43,7 @@ public enum BlockHoloState {
 			} else {
 				return BlockHoloState.WRONG_BLOCK;
 			}
-		} else if (!targetState.equals(holoState)) {
+		} else if (!compareProperties(targetState, holoState)) {
 			return BlockHoloState.WRONG_STATE;
 		} else {
 			if (targetBlockEntity == null || Objects.equal(targetBlockEntity, holoBlockEntity)) {
@@ -51,6 +52,14 @@ public enum BlockHoloState {
 				return BlockHoloState.WRONG_DATA;
 			}
 		}
+	}
+	
+	public static boolean compareProperties(BlockStateData stateA, BlockStateData stateB) {
+		for (String prop : stateA.getProperties().keySet()) {
+			if (ClientConfig.isBlockStatePropBlacklisted(stateA.getBlockName().toString(), prop)) continue;
+			if (!Objects.equal(stateB.getProperties().get(prop), stateB.getValue(prop))) return false;
+		}
+		return true;
 	}
 	
 	public static BlockHoloState getHoloState(BlockState holoState, Optional<BlockEntity> holoBlockEntity, BlockState realState, Optional<BlockEntity> realBlockEntity) {

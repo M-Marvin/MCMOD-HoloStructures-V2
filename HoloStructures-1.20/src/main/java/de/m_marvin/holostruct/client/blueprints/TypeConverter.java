@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;

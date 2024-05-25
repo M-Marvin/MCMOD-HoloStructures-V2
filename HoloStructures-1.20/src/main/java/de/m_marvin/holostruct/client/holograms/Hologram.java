@@ -14,7 +14,6 @@ import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
-import de.m_marvin.holostruct.client.ClientConfig;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
@@ -301,7 +300,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 				.exceptionally(e -> {
 					HoloStruct.LOGGER.warn("failed to update hologram at {{} {} {}}: {}", targetPos.x, targetPos.y, targetPos.z, e.getMessage());
 					return null;
-				}); 
+				});
 		});
 	}
 	
@@ -311,8 +310,6 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 	 * @param target The target to compare the hologram with, normally an level {@link IRemoteLevelAccessor} to the real world
 	 */
 	public void updateHoloStates(IRemoteLevelAccessor target) {
-		HoloStruct.CLIENT.LEVELBOUND.clearTaskQueue();
-		
 		CompletableFuture.runAsync(() -> {
 			for (HologramChunk chunk : this.chunks.values()) {
 				Vec3i chunkPos = new Vec3i(chunk.position.getMinBlockX(), 0, chunk.position.getMinBlockZ());
@@ -329,7 +326,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 					}
 					HoloStruct.CLIENT.LEVELBOUND.safeExecute(() -> markSectionDirty(chunk.position, section.getKey()));
 					
-					try { Thread.sleep(ClientConfig.SECTION_UPDATE_DELAY.get()); } catch (InterruptedException e) {}
+					try { Thread.sleep(200); } catch (InterruptedException e) {}
 				}
 			}
 		});
