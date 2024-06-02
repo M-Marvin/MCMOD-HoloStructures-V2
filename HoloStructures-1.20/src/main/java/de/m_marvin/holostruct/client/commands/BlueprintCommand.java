@@ -1,6 +1,7 @@
 package de.m_marvin.holostruct.client.commands;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -11,6 +12,7 @@ import de.m_marvin.blueprints.BlueprintLoader.BlueprintFormat;
 import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.ClientConfig;
+import de.m_marvin.holostruct.client.blueprints.MaterialCounter;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintFormatArgument;
 import de.m_marvin.holostruct.client.commands.arguments.FilePathArgument;
@@ -18,6 +20,7 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Command used to manage blueprints and their files
@@ -96,7 +99,33 @@ public class BlueprintCommand {
 								showParsingLogs(source, BlueprintArgument.getBlueprint(source, "blueprint"))
 						)
 				)
+		)
+		.then(
+				Commands.literal("materials")
+				.then(
+						Commands.argument("blueprint", BlueprintArgument.blueprint())
+						.executes(source ->
+								printMaterials(source, BlueprintArgument.getBlueprint(source, "blueprint"))
+						)
+				)
 		));
+	}
+	
+	public static int printMaterials(CommandContext<CommandSourceStack> source, String blueprintName) {
+		Blueprint blueprint = HoloStruct.CLIENT.BLUEPRINTS.getLoadedBlueprint(blueprintName);
+		if (blueprint == null) {
+			source.getSource().sendFailure(Component.translatable("holostruct.commands.blueprint.materials.invalidblueprint", blueprintName));
+			return 0;
+		}
+
+		List<ItemStack> materials = MaterialCounter.countMaterials(blueprint);
+		
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.materials.listhead"), false);
+		for (ItemStack item : materials) {
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.blueprint.materials.entry", item.getDisplayName(), item.getCount()), false);
+		}
+		return 1;
+		
 	}
 	
 	public static int showParsingLogs(CommandContext<CommandSourceStack> source, String blueprintName) {

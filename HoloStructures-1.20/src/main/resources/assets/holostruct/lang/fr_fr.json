@@ -16,6 +16,9 @@
 "holostruct.commands.blueprint.load.started": "§2Plan de construction '%1$s§2' sera chargé ...",
 "holostruct.commands.blueprint.load.loaded": "§2Plan de construction '%1$s§2' chargé",
 "holostruct.commands.blueprint.load.parsewarning": "§2Attention: Chargeant le plan, des erreurs se sont produites, utilise §fshow_logs§2 pour des détails",
+"holostruct.commands.blueprint.materials.invalidblueprint": "§2Plan de construction '%1$s§2' introuvable!",
+"holostruct.commands.blueprint.materials.listhead": "X §2Material-List: (WIP)",
+"holostruct.commands.blueprint.materials.entry": "§2- %1$s§2 §2x %2$s",
 
 "holostruct.commands.hologram.position.invalidhologram": "§2Hologramme '%1$s§2' n'existe pas!",
 "holostruct.commands.hologram.position.changed": "§2Hologramme '%1$s§2' positionné à %2$d %3$d %4$d",

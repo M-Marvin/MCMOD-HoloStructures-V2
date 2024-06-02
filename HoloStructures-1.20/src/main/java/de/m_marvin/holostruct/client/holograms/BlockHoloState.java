@@ -57,7 +57,7 @@ public enum BlockHoloState {
 	public static boolean compareProperties(BlockStateData stateA, BlockStateData stateB) {
 		for (String prop : stateA.getProperties().keySet()) {
 			if (ClientConfig.isBlockStatePropBlacklisted(stateA.getBlockName().toString(), prop)) continue;
-			if (!Objects.equal(stateB.getProperties().get(prop), stateB.getValue(prop))) return false;
+			if (!Objects.equal(stateA.getProperties().get(prop), stateB.getValue(prop))) return false;
 		}
 		return true;
 	}

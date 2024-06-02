@@ -104,7 +104,7 @@ public class SchemParserSponge3 {
 				}
 			}
 			
-			if (nbt.has("Entities")) {
+			if (blockContainer.has("BlockEntities")) {
 				for (TagCompound blockEntityTag : blockContainer.getList("BlockEntities", TagCompound.class)) {
 					try {
 						RegistryName typeName = new RegistryName(blockEntityTag.getString("Id"));

@@ -223,7 +223,7 @@ public class HolographicRenderer {
 					holoRender.renderChunks.put(pos.toLong(), chunk);
 
 					chunk.dirty.addAll(hchunk.get().getSections().keySet());
-				} else {
+				} else if (chunk != null) {
 					chunk.dirty.add(section);
 				}
 			}
@@ -269,16 +269,6 @@ public class HolographicRenderer {
 				chunk.discardBuffers();
 			});
 		}, HoloStruct.CLIENT.RENDER_EXECUTOR);
-//		RenderSystem.recordRenderCall(() -> {
-//			HologramRender holoRender = hologramRenders.remove(hologram.hashCode());
-//			if (holoRender != null) {
-//				holoRender.hologram = null;
-//				holoRender.renderChunks.forEach((lp, chunk) -> {
-//					chunk.compiled.values().forEach(HolographicSectionCompiled::discardBuffers);
-//					chunk.discardBuffers();
-//				});
-//			}
-//		});
 	}
 	
 	private void recompileDirtyChunks() {
@@ -315,7 +305,7 @@ public class HolographicRenderer {
 			List<BlockEntity> sectionBlockEntities = chunk.get().getBlockEntities().entrySet().stream()
 					.filter(entry -> entry.getKey().getY() >= sectionIndex << 4 && entry.getKey().getY() < (sectionIndex + 1) << 4)
 					.map(Map.Entry::getValue).toList();
-			renderBlockEntities(holoChunk.bufferContainer, holoRender.hologram, holoChunk.pos, sectionIndex, section, sectionBlockEntities);
+			renderBlockEntities(holoChunk.bufferContainer, holoRender.hologram, level, holoChunk.pos, sectionIndex, section, sectionBlockEntities);
 			
 			List<Entity> sectionEntities = holoRender.hologram.getEntitiesInSection(chunk.get().getPosition(), sectionIndex);
 			renderEntities(holoChunk.bufferContainer, holoRender.hologram, holoChunk.pos, sectionIndex, section, sectionEntities);
@@ -351,7 +341,7 @@ public class HolographicRenderer {
 		
 	}
 	
-	private void renderBlockEntities(HologramBufferContainer bufferContainer, Hologram hologramLevel, ChunkPos chunkPos, int yindex, HologramSection section, List<BlockEntity> blockEntities) {
+	private void renderBlockEntities(HologramBufferContainer bufferContainer, Hologram hologramLevel, LevelAccessor realLevel, ChunkPos chunkPos, int yindex, HologramSection section, List<BlockEntity> blockEntities) {
 		
 		PoseStack poseStack = new PoseStack();
 		BlockEntityRenderDispatcher blockEntityRenderer = BLOCK_ENTITY_RENDERER.get();
@@ -369,8 +359,8 @@ public class HolographicRenderer {
 			MultiBufferSource bufferSource = bufferContainer.getBufferSource(holoState);
 			BlockEntityRenderer<BlockEntity> renderer = blockEntityRenderer.getRenderer(blockEntity);
 			
-			if (renderer != null) {
-				
+			if (renderer != null && holoState == BlockHoloState.NO_BLOCK) {
+							
 				int light = LevelRenderer.getLightColor(hologramLevel, worldPos);
 				
 				poseStack.pushPose();
@@ -381,6 +371,43 @@ public class HolographicRenderer {
 			}
 			
 		});
+
+		int posY = yindex << 4;
+		
+		for (int y = 0; y < 16; y++) {
+			for (int z = 0; z < 16; z++) {
+				for (int x = 0; x < 16; x++) {
+					BlockPos holoPos = new BlockPos(chunkPos.getMinBlockX() + x, posY + y, chunkPos.getMinBlockZ() + z);
+					BlockPos worldPos = hologramLevel.holoToWorldPosition(holoPos);
+					
+					if (worldPos.getY() != hologramManager.getActiveLayer() && hologramManager.isOneLayerMode()) continue;
+					
+					BlockHoloState holoState = section.getHoloState(x, y, z);
+					
+					if (holoState != BlockHoloState.NO_BLOCK) {
+						
+						BlockEntity blockEntity = realLevel.getBlockEntity(worldPos);
+						if (blockEntity == null) continue;
+						
+						MultiBufferSource bufferSource = bufferContainer.getBufferSource(holoState);
+						BlockEntityRenderer<BlockEntity> renderer = blockEntityRenderer.getRenderer(blockEntity);
+						
+						if (renderer != null) {
+							
+							int light = LevelRenderer.getLightColor(hologramLevel, worldPos);
+							
+							poseStack.pushPose();
+							poseStack.translate(holoPos.getX(), holoPos.getY(), holoPos.getZ());
+							renderer.render(blockEntity, 0, poseStack, bufferSource, light, OverlayTexture.NO_OVERLAY);
+							poseStack.popPose();
+							
+						}
+						
+					}
+					
+				}
+			}
+		}
 		
 	}
 	
@@ -411,7 +438,7 @@ public class HolographicRenderer {
 			}
 			
 		});
-		
+
 	}
 	
 	private void renderChunkLayers(HologramBufferContainer bufferContainer, RenderType renderLayer, Hologram hologramLevel, LevelAccessor realLevel, ChunkPos chunkPos, int yindex, HologramSection section) {

@@ -16,6 +16,9 @@
 "holostruct.commands.blueprint.load.started": "§2Loading blueprint '%1$s§2' ...",
 "holostruct.commands.blueprint.load.loaded": "§2Blueprint '%1$s§2' loaded",
 "holostruct.commands.blueprint.load.parsewarning": "§2Warning: errors occured while loading, use §fshow_logs§2 for details!",
+"holostruct.commands.blueprint.materials.invalidblueprint": "§2Blueprint '%1$s§2' not found!",
+"holostruct.commands.blueprint.materials.listhead": "§2Material-List: (WIP)",
+"holostruct.commands.blueprint.materials.entry": "§2- %1$s§2 §2x %2$s",
 
 "holostruct.commands.hologram.position.invalidhologram": "§2Hologram '%1$s§2' does not exist!",
 "holostruct.commands.hologram.position.changed": "§2Hologram '%1$s§2' positioned at %2$d %3$d %4$d",

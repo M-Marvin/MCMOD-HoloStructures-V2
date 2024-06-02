@@ -19,6 +19,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 public class PixelArtCommand {
@@ -201,7 +202,7 @@ public class PixelArtCommand {
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blocklist.head"), false);
 		for (Entry<Block, Integer> block : HoloStruct.CLIENT.PIXELART_GENERATOR.getBlockList().entrySet()) {
-			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blocklist.entry", block.getKey().getName(), block.getValue()), false);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blocklist.entry", new ItemStack(block.getKey(), 1).getDisplayName(), block.getValue()), false);
 		}
 		
 		return 1;
@@ -216,7 +217,7 @@ public class PixelArtCommand {
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.head"), false);
 		for (Block block : HoloStruct.CLIENT.PIXELART_GENERATOR.getWhitelist()) {
-			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.entry", block.getName()), false);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.entry", new ItemStack(block, 1).getDisplayName()), false);
 		}
 		
 		return 1;
@@ -227,7 +228,7 @@ public class PixelArtCommand {
 		if (HoloStruct.CLIENT.PIXELART_GENERATOR.getWhitelist().add(block))
 			HoloStruct.CLIENT.PIXELART_GENERATOR.rebuild();
 		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.added", block.getName()), false);
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.added", new ItemStack(block, 1).getDisplayName()), false);
 		return 1;
 		
 	}
@@ -237,7 +238,7 @@ public class PixelArtCommand {
 		if (HoloStruct.CLIENT.PIXELART_GENERATOR.getWhitelist().remove(block))
 			HoloStruct.CLIENT.PIXELART_GENERATOR.rebuild();
 		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.removed", block.getName()), false);
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.removed", new ItemStack(block, 1).getDisplayName()), false);
 		return 1;
 		
 	}
@@ -251,7 +252,7 @@ public class PixelArtCommand {
 		
 		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blacklist.head"), false);
 		for (Block block : HoloStruct.CLIENT.PIXELART_GENERATOR.getBlacklist()) {
-			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.entry", block.getName()), false);
+			source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.whitelist.entry", new ItemStack(block, 1).getDisplayName()), false);
 		}
 		
 		return 1;
@@ -262,7 +263,7 @@ public class PixelArtCommand {
 		if (HoloStruct.CLIENT.PIXELART_GENERATOR.getBlacklist().add(block))
 			HoloStruct.CLIENT.PIXELART_GENERATOR.rebuild();
 		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blacklist.added", block.getName()), false);
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blacklist.added", new ItemStack(block, 1).getDisplayName()), false);
 		return 1;
 		
 	}
@@ -272,7 +273,7 @@ public class PixelArtCommand {
 		if (HoloStruct.CLIENT.PIXELART_GENERATOR.getBlacklist().remove(block))
 			HoloStruct.CLIENT.PIXELART_GENERATOR.rebuild();
 		
-		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blacklist.removed", block.getName()), false);
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.pixelart.blacklist.removed", new ItemStack(block, 1).getDisplayName()), false);
 		return 1;
 		
 	}
