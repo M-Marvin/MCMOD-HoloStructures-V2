@@ -7,7 +7,7 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig.Type;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -64,8 +64,8 @@ public class ServerConfig {
 		}
 	}
 
-	public static void register() {
-		ModLoadingContext.get().registerConfig(Type.SERVER, CONFIG);
+	public static void register(ModContainer modContainer) {
+		modContainer.registerConfig(Type.SERVER, CONFIG);
 	}
 	
 }

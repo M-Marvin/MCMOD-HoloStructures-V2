@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -270,6 +270,6 @@ public interface IFakeLevelAccess extends LevelAccessor {
 	public default void levelEvent(Player pPlayer, int pType, BlockPos pPos, int pData) {}
 
 	@Override
-	public default void gameEvent(GameEvent pEvent, Vec3 pPosition, Context pContext) {}
+	public default void gameEvent(Holder<GameEvent> pGameEvent, Vec3 pPos, Context pContext) {}
 
 }

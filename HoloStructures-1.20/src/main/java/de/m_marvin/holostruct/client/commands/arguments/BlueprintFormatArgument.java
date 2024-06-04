@@ -40,7 +40,7 @@ public class BlueprintFormatArgument implements ArgumentType<BlueprintFormat> {
 	@Override
 	public boolean equals(final Object o) {
 		 if (this == o) return true;
-		 if (o instanceof BlueprintFormatArgument other) {
+		 if (o instanceof BlueprintFormatArgument) {
 		 	return true;
 		 }
 		 return false;

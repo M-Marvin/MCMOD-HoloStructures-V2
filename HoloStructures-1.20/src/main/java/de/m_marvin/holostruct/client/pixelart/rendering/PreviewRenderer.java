@@ -9,10 +9,10 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.common.Mod.EventBusSubscriber.Bus;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.EventBusSubscriber.Bus;
 
-@Mod.EventBusSubscriber(modid = HoloStruct.MODID, bus = Bus.FORGE, value = Dist.CLIENT)
+@EventBusSubscriber(modid = HoloStruct.MODID, bus = Bus.GAME, value = Dist.CLIENT)
 public class PreviewRenderer {
 	
 	public static final ResourceLocation PREVIEW_TEXTURE_LOC = new ResourceLocation("holostruct:map_preview");

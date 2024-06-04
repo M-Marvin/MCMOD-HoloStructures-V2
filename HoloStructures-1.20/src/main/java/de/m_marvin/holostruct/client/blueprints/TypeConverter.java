@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
@@ -18,6 +19,7 @@ import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
@@ -37,6 +39,8 @@ import net.minecraft.world.phys.Vec3;
  * @author Marvin Koehler
  */
 public class TypeConverter {
+
+	public static final Supplier<RegistryAccess> HOLDER = () -> Minecraft.getInstance().level.registryAccess();
 	
 	public static final BlockStateData AIR_STATE = new BlockStateData(new RegistryName("minecraft:air"));
 	
@@ -90,7 +94,7 @@ public class TypeConverter {
 		RegistryName typeName = resLoc2data(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()));
 		Vec3i position = new Vec3i(blockEntity.getBlockPos().getX(), blockEntity.getBlockPos().getY(), blockEntity.getBlockPos().getZ());
 		BlockEntityData data = new BlockEntityData(position, typeName);
-		data.setData(nbt2data(blockEntity.serializeNBT()));
+		data.setData(nbt2data(blockEntity.saveWithoutMetadata(HOLDER.get())));
 		return data;
 	}
 	
@@ -106,7 +110,7 @@ public class TypeConverter {
 		if (type == null) return null;
 		BlockPos position = new BlockPos(data.getPosition().x, data.getPosition().y, data.getPosition().z);
 		BlockEntity blockEntity = type.create(position, block);
-		blockEntity.deserializeNBT(data2nbt(data.getData()));
+		blockEntity.loadWithComponents(data2nbt(data.getData()), HOLDER.get());
 		return blockEntity;
 	}
 	
@@ -120,7 +124,7 @@ public class TypeConverter {
 		RegistryName entityName = resLoc2data(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
 		Vec3d position = new Vec3d(entity.position().x, entity.position().y, entity.position().z);
 		EntityData data = new EntityData(position, entityName);
-		data.setData(nbt2data(entity.serializeNBT()));
+		data.setData(nbt2data(entity.serializeNBT(HOLDER.get())));
 		return data;
 	}
 	

@@ -5,11 +5,14 @@ import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.univec.impl.Vec3d;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 public class AddEntityPackage implements ILevelboundPackage<Boolean> {
 	
-	public static final ResourceLocation ID = new ResourceLocation(HoloStruct.MODID, "add_entity_data");
+	public static final Type<AddEntityPackage> TYPE = new Type<>(new ResourceLocation(HoloStruct.MODID, "add_entity_data"));
+	public static final StreamCodec<FriendlyByteBuf, AddEntityPackage> CODEC = StreamCodec.of((buf, val) -> val.write(buf), AddEntityPackage::new);
 	
 	private final EntityData data;
 	private final int taskId;
@@ -55,7 +58,6 @@ public class AddEntityPackage implements ILevelboundPackage<Boolean> {
 		this.taskId = pBuffer.readInt();
 	}
 	
-	@Override
 	public void write(FriendlyByteBuf pBuffer) {
 		pBuffer.writeDouble(this.data.getPosition().x);
 		pBuffer.writeDouble(this.data.getPosition().y);
@@ -70,8 +72,8 @@ public class AddEntityPackage implements ILevelboundPackage<Boolean> {
 	}
 
 	@Override
-	public ResourceLocation id() {
-		return ID;
+	public Type<? extends CustomPacketPayload> type() {
+		return TYPE;
 	}
 
 }

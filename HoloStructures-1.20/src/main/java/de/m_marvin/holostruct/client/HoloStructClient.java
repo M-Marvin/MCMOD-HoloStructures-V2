@@ -34,19 +34,19 @@ import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.locale.Language;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.common.Mod.EventBusSubscriber.Bus;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.EventBusSubscriber.Bus;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * The client side only instance of the mod.
  * This does only exist on the client side.
  * @author Marvin Koehler
  */
-@Mod.EventBusSubscriber(modid=HoloStruct.MODID, value=Dist.CLIENT, bus=Bus.FORGE)
+@EventBusSubscriber(modid=HoloStruct.MODID, value=Dist.CLIENT, bus=Bus.GAME)
 public class HoloStructClient {
 	
 	/** The levelbound instance used to access the server level */
@@ -105,7 +105,7 @@ public class HoloStructClient {
 	private static void updateAccessPermisson() {
 		if (ServerConfig.ALLOW_READ.get()) {
 			@SuppressWarnings("resource")
-			boolean serverMode = Minecraft.getInstance().player.connection.isConnected(SetBlockStatePackage.ID);
+			boolean serverMode = Minecraft.getInstance().player.connection.hasChannel(SetBlockStatePackage.TYPE);
 			
 			if (serverMode) {
 				HoloStruct.LOGGER.info("Connect to server with HS2 installed!");
@@ -129,8 +129,8 @@ public class HoloStructClient {
 		updateAccessPermisson();
 		
 		boolean serverHasPermissonConfig = 
-				event.getPlayer().connection.isConnected(QueryAccessPermissions.ID) &&
-				event.getPlayer().connection.isConnected(QueryAccessPermissions.ID);
+				event.getPlayer().connection.hasChannel(QueryAccessPermissions.TYPE) &&
+				event.getPlayer().connection.hasChannel(QueryAccessPermissions.TYPE);
 		
 		if (serverHasPermissonConfig) {
 			HoloStruct.LOGGER.info("HS2/Permissons Querry access permissions from server");
@@ -139,7 +139,7 @@ public class HoloStructClient {
 		}
 	}
 	
-	public void onAccessPermissionsReceived(QueryAccessPermissions pkg, PlayPayloadContext context) {
+	public void onAccessPermissionsReceived(QueryAccessPermissions pkg, IPayloadContext context) {
 		HoloStruct.LOGGER.info("HS2/Permissons Received configuation from server!");
 		String config = pkg.config();
 		ServerConfig.load(config);

@@ -12,7 +12,7 @@ import de.m_marvin.blueprints.BlueprintLoader.BlueprintFormat;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig.Type;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -134,8 +134,8 @@ public class ClientConfig {
 				.collect(Collectors.toMap(m -> m.group(1), m -> m.group(2)));
 	}
 	
-	public static void register() {
-		ModLoadingContext.get().registerConfig(Type.CLIENT, CONFIG);
+	public static void register(ModContainer modContainer) {
+		modContainer.registerConfig(Type.CLIENT, CONFIG);
 	}
 	
 }

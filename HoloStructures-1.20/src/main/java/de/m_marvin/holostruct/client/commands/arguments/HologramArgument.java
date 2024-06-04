@@ -39,7 +39,7 @@ public class HologramArgument implements ArgumentType<String> {
 	@Override
 	public boolean equals(final Object o) {
 		 if (this == o) return true;
-		 if (o instanceof HologramArgument other) {
+		 if (o instanceof HologramArgument) {
 		 	return true;
 		 }
 		 return false;

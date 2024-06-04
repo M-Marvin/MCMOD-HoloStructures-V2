@@ -7,11 +7,14 @@ import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 public class SetBlockStatePackage implements ILevelboundPackage<Boolean> {
 	
-	public static final ResourceLocation ID = new ResourceLocation(HoloStruct.MODID, "set_block_state_data");
+	public static final Type<SetBlockStatePackage> TYPE = new Type<>(new ResourceLocation(HoloStruct.MODID, "set_block_state_data"));
+	public static final StreamCodec<FriendlyByteBuf, SetBlockStatePackage> CODEC = StreamCodec.of((buf, val) -> val.write(buf), SetBlockStatePackage::new);
 	
 	private final Vec3i position;
 	private final BlockStateData data;
@@ -64,7 +67,6 @@ public class SetBlockStatePackage implements ILevelboundPackage<Boolean> {
 		this.taskId = pBuffer.readInt();
 	}
 	
-	@Override
 	public void write(FriendlyByteBuf pBuffer) {
 		pBuffer.writeInt(this.position.x);
 		pBuffer.writeInt(this.position.y);
@@ -80,8 +82,8 @@ public class SetBlockStatePackage implements ILevelboundPackage<Boolean> {
 	}
 
 	@Override
-	public ResourceLocation id() {
-		return ID;
+	public Type<? extends CustomPacketPayload> type() {
+		return TYPE;
 	}
 
 }

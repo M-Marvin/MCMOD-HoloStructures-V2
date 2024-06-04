@@ -39,7 +39,7 @@ public class BlueprintArgument implements ArgumentType<String> {
 	@Override
 	public boolean equals(final Object o) {
 		 if (this == o) return true;
-		 if (o instanceof BlueprintArgument other) {
+		 if (o instanceof BlueprintArgument) {
 		 	return true;
 		 }
 		 return false;

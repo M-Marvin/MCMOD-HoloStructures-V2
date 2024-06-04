@@ -2,12 +2,15 @@ package de.m_marvin.holostruct.client.struktedit;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.mojang.math.OctahedralGroup;
 
 import de.m_marvin.holostruct.utility.UtilHelper;
 import de.m_marvin.univec.impl.Vec3d;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LevelAccessor;
@@ -19,6 +22,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class StruktOrientator {
+
+	public static final Supplier<RegistryAccess> HOLDER = () -> Minecraft.getInstance().level.registryAccess();
 	
 	public static void rotate(LevelAccessor source, BlockPos origin, BlockPos boundsMin, BlockPos boundsMax, Rotation rotation) {
 		
@@ -37,7 +42,7 @@ public class StruktOrientator {
 					state = state.rotate(source, scanPos, rotation);
 					
 					newStates.put(newPos, state);
-					newBlockEntities.put(newPos, blockEntity == null ? null : blockEntity.serializeNBT());
+					newBlockEntities.put(newPos, blockEntity == null ? null : blockEntity.saveWithoutMetadata(HOLDER.get()));
 					
 					source.removeBlock(scanPos, false);
 				}
@@ -53,7 +58,7 @@ public class StruktOrientator {
 			if (blockEntity != null) {
 				BlockEntity newBlockEntity = source.getBlockEntity(scanPos);
 				if (newBlockEntity != null) {
-					newBlockEntity.deserializeNBT(blockEntity);
+					newBlockEntity.loadWithComponents(blockEntity, HOLDER.get());
 				}
 			}
 			
@@ -96,7 +101,7 @@ public class StruktOrientator {
 					state = state.mirror(mirror);
 					
 					newStates.put(newPos, state);
-					newBlockEntities.put(newPos, blockEntity == null ? null : blockEntity.serializeNBT());
+					newBlockEntities.put(newPos, blockEntity == null ? null : blockEntity.saveWithoutMetadata(HOLDER.get()));
 					
 					source.removeBlock(scanPos, false);
 				}
@@ -112,7 +117,7 @@ public class StruktOrientator {
 			if (blockEntity != null) {
 				BlockEntity newBlockEntity = source.getBlockEntity(scanPos);
 				if (newBlockEntity != null) {
-					newBlockEntity.deserializeNBT(blockEntity);
+					newBlockEntity.loadWithComponents(blockEntity, HOLDER.get());
 				}
 			}
 			

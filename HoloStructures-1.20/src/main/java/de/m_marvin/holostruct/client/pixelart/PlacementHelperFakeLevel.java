@@ -17,6 +17,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
@@ -29,6 +30,7 @@ import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEvent.Context;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -85,7 +87,7 @@ public class PlacementHelperFakeLevel extends Level {
 	public void levelEvent(Player pPlayer, int pType, BlockPos pPos, int pData) {}
 
 	@Override
-	public void gameEvent(GameEvent pEvent, Vec3 pPosition, Context pContext) {}
+	public void gameEvent(Holder<GameEvent> pGameEvent, Vec3 pPos, Context pContext) {}
 
 	@Override
 	public List<? extends Player> players() {
@@ -134,18 +136,23 @@ public class PlacementHelperFakeLevel extends Level {
 	}
 
 	@Override
-	public MapItemSavedData getMapData(String pMapName) {
-		return level.getMapData(pMapName);
+	public MapItemSavedData getMapData(MapId mapId) {
+		return level.getMapData(mapId);
 	}
 
 	@Override
-	public void setMapData(String pMapName, MapItemSavedData pData) {}
-
-	@Override
-	public int getFreeMapId() {
+	public MapId getFreeMapId() {
 		return level.getFreeMapId();
 	}
 
+	@Override
+	public void setMapData(MapId pMapId, MapItemSavedData pMapData) {}
+
+	@Override
+	public PotionBrewing potionBrewing() {
+		return null;
+	}
+	
 	@Override
 	public void destroyBlockProgress(int pBreakerId, BlockPos pPos, int pProgress) {}
 
@@ -163,5 +170,5 @@ public class PlacementHelperFakeLevel extends Level {
 	protected LevelEntityGetter<Entity> getEntities() {
 		return null;
 	}
-	
+
 }

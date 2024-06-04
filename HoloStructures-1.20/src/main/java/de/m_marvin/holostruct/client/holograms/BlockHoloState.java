@@ -2,6 +2,7 @@ package de.m_marvin.holostruct.client.holograms;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -9,6 +10,8 @@ import com.google.common.collect.ImmutableList;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.holostruct.client.ClientConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +24,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public enum BlockHoloState {
 	
 	CORRECT_BLOCK(1, 1, 1, 1),NO_BLOCK(0.7F, 0.7F, 1, 1F),WRONG_BLOCK(1, 0, 0, 1),WRONG_STATE(1, 1, 0, 1),WRONG_DATA(0, 1, 0, 1);
+
+	public static final Supplier<RegistryAccess> HOLDER = () -> Minecraft.getInstance().level.registryAccess();
 	
 	public final float colorRed;
 	public final float colorGreen;
@@ -70,8 +75,8 @@ public enum BlockHoloState {
 		} else if (!holoState.equals(realState)) {
 			return WRONG_STATE;
 		} else if (holoState.hasBlockEntity()) {
-			CompoundTag holoNbt = holoBlockEntity.isPresent() ? holoBlockEntity.get().serializeNBT() : new CompoundTag();
-			CompoundTag realNbt = realBlockEntity.isPresent() ? realBlockEntity.get().serializeNBT() : new CompoundTag();
+			CompoundTag holoNbt = holoBlockEntity.isPresent() ? holoBlockEntity.get().saveWithoutMetadata(HOLDER.get()) : new CompoundTag();
+			CompoundTag realNbt = realBlockEntity.isPresent() ? realBlockEntity.get().saveWithoutMetadata(HOLDER.get()) : new CompoundTag();
 			if (!holoNbt.equals(realNbt)) return WRONG_DATA;
 		}
 		return CORRECT_BLOCK;

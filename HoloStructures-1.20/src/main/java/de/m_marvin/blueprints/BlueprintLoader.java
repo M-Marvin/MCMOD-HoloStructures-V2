@@ -11,8 +11,8 @@ import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.blueprints.parser.IBlueprintParser;
 import de.m_marvin.blueprints.parser.NBTStrructParser;
 import de.m_marvin.blueprints.parser.SchemParser;
-import de.m_marvin.blueprints.parser.SchematicParser;
 import de.m_marvin.blueprints.parser.SchemParser.SchemVersion;
+import de.m_marvin.blueprints.parser.SchematicParser;
 
 /**
  * An class combining all imnplementations of {@link IBlueprintParser}.

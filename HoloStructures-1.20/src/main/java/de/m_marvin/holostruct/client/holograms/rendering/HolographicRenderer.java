@@ -66,7 +66,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.client.model.data.ModelData;
@@ -75,7 +75,7 @@ import net.neoforged.neoforge.client.model.data.ModelData;
  * Manages the rendering of the holograms in the world.
  * @author Marvin Koehler
  */
-@Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
+@EventBusSubscriber(modid=HoloStruct.MODID, bus=EventBusSubscriber.Bus.GAME, value=Dist.CLIENT)
 public class HolographicRenderer {
 	
 	public static final Supplier<HologramManager> HOLOGRAM_MANAGER = () -> HoloStruct.CLIENT.HOLOGRAMS;
@@ -592,7 +592,7 @@ public class HolographicRenderer {
 	}
 	
 	protected void renderHologramLine(PoseStack poseStack, VertexConsumer buffer, float fx, float fy, float fz, float r, float g, float b, float a) {
-		buffer.vertex(poseStack.last().pose(), fx, fy, fz).color(r, g, b, a).normal(poseStack.last().normal(), 1, 1, 1).endVertex();
+		buffer.vertex(poseStack.last().pose(), fx, fy, fz).color(r, g, b, a).normal(poseStack.last(), 1, 1, 1).endVertex();
 	}
 	
 	protected void renderHolograms(PoseStack poseStack, Matrix4f projectionMatrix, RenderType renderLayer) {
@@ -671,10 +671,6 @@ public class HolographicRenderer {
 		
 		if (pShader.PROJECTION_MATRIX != null) {
 			pShader.PROJECTION_MATRIX.set(pProjectionMatrix);
-		}
-
-		if (pShader.INVERSE_VIEW_ROTATION_MATRIX != null) {
-			pShader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
 		}
 
 		if (pShader.COLOR_MODULATOR != null) {

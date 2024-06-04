@@ -23,18 +23,20 @@ import de.m_marvin.holostruct.levelbound.network.SetBlockEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.SetBlockStatePackage;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
-import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /*
  * Main class of the mod, exists on server and client side.
  * Mainly registers other classes to the mod bus.
  */
 @Mod(HoloStruct.MODID)
-@Mod.EventBusSubscriber(modid=HoloStruct.MODID, bus=Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid=HoloStruct.MODID, bus=EventBusSubscriber.Bus.MOD)
 public class HoloStruct {
 	
 	public static final String MODID = "holostruct";
@@ -42,9 +44,9 @@ public class HoloStruct {
 	public static final ServerLevelboundPackageHandler SERVER_LEVELBOUND = new ServerLevelboundPackageHandler();
 	public static final HoloStructClient CLIENT = FMLEnvironment.dist.isClient() ? new HoloStructClient() : null;
 	
-	public HoloStruct(IEventBus bus) {
-		ClientConfig.register();
-		ServerConfig.register();
+	public HoloStruct(ModContainer container, IEventBus bus) {
+		ClientConfig.register(container);
+		ServerConfig.register(container);
 		CommandArguments.register(bus);
 		
 		try {
@@ -56,39 +58,66 @@ public class HoloStruct {
 			LOGGER.warn("could not load lagacy block id mappings!");
 			e.printStackTrace();
 		}
-		
 	}
 
 	@SubscribeEvent
-	public static void onPayloadRegister(RegisterPayloadHandlerEvent event) {
-		IPayloadRegistrar registrar = event.registrar(MODID).optional();
-		registrar.play(SetBlockStatePackage.ID, SetBlockStatePackage::new, handler -> handler
-				.server(SERVER_LEVELBOUND::handlerSetBlockstate)
-				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(SetBlockEntityPackage.ID, SetBlockEntityPackage::new, handler -> handler
-				.server(SERVER_LEVELBOUND::handlerSetBlockEntity)
-				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(AddEntityPackage.ID, AddEntityPackage::new, handler -> handler
-				.server(SERVER_LEVELBOUND::handlerAddEntity)
-				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(GetBlockStatePackage.ID, GetBlockStatePackage::new, handler -> handler
-				.server(SERVER_LEVELBOUND::handlerGetBlockState)
-				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(GetBlockEntityPackage.ID, GetBlockEntityPackage::new, handler -> handler
-				.server(SERVER_LEVELBOUND::handlerGetBlockEntity)
-				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(GetEntitiesPackage.ID, GetEntitiesPackage::new, handler -> handler
-				.server(SERVER_LEVELBOUND::handlerGetEntities)
-				.client(CLIENT.CLIENT_LEVELBOUND::handlerTaskResponse));
-		registrar.play(QueryAccessPermissions.ID, QueryAccessPermissions::new, handler -> handler
-				.server(HoloStruct::handlePermissonRequest)
-				.client(CLIENT::onAccessPermissionsReceived));
+	public static void onPayloadRegister(RegisterPayloadHandlersEvent event) {
+		PayloadRegistrar registrar = event.registrar(MODID).optional();
+		registrar.playBidirectional(SetBlockStatePackage.TYPE, SetBlockStatePackage.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				SERVER_LEVELBOUND.handlerSetBlockstate(payload, context);
+			} else {
+				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
+			}
+		});
+		registrar.playBidirectional(SetBlockEntityPackage.TYPE, SetBlockEntityPackage.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				SERVER_LEVELBOUND.handlerSetBlockEntity(payload, context);
+			} else {
+				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
+			}
+		});
+		registrar.playBidirectional(AddEntityPackage.TYPE, AddEntityPackage.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				SERVER_LEVELBOUND.handlerAddEntity(payload, context);
+			} else {
+				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
+			}
+		});
+		registrar.playBidirectional(GetBlockStatePackage.TYPE, GetBlockStatePackage.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				SERVER_LEVELBOUND.handlerGetBlockState(payload, context);
+			} else {
+				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
+			}
+		});
+		registrar.playBidirectional(GetBlockEntityPackage.TYPE, GetBlockEntityPackage.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				SERVER_LEVELBOUND.handlerGetBlockEntity(payload, context);
+			} else {
+				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
+			}
+		});
+		registrar.playBidirectional(GetEntitiesPackage.TYPE, GetEntitiesPackage.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				SERVER_LEVELBOUND.handlerGetEntities(payload, context);
+			} else {
+				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
+			}
+		});
+		registrar.playBidirectional(QueryAccessPermissions.TYPE, QueryAccessPermissions.CODEC, (payload, context) -> {
+			if (context.player().level().isClientSide()) {
+				HoloStruct.handlePermissonRequest(payload, context);
+			} else {
+				CLIENT.onAccessPermissionsReceived(payload, context);
+			}
+		});
 	}
 	
-	public static void handlePermissonRequest(QueryAccessPermissions pkg, PlayPayloadContext context) {
+	public static void handlePermissonRequest(QueryAccessPermissions pkg, IPayloadContext context) {
 		LOGGER.info("HS2/Permisson Access permissions requested!");
 		String config = ServerConfig.write();
-		context.replyHandler().send(new QueryAccessPermissions(config));
+		context.reply(new QueryAccessPermissions(config));
 	}
 	
 	/** TODO Feature liste 
