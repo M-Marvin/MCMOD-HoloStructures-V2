@@ -92,6 +92,7 @@ public class HoloStructClient {
 	
 	@SubscribeEvent
 	public static void onChatMessageReceived(ClientChatReceivedEvent event) {
+		if (event.getBoundChatType() == null) return;
 		if (!event.getBoundChatType().name().getString().equals("System")) return;
 		if (HoloStruct.CLIENT.COMMAND_DISPATCHER.handleSysteMessage(event.getMessage().getString()))
 			event.setCanceled(true);

@@ -13,7 +13,6 @@ import org.joml.Matrix4f;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -122,7 +121,7 @@ public class HolographicRenderer {
 			
 			PoseStack poseStack = event.getPoseStack();
 			poseStack.pushPose();
-			renderer.translateToWorld(poseStack);
+			renderer.translateToWorld(poseStack, true);
 			
 			if (event.getStage() == Stage.AFTER_SOLID_BLOCKS) {
 				renderer.renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.solid());
@@ -138,6 +137,9 @@ public class HolographicRenderer {
 				HologramBufferContainer.getAlocatedRenderTypes().stream().filter(r -> !RenderType.chunkBufferLayers().contains(r)).forEach(renderLayer -> {
 					renderer.renderHolograms(poseStack, event.getProjectionMatrix(), renderLayer);
 				});
+				poseStack.popPose();
+				poseStack.pushPose();
+				renderer.translateToWorld(poseStack, false);
 				renderer.renderHologramBounds(poseStack);
 			} else 
 				if (event.getStage() == Stage.AFTER_PARTICLES) {
@@ -490,8 +492,13 @@ public class HolographicRenderer {
 		
 	}
 	
-	protected void translateToWorld(PoseStack poseStack) {
-		Vec3 cameraOffset = CAMERA.get().getPosition();
+	protected void translateToWorld(PoseStack poseStack, boolean applyRotation) {
+		Camera camera = CAMERA.get();
+		Vec3 cameraOffset = camera.getPosition();
+		if (applyRotation) {
+			poseStack.last().pose() .rotationXYZ(camera.getXRot() * (float) (Math.PI / 180.0), camera.getYRot() * (float) (Math.PI / 180.0) + (float) Math.PI, 0.0F);
+			poseStack.last().normal().rotateXYZ(camera.getXRot() * (float) (Math.PI / 180.0), camera.getYRot() * (float) (Math.PI / 180.0) + (float) Math.PI, 0.0F);
+		}
 		poseStack.translate(-cameraOffset.x, -cameraOffset.y, -cameraOffset.z);
 	}
 	
@@ -602,7 +609,8 @@ public class HolographicRenderer {
 		Uniform chunkOffset = shader.CHUNK_OFFSET;
 		Uniform modelViewMatrix = shader.MODEL_VIEW_MATRIX;
 
-		RenderSystem.setShaderFogShape(FogShape.SPHERE);
+		// Disable fog, does not work well with holograms
+		RenderSystem.setShaderFogColor(0, 0, 0, 0);
 		
 		setupSectionShader(projectionMatrix, shader);
 		

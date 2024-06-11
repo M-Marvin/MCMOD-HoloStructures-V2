@@ -50,10 +50,6 @@ public class GetBlockEntityPackage implements ILevelboundPackage<BlockEntityData
 				pBuffer.readInt(),
 				pBuffer.readInt());
 		if (pBuffer.readBoolean()) {
-			Vec3i position = new Vec3i(
-					pBuffer.readInt(),
-					pBuffer.readInt(),
-					pBuffer.readInt());
 			this.state = new BlockEntityData(position, TypeConverter.resLoc2data(pBuffer.readResourceLocation()));
 			if (pBuffer.readBoolean()) {
 				this.state.setData(TypeConverter.nbt2data(pBuffer.readNbt()));

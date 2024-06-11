@@ -289,6 +289,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 			CompletableFuture.allOf(targetState, targetBE)
 				.exceptionally(e -> {
 					HoloStruct.LOGGER.warn("failed to update hologram at {{} {} {}}: {}", targetPos.x, targetPos.y, targetPos.z, e.getMessage());
+					e.printStackTrace();
 					return null;
 				})
 				.thenRunAsync(() -> {
@@ -299,6 +300,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 				})
 				.exceptionally(e -> {
 					HoloStruct.LOGGER.warn("failed to update hologram at {{} {} {}}: {}", targetPos.x, targetPos.y, targetPos.z, e.getMessage());
+					e.printStackTrace();
 					return null;
 				});
 		});

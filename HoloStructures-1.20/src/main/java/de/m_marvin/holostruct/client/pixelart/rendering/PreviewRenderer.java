@@ -11,6 +11,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.EventBusSubscriber.Bus;
+import net.neoforged.neoforge.client.event.CustomizeGuiOverlayEvent;
 
 @EventBusSubscriber(modid = HoloStruct.MODID, bus = Bus.GAME, value = Dist.CLIENT)
 public class PreviewRenderer {
@@ -21,7 +22,7 @@ public class PreviewRenderer {
 	protected BufferedImage previewImage;
 	
 	@SubscribeEvent
-	public static void onRenderLevelLast(net.neoforged.neoforge.client.event.CustomizeGuiOverlayEvent.Chat event) {
+	public static void onRenderLevelLast(CustomizeGuiOverlayEvent.Chat event) {
 		HoloStruct.CLIENT.PIXELART_PREVIEW.renderPreview(event.getGuiGraphics());
 	}
 	

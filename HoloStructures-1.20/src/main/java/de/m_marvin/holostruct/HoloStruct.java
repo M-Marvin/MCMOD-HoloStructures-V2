@@ -64,49 +64,49 @@ public class HoloStruct {
 	public static void onPayloadRegister(RegisterPayloadHandlersEvent event) {
 		PayloadRegistrar registrar = event.registrar(MODID).optional();
 		registrar.playBidirectional(SetBlockStatePackage.TYPE, SetBlockStatePackage.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				SERVER_LEVELBOUND.handlerSetBlockstate(payload, context);
 			} else {
 				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
 			}
 		});
 		registrar.playBidirectional(SetBlockEntityPackage.TYPE, SetBlockEntityPackage.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				SERVER_LEVELBOUND.handlerSetBlockEntity(payload, context);
 			} else {
 				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
 			}
 		});
 		registrar.playBidirectional(AddEntityPackage.TYPE, AddEntityPackage.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				SERVER_LEVELBOUND.handlerAddEntity(payload, context);
 			} else {
 				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
 			}
 		});
 		registrar.playBidirectional(GetBlockStatePackage.TYPE, GetBlockStatePackage.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				SERVER_LEVELBOUND.handlerGetBlockState(payload, context);
 			} else {
 				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
 			}
 		});
 		registrar.playBidirectional(GetBlockEntityPackage.TYPE, GetBlockEntityPackage.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				SERVER_LEVELBOUND.handlerGetBlockEntity(payload, context);
 			} else {
 				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
 			}
 		});
 		registrar.playBidirectional(GetEntitiesPackage.TYPE, GetEntitiesPackage.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				SERVER_LEVELBOUND.handlerGetEntities(payload, context);
 			} else {
 				CLIENT.CLIENT_LEVELBOUND.handlerTaskResponse(payload, context);
 			}
 		});
 		registrar.playBidirectional(QueryAccessPermissions.TYPE, QueryAccessPermissions.CODEC, (payload, context) -> {
-			if (context.player().level().isClientSide()) {
+			if (!context.player().level().isClientSide()) {
 				HoloStruct.handlePermissonRequest(payload, context);
 			} else {
 				CLIENT.onAccessPermissionsReceived(payload, context);
