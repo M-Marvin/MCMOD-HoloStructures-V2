@@ -5,7 +5,7 @@
         "dstrgb": "1-srcalpha"
     },
     "vertex": "holostruct:post/base",
-    "fragment": "holostruct:post/scanline",
+    "fragment": "holostruct:post/bits",
     "attributes": [ "Position" ],
     "samplers": [
         { "name": "DiffuseSampler" },
@@ -13,8 +13,10 @@
     ],
     "uniforms": [
         { "name": "ProjMat",          "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+		{ "name": "DiffuseSize",  	"type": "float",     "count": 2,  "values": [ 1.0, 1.0 ] },
         { "name": "OutSize",          "type": "float",     "count": 2,  "values": [ 1.0, 1.0 ] },
-        { "name": "GameTime",         "type": "float",     "count": 1,  "values": [ 0.0 ] },
-        { "name": "Alpha",            "type": "float",     "count": 1,  "values": [ 1.0 ] }
+        { "name": "Resolution",       "type": "float",     "count": 1,  "values": [ 4.0 ] },
+        { "name": "Saturation",       "type": "float",     "count": 1,  "values": [ 1.5 ] },
+        { "name": "MosaicSize",       "type": "float",     "count": 1,  "values": [ 8.0 ] }
     ]
 }

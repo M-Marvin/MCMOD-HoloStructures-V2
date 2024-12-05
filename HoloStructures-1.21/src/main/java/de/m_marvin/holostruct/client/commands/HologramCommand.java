@@ -185,12 +185,12 @@ public class HologramCommand {
 	}
 	
 	public static int selectViewMode(CommandContext<CommandSourceStack> source, ViewMode viewMode) {
-//		if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(viewMode.getPostEffect())) {
+		if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(viewMode.getPostEffect())) {
 			source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.viewmode.failed", viewMode.getName()));
 			return 0;
-//		}
-//		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.viewmode.enabled", viewMode.getName()), false);
-//		return 1;
+		}
+		source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.viewmode.enabled", viewMode.getName()), false);
+		return 1;
 	}
 	
 	public static int layerMode(CommandContext<CommandSourceStack> source, boolean layerMode, int layer) {

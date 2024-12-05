@@ -31,6 +31,7 @@ public class ClientConfig {
 	public static ModConfigSpec.IntValue PACKAGE_TIMEOUT;
 	
 	public static final String HOLOGRAMS = "holograms";
+	public static ModConfigSpec.IntValue AUTO_UPDATE_ALL;
 	public static ModConfigSpec.IntValue SECTION_UPDATE_DELAY;
 	public static ModConfigSpec.ConfigValue<List<? extends String>> BLOCK_STATE_PROP_BLACKLIST;
 	
@@ -67,10 +68,12 @@ public class ClientConfig {
 		BUILDER.pop();
 		
 		BUILDER.push(HOLOGRAMS);
+		AUTO_UPDATE_ALL = BUILDER.comment("The maximum number of chunk section a hologram is allowed to have, before stopping to run updates on the entire hologram.")
+				.defineInRange("auto_update_all", 40, 0, 10000);
 		SECTION_UPDATE_DELAY = BUILDER.comment("Time in ms to wait between triggering the updates of the individual hologram sections, samler timeouts make the updates faster, but increase the risk of losing individual blocks due to timeouts of the server")
-				.defineInRange("section_update_delay", 1000, 100, 10000);
+				.defineInRange("section_update_delay", 250, 0, 10000);
 		BLOCK_STATE_PROP_BLACKLIST = BUILDER.comment("Block states ignored when comparing placed blocks with hologram for placement state")
-				.defineList("block_state_prop_blacklist", DEFAULT_BLOCK_PROP_BLACKLIST, item -> {
+				.defineList("block_state_prop_blacklist", DEFAULT_BLOCK_PROP_BLACKLIST, null, item -> {
 					Matcher m = BLOCK_PROP_PATTERN.matcher((String) item);
 					if (m.find()) {
 						Optional<Reference<Block>> block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(m.group(1)));
@@ -85,21 +88,21 @@ public class ClientConfig {
 		DEFAULT_BLUEPRINT_FOLDER = BUILDER.comment("Default blueprint folder used if no path specified in the commands.")
 				.define("default_blueprint_folder", "/schematics");
 		ADDITIONAL_BLUEPRINT_FOLDERS = BUILDER.comment("Additional blueprint paths that are aviable in the commands via their names.")
-				.defineList("aditional_blueprint_folders", (List<String>) Arrays.asList("world:/saves/" + WORLD_FOLDER_KEY + "/generated/minecraft/structures", "worldedit:/config/worldedit/schematics", "global:/schematics"), s -> true);
+				.defineList("aditional_blueprint_folders", (List<String>) Arrays.asList("world:/saves/" + WORLD_FOLDER_KEY + "/generated/minecraft/structures", "worldedit:/config/worldedit/schematics", "global:/schematics"), null, s -> true);
 		DEFAULT_BLUEPRINT_FORMAT = BUILDER.comment("The default format used by the save and load command.")
 				.defineEnum("default_blueprint_format", BlueprintFormat.NBT);
 		DEFAULT_IMAGE_FOLDER = BUILDER.comment("Default image folder used if no path specified in the commands.")
 				.define("default_image_folder", "/images");
 		ADDITIONAL_IMAGE_FOLDERS = BUILDER.comment("Additional image paths that are aviable in the commands via their names.")
-				.defineList("aditional_image_folders", (List<String>) Arrays.asList("world:/saves/" + WORLD_FOLDER_KEY + "/generated/industria/images", "global:/images"), s -> true);
+				.defineList("aditional_image_folders", (List<String>) Arrays.asList("world:/saves/" + WORLD_FOLDER_KEY + "/generated/industria/images", "global:/images"), null, s -> true);
 		BUILDER.pop();
 		
 		BUILDER.comment("Settings for the pixel art generator");
 		BUILDER.push(CATEGORY_PIXELART);
 		DEFAULT_BLOCK_WHITELIST = BUILDER.comment("Default list of blocks to prefer when creating an pixel art.")
-				.defineList("default_block_whitelist", DEFAULT_WHITELIST, s -> BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse((String) s)));
+				.defineList("default_block_whitelist", DEFAULT_WHITELIST, null, s -> BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse((String) s)));
 		DEFAULT_BLOCK_BLACKLIST = BUILDER.comment("Default list of blocks to never use when creating an pixel art.")
-				.defineList("default_block_blacklist", DEFAULT_BLACKLIST, s -> BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse((String) s)));
+				.defineList("default_block_blacklist", DEFAULT_BLACKLIST, null, s -> BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse((String) s)));
 		BUILDER.pop();
 		
 		CONFIG = BUILDER.build();

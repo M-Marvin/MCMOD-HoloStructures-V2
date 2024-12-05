@@ -84,6 +84,9 @@
 "holostruct.commands.pixelart.shadowing.enabled": "§23D shading is §fenabled",
 "holostruct.commands.pixelart.shadowing.disabled": "§23D shading is §fdisabled",
 
-"holostruct.commands.argument.filepath.invalid": "File path is invalid!"
+"holostruct.commands.argument.filepath.invalid": "File path is invalid!",
+
+"holostruct.actionbar.hologramupdate": "§2Updating hologram ... %s %% [%d/%d]",
+"holostruct.actionbar.sectionlimit": "§2To large to update! Limit in config: %d §2Current hologram: %d"
 
 }

@@ -1,0 +1,251 @@
+{
+    "targets": {
+        "swap": {}
+    },
+    "passes": [
+		{
+			"program": "holostruct:post/color_mod",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "holostruct:holographic/wrong_data"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "holostruct:holographic/wrong_data",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.2, 0.2, 0.2 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.0, 0.0, 0.35 ]
+                }
+			]
+		},
+		{
+			"program": "holostruct:post/scanline",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "swap"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "swap",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "minecraft:main",
+			"uniforms": [
+				{
+		            "name": "Alpha",
+		            "values": [ 0.8 ]
+		        }
+			]
+		},
+		{
+			"program": "holostruct:post/color_mod",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "holostruct:holographic/wrong_state"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "holostruct:holographic/wrong_state",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.6, 0.6, 0.6 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.6, 0.6, 0.6 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.20, 0.20, 0.0 ]
+                }
+			]
+		},
+		{
+			"program": "holostruct:post/scanline",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "swap"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "swap",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "minecraft:main",
+			"uniforms": [
+				{
+		            "name": "Alpha",
+		            "values": [ 0.8 ]
+		        }
+			]
+		},
+		{
+			"program": "holostruct:post/color_mod",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "holostruct:holographic/wrong_block"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "holostruct:holographic/wrong_block",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.2, 0.2, 0.2 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "Offset",
+                    "values": [ 0.35, 0.0, 0.0 ]
+                }
+			]
+		},
+		{
+			"program": "holostruct:post/scanline",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "swap"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "swap",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "minecraft:main",
+			"uniforms": [
+				{
+                    "name": "Alpha",
+                    "values": [ 0.8 ]
+                }
+			]
+		},
+		{
+			"program": "holostruct:post/color_mod",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "holostruct:holographic/no_block"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "holostruct:holographic/no_block",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "swap",
+			"uniforms": [
+				{
+                    "name": "RedMatrix",
+                    "values": [ 0.8, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.0, 0.8, 0.0 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.8 ]
+                }
+			]
+		},
+		{
+			"program": "holostruct:post/scanline",
+			"inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "swap"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "swap",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "minecraft:main",
+			"uniforms": [
+				{
+                    "name": "Alpha",
+                    "values": [ 0.8 ]
+                }
+			]
+		}
+    ]
+}

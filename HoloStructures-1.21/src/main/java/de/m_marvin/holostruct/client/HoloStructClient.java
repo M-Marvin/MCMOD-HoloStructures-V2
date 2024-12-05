@@ -32,6 +32,7 @@ import de.m_marvin.holostruct.levelbound.network.SetBlockStatePackage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -103,6 +104,17 @@ public class HoloStructClient {
 		HoloStruct.CLIENT.COMMAND_DISPATCHER.reloadReverseMap(event.getLanguage());
 	}
 	
+	@SuppressWarnings("resource")
+	public static void updateTaskInfo(int count, int completed) {
+		float progress = completed / (float) count * 100;
+		Minecraft.getInstance().gui.setOverlayMessage(Component.translatable("holostruct.actionbar.hologramupdate", String.format("%.2f", progress), completed, count), false);
+	}
+
+	@SuppressWarnings("resource")
+	public static void notifyTaskLimit(int taskCount) {
+		Minecraft.getInstance().gui.setOverlayMessage(Component.translatable("holostruct.actionbar.sectionlimit", taskCount, ClientConfig.AUTO_UPDATE_ALL.get()), false);
+	}
+
 	private static void updateAccessPermisson() {
 		if (ServerConfig.ALLOW_READ.get()) {
 			@SuppressWarnings("resource")

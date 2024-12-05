@@ -10,9 +10,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.m_marvin.holostruct.HoloStruct;
+import de.m_marvin.holostruct.client.holograms.rendering.posteffect.PostChainHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -27,11 +29,11 @@ public class DebugCommand {
 		.then(
 				Commands.literal("framedump")
 				.then(
-						Commands.argument("framebuffer", StringArgumentType.string())
+						Commands.argument("framebuffer", ResourceLocationArgument.id())
 						.then(
 								Commands.argument("file", StringArgumentType.word())
 								.executes(source ->
-										dumpFrame(source, StringArgumentType.getString(source, "framebuffer"), StringArgumentType.getString(source, "file"))
+										dumpFrame(source, ResourceLocationArgument.getId(source, "framebuffer"), StringArgumentType.getString(source, "file"))
 								)	
 						)
 				)
@@ -50,12 +52,12 @@ public class DebugCommand {
 	public static int changePostEffect(CommandContext<CommandSourceStack> source, String postEffectName) {
 		try {
 			ResourceLocation effect = ResourceLocation.parse(postEffectName);
-//			if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(effect)) {
+			if (!HoloStruct.CLIENT.HOLORENDERER.loadPostEffect(effect)) {
 				source.getSource().sendFailure(Component.literal("Failed to apply shader!"));
 				return 0;
-//			}
-//			source.getSource().sendSuccess(() -> Component.literal("Applied shader"), false);
-//			return 1;
+			}
+			source.getSource().sendSuccess(() -> Component.literal("Applied shader"), false);
+			return 1;
 		} catch (Throwable e) {
 			source.getSource().sendFailure(Component.literal("An exception was thrown!"));
 			return 0;
@@ -63,7 +65,7 @@ public class DebugCommand {
 	}
 	
 	@SuppressWarnings("resource")
-	public static int dumpFrame(CommandContext<CommandSourceStack> source, String framebufferName, String fileName) {
+	public static int dumpFrame(CommandContext<CommandSourceStack> source, ResourceLocation framebufferName, String fileName) {
 		
 		if (!RenderSystem.isOnRenderThread()) {
 			source.getSource().sendFailure(Component.literal("Not on render thread!"));
@@ -72,25 +74,25 @@ public class DebugCommand {
 		
 		try {
 			
-//			SelectivePostChain postChain = HoloStruct.CLIENT.HOLORENDERER.getActivePostEffect();
-//			if (postChain != null) {
-//				RenderTarget framebuffer = postChain.getTempTarget(framebufferName);
-//				if (framebuffer != null) {
-//					NativeImage frameimage = new NativeImage(framebuffer.width, framebuffer.height, false);
-//					RenderSystem.bindTexture(framebuffer.getColorTextureId());
-//					frameimage.downloadTexture(0, false);
-//					frameimage.flipY();
-//					
-//					File folder = new File(Minecraft.getInstance().gameDirectory, "framedump");
-//					folder.mkdir();
-//					frameimage.writeToFile(new File(folder, fileName + ".png"));
-//					
-//					frameimage.close();
-//					
-//					source.getSource().sendSuccess(() -> Component.literal("Saved frame to file"), false);
-//					return 1;
-//				}
-//			}
+			PostChainHandler postChain = HoloStruct.CLIENT.HOLORENDERER.getActivePostEffect();
+			if (postChain != null) {
+				RenderTarget framebuffer = postChain.getTarget(framebufferName);
+				if (framebuffer != null) {
+					NativeImage frameimage = new NativeImage(framebuffer.width, framebuffer.height, false);
+					RenderSystem.bindTexture(framebuffer.getColorTextureId());
+					frameimage.downloadTexture(0, false);
+					frameimage.flipY();
+					
+					File folder = new File(Minecraft.getInstance().gameDirectory, "framedump");
+					folder.mkdir();
+					frameimage.writeToFile(new File(folder, fileName + ".png"));
+					
+					frameimage.close();
+					
+					source.getSource().sendSuccess(() -> Component.literal("Saved frame to file"), false);
+					return 1;
+				}
+			}
 			
 			source.getSource().sendFailure(Component.literal("Framebuffer not found!"));
 			return 0;

@@ -122,6 +122,7 @@ public class TypeConverter {
 	 * @param entity The entity instance
 	 * @return The entity data type or null if it was not possible to convert
 	 */
+	@SuppressWarnings("removal")
 	public static EntityData entity2data(Entity entity) {
 		if (entity == null) return null;
 		RegistryName entityName = resLoc2data(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));

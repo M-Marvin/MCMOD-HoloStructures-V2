@@ -27,6 +27,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -112,6 +113,11 @@ public class HoloStruct {
 				CLIENT.onAccessPermissionsReceived(payload, context);
 			}
 		});
+	}
+
+	@SubscribeEvent
+	public static void onResourceReloadRegister(RegisterClientReloadListenersEvent event) {
+		event.registerReloadListener(HoloStruct.CLIENT.HOLORENDERER);
 	}
 	
 	public static void handlePermissonRequest(QueryAccessPermissions pkg, IPayloadContext context) {

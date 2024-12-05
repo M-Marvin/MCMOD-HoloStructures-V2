@@ -146,7 +146,6 @@ public interface IFakeLevelAccess extends LevelAccessor {
 		return true;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public default int getSeaLevel() {
 		return getLevel().getSeaLevel();

@@ -1,12 +1,13 @@
 {
 	"required": true,
-	"package": "de.m_marvin.holostruct.mixin",
+	"package": "de.m_marvin.holostruct.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 	],
 	"client": [
 		"ClientBlockStateDetection",
-		"ClientLanguageInjectDetection"
+		"ClientLanguageInjectDetection",
+		"PostChainSlectiveInjection"
 	],
 	"minVersion": "0.8"
 }

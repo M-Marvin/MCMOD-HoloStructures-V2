@@ -60,8 +60,20 @@ public class PreviewRenderer {
 			int posX = graphics.guiWidth() - 128 - 15;
 			int posY = 5;
 			
-			graphics.fill(posX, posY, posX + 128 + 10, posY + 128 + 10, 0xB0202020);
-			graphics.blit(RenderType::guiTextured, PREVIEW_TEXTURE_LOC, posX + 5, posY + 5, 0, 0, 0, 128, 128, 128, 128);
+			graphics.fill(posX, posY, posX + 128 + 10, posY + 128 + 10, 0x800A0A0A);
+			
+			
+			graphics.blit(RenderType::guiTextured, PREVIEW_TEXTURE_LOC, posX + 5, posY + 5, 0.0F, 0.0F, 128, 128, 128, 128);
+//			graphics.blit(RenderType::guiTextured, ResourceLocation.parse("minecraft:textures/gui/container/crafting_table.png"), 
+//					0, 
+//					posX + 5, 
+//					0, 
+//					posY + 5, 
+//					0.0F, 
+//					.0F, 
+//					0.0F, 
+//					1.0F, 
+//					0xFFFFFFFF);
 		}
 		
 	}

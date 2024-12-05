@@ -11,10 +11,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.MeshData.SortState;
 
 import de.m_marvin.holostruct.client.holograms.BlockHoloState;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
@@ -103,11 +101,6 @@ public class HologramBufferContainer {
 			}
 			return meshdata;
 		}
-		
-//		public SortState makeSortState(RenderType pRenderType) {
-//			BufferBuilder builder = getBuffer(pRenderType);
-//			return null; // builder.getSortState();
-//		}
 		
 		public void discard() {
 			this.byteBufferBuilders.values().forEach(ByteBufferBuilder::discard);

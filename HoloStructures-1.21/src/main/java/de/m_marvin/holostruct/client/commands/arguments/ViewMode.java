@@ -10,9 +10,9 @@ import net.minecraft.resources.ResourceLocation;
 public enum ViewMode {
 	
 	VANILLA("vanilla", null),
-	BASE("base", ResourceLocation.fromNamespaceAndPath(HoloStruct.MODID, "shaders/post/base.json")),
-	SCANLINE("scanline", ResourceLocation.fromNamespaceAndPath(HoloStruct.MODID, "shaders/post/scanline.json")),
-	CREEPER("creeper", ResourceLocation.fromNamespaceAndPath(HoloStruct.MODID, "shaders/post/creeper.json"));
+	BASE("base", ResourceLocation.fromNamespaceAndPath(HoloStruct.MODID, "base")),
+	SCANLINE("scanline", ResourceLocation.fromNamespaceAndPath(HoloStruct.MODID, "scanline")),
+	CREEPER("creeper", ResourceLocation.fromNamespaceAndPath(HoloStruct.MODID, "creeper"));
 	
 	private final ResourceLocation postEffect;
 	private final String name;

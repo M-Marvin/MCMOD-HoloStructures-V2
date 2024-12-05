@@ -77,6 +77,10 @@ public class Levelbound {
 		this.accessor = new NoAccessAccessor();
 	}
 	
+	public int getTaskCount() {
+		return tasks.size();
+	}
+	
 	/**
 	 * Start the task thread.
 	 * The task thread executes the asynchronous tasks that use the {@link IRemoteLevelAccessor}
@@ -138,7 +142,6 @@ public class Levelbound {
 				}
 				if (task != null) {
 					task.run();
-//					System.out.println("Run task"); // TODO task problem
 				}
 			} catch (Throwable e) {
 				HoloStruct.LOGGER.warn("Error while executing levelbound task: {}", e);

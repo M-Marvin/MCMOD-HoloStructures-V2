@@ -14,6 +14,8 @@ import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
+import de.m_marvin.holostruct.client.ClientConfig;
+import de.m_marvin.holostruct.client.HoloStructClient;
 import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
 import de.m_marvin.univec.impl.Vec3i;
@@ -295,7 +297,6 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 				.thenRunAsync(() -> {
 					BlockHoloState state = BlockHoloState.getHoloState(targetState.join(), holoState, targetBE.join(), holoBE);
 					setHoloState(holoPos, state);
-
 					if (markDirty) markSectionDirty(new ChunkPos(new BlockPos(holoPos.x, holoPos.y, holoPos.z)), holoPos.y >> 4);
 				})
 				.exceptionally(e -> {
@@ -312,7 +313,24 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 	 * @param target The target to compare the hologram with, normally an level {@link IRemoteLevelAccessor} to the real world
 	 */
 	public void updateHoloStates(IRemoteLevelAccessor target) {
+		
 		CompletableFuture.runAsync(() -> {
+			
+			try { Thread.sleep(1000); } catch (InterruptedException e) {}
+			
+			// Count sections to update
+			int taskCount = 0;
+			for (HologramChunk chunk : this.chunks.values()) {
+				taskCount += chunk.sections.int2ObjectEntrySet().size();
+			}
+			
+			if (taskCount > ClientConfig.AUTO_UPDATE_ALL.get()) {
+				HoloStructClient.notifyTaskLimit(taskCount);
+				return;
+			}
+			
+			// Update sections and print progress
+			int completed = 0;
 			for (HologramChunk chunk : this.chunks.values()) {
 				Vec3i chunkPos = new Vec3i(chunk.position.getMinBlockX(), 0, chunk.position.getMinBlockZ());
 				for (Entry<Integer, HologramSection> section : chunk.sections.int2ObjectEntrySet()) {
@@ -328,7 +346,9 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 					}
 					HoloStruct.CLIENT.LEVELBOUND.safeExecute(() -> markSectionDirty(chunk.position, section.getKey()));
 					
-					try { Thread.sleep(200); } catch (InterruptedException e) {}
+					try { Thread.sleep(ClientConfig.SECTION_UPDATE_DELAY.get()); } catch (InterruptedException e) {}
+					
+					HoloStructClient.updateTaskInfo(taskCount, ++completed);
 				}
 			}
 		});

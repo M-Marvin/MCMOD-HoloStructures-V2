@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 
 import net.neoforged.fml.ModContainer;
@@ -45,7 +44,7 @@ public class ServerConfig {
 	public static void load(String config) {
 		try {
 			CommentedConfig configuration = TomlFormat.instance().createParser().parse(config);
-			//CONFIG.acceptConfig((ILoadedConfig) configuration); // TODO CONFIG
+			//CONFIG.acceptConfig((ILoadedConfig) configuration); // FIXME CONFIG
 		} catch (Throwable e) {
 			HoloStruct.LOGGER.error("Failed to read remote server configuration string: {}", e);
 		}

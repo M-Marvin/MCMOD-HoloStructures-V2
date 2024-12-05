@@ -1,0 +1,65 @@
+{
+    "targets": {
+        "swap": {}
+    },
+    "passes": [
+        {
+            "program": "holostruct:post/color_convolve",
+            "inputs": [
+				{
+					"sampler_name": "Main",
+					"target": "minecraft:main"
+				},
+				{
+					"sampler_name": "Diffuse",
+					"target": "holostruct:holographic/no_block"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "holostruct:holographic/no_block",
+					"use_depth_buffer": true
+				}
+			],
+            "output": "swap",
+            "uniforms": [
+                {
+                    "name": "RedMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "name": "GreenMatrix",
+                    "values": [ 0.3, 0.59, 0.11 ]
+                },
+                {
+                    "name": "BlueMatrix",
+                    "values": [ 0.0, 0.0, 0.0 ]
+                }
+            ]
+        },
+        {
+            "program": "holostruct:post/bits",
+			"inputs": [
+				{
+					"sampler_name": "Diffuse",
+					"target": "swap"
+				},
+				{
+					"sampler_name": "Depth",
+					"target": "swap",
+					"use_depth_buffer": true
+				}
+			],
+			"output": "minecraft:main",
+            "uniforms": [
+                {
+                    "name": "Resolution",
+                    "values": [ 16.0 ]
+                },
+                {
+                    "name": "MosaicSize",
+                    "values": [ 4.0 ]
+                }
+            ]
+        }
+    ]
+}

@@ -280,7 +280,6 @@ public class PixelArtCommand {
 	
 	public static int openFolder(CommandContext<CommandSourceStack> source, String folder) {
 		File folderPath = FilePathArgument.resolvePath(folder);
-		System.out.println(folder + " -> " + folderPath);
 		if (folderPath.isFile()) folderPath = folderPath.getParentFile();
 		if (!folderPath.isDirectory()) folderPath.mkdir();
 		Util.getPlatform().openFile(folderPath);

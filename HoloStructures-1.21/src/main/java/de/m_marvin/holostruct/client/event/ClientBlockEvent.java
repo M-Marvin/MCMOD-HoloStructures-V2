@@ -1,6 +1,6 @@
 package de.m_marvin.holostruct.client.event;
 
-import de.m_marvin.holostruct.mixin.ClientBlockStateDetection;
+import de.m_marvin.holostruct.client.mixin.ClientBlockStateDetection;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
