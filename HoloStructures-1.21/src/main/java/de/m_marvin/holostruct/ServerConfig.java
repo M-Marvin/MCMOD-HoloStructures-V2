@@ -1,13 +1,17 @@
 package de.m_marvin.holostruct;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
 
+import de.m_marvin.holostruct.client.ClientConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.IConfigSpec.ILoadedConfig;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.config.ModConfig.Type;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -44,7 +48,23 @@ public class ServerConfig {
 	public static void load(String config) {
 		try {
 			CommentedConfig configuration = TomlFormat.instance().createParser().parse(config);
-			//CONFIG.acceptConfig((ILoadedConfig) configuration); // FIXME CONFIG
+			
+			// Get client loaded config
+			Field loadedConfigField = ClientConfig.CONFIG.getClass().getDeclaredField("loadedConfig");
+			loadedConfigField.setAccessible(true);
+			ILoadedConfig clientLoadedConfig = (ILoadedConfig) loadedConfigField.get(ClientConfig.CONFIG);
+			
+			// Get mod config from client loaded config
+			Field modConfigField = clientLoadedConfig.getClass().getDeclaredField("modConfig");
+			modConfigField.setAccessible(true);
+			ModConfig modConfig = (ModConfig) modConfigField.get(clientLoadedConfig);
+			
+			// Construct new server config from parsed commented config and client mod config
+			Class<?> loadedConfigClass = Class.forName("net.neoforged.fml.config.LoadedConfig");
+			Constructor<?> constr = loadedConfigClass.getConstructor(CommentedConfig.class, Path.class, ModConfig.class);
+			ILoadedConfig serverLoadedConfig = (ILoadedConfig) constr.newInstance((CommentedConfig) configuration, null, modConfig);
+			
+			CONFIG.acceptConfig(serverLoadedConfig);
 		} catch (Throwable e) {
 			HoloStruct.LOGGER.error("Failed to read remote server configuration string: {}", e);
 		}

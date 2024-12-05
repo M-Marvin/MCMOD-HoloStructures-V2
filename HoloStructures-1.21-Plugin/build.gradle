@@ -25,8 +25,8 @@
  
  dependencies {
  	
- 	implementation "spigot:spigot-api-1.20.4-R0.1-SNAPSHOT";
-	implementation "spigot:spigot-1.20.4-R0.1-SNAPSHOT";
+ 	implementation "spigot:spigot-api-1.21.3-R0.1-SNAPSHOT";
+	implementation "spigot:spigot-1.21.3-R0.1-SNAPSHOT";
 	
  }
  
