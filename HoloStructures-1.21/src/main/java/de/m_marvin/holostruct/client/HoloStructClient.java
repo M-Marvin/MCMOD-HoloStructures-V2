@@ -155,6 +155,7 @@ public class HoloStructClient {
 	public void onAccessPermissionsReceived(QueryAccessPermissions pkg, IPayloadContext context) {
 		HoloStruct.LOGGER.info("HS2/Permissons Received configuation from server!");
 		String config = pkg.config();
+		HoloStruct.LOGGER.debug("HS2/Permissons Config:\n" + config);
 		ServerConfig.load(config);
 		updateAccessPermisson();
 	}

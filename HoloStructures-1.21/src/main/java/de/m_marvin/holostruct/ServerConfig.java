@@ -3,7 +3,7 @@ package de.m_marvin.holostruct;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.toml.TomlFormat;
@@ -45,7 +45,7 @@ public class ServerConfig {
 		load("");
 	}
 	
-	public static void load(String config) {
+	public static boolean load(String config) {
 		try {
 			CommentedConfig configuration = TomlFormat.instance().createParser().parse(config);
 			
@@ -61,12 +61,15 @@ public class ServerConfig {
 			
 			// Construct new server config from parsed commented config and client mod config
 			Class<?> loadedConfigClass = Class.forName("net.neoforged.fml.config.LoadedConfig");
-			Constructor<?> constr = loadedConfigClass.getConstructor(CommentedConfig.class, Path.class, ModConfig.class);
+			Constructor<?> constr = Stream.of(loadedConfigClass.getDeclaredConstructors()).findFirst().get(); // This entire code is sketchy, so it does not matter at this point ...
+			constr.setAccessible(true);
 			ILoadedConfig serverLoadedConfig = (ILoadedConfig) constr.newInstance((CommentedConfig) configuration, null, modConfig);
 			
 			CONFIG.acceptConfig(serverLoadedConfig);
+			return true;
 		} catch (Throwable e) {
 			HoloStruct.LOGGER.error("Failed to read remote server configuration string: {}", e);
+			return false;
 		}
 	}
 	

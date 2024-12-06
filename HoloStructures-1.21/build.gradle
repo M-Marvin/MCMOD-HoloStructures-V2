@@ -159,6 +159,10 @@ tasks.withType(ProcessResources).configureEach {
     }
 }
 
+tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+	configurations = [project.configurations.shade]
+}
+
 jar {
     manifest {
         attributes 'Implementation-Version': version
