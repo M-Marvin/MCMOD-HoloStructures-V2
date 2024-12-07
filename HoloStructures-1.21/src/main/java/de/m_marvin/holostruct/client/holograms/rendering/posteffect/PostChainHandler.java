@@ -14,6 +14,12 @@ import net.minecraft.resources.ResourceLocation;
 
 public class PostChainHandler {
 
+	private static boolean injectSelectiveOverride = false;
+	
+	public static boolean isInjectSelectiveOverrideEnabled() {
+		return injectSelectiveOverride;
+	}
+	
 	private PostChain activePostEffect;
     private final CrossFrameResourcePool resourcePool = new CrossFrameResourcePool(3);
 	private FrameGraphBuilder frameGraph;
@@ -52,6 +58,9 @@ public class PostChainHandler {
 	}
 	
 	public void applyToFrame(RenderTarget target) {
+        // Enable PostChainSelectiveInjection
+		injectSelectiveOverride = true;
+		
 		MapTargetBundle targets = new MapTargetBundle();
 		for (var entry : this.targets.entrySet()) {
 			targets.addTarget(entry.getKey(), entry.getValue());
@@ -59,6 +68,9 @@ public class PostChainHandler {
 		
         this.activePostEffect.addToFrame(this.frameGraph, target.width, target.height, targets);
         this.frameGraph.execute(this.resourcePool);
+        
+        // Disable PostChainSelectiveInjection
+		injectSelectiveOverride = false;
 	}
 	
 }

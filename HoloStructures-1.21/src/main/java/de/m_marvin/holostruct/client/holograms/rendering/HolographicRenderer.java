@@ -125,7 +125,6 @@ public class HolographicRenderer implements ResourceManagerReloadListener {
 				renderer.postChain.registerExternalTarget(LevelTargetBundle.MAIN_TARGET_ID, MAIN_TARGET.get());
 			}
 		} else if (event.getStage() == Stage.AFTER_LEVEL) {
-
 			if (renderer.postChain.hasPostChain()) {
 				try {
 					renderer.postChain.applyToFrame(MAIN_TARGET.get());
@@ -134,11 +133,12 @@ public class HolographicRenderer implements ResourceManagerReloadListener {
 				}
 			}
 		}
-	
+		
 		PoseStack poseStack = event.getPoseStack();
 		poseStack.pushPose();
-		renderer.translateToWorld(poseStack, true);
 		
+		renderer.translateToWorld(poseStack, true);
+
 		if (event.getStage() == Stage.AFTER_SOLID_BLOCKS) {
 			renderer.renderHolograms(poseStack, event.getProjectionMatrix(), RenderType.solid());
 		} else if (event.getStage() == Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS) {
@@ -157,10 +157,8 @@ public class HolographicRenderer implements ResourceManagerReloadListener {
 			poseStack.pushPose();
 			renderer.translateToWorld(poseStack, false);
 			renderer.renderHologramBounds(poseStack);
-		} else 
-			if (event.getStage() == Stage.AFTER_PARTICLES) {
 		}
-		
+
 		poseStack.popPose();
 		
 	}
@@ -625,7 +623,7 @@ public class HolographicRenderer implements ResourceManagerReloadListener {
 		
 		renderLayer.setupRenderState();
 		CompiledShaderProgram shader = RenderSystem.getShader();
-		Uniform chunkOffset =shader.MODEL_OFFSET;
+		Uniform chunkOffset = shader.MODEL_OFFSET;
 		Uniform modelViewMatrix = shader.MODEL_VIEW_MATRIX;
 
 		// Disable fog, does not work well with holograms
@@ -681,6 +679,9 @@ public class HolographicRenderer implements ResourceManagerReloadListener {
 			}
 			
 		});
+		
+		// Looks like minecraft is not smart enough the clear its uniforms before rendering stuff, so i need to do it ...
+		if (chunkOffset != null) chunkOffset.set(0F, 0F, 0F);
 		
 		RenderSystem.disablePolygonOffset();
 		
