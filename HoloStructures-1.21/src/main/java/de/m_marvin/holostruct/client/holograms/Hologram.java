@@ -31,6 +31,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -362,6 +363,10 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 		if (chunk.isEmpty()) return;
 		chunk.get().setBlock(position, state);
 		if (chunk.get().isEmpty()) discardChunk(chunk.get());
+		if (state.hasBlockEntity() && state.getBlock() instanceof EntityBlock block) {
+			BlockEntity blockEntity = block.newBlockEntity(position, state);
+			chunk.get().setBlockEntity(position, blockEntity);;
+		}
 		markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 		this.updateBounds = true;
 	}
