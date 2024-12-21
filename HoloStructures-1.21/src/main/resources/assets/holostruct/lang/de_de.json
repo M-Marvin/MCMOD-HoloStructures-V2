@@ -87,7 +87,7 @@
 "holostruct.commands.pixelart.shadowing.enabled": "§23D-Schattierungen sind §faktiviert",
 "holostruct.commands.pixelart.shadowing.disabled": "§23D-Schattierungen sind §fdekativiert",
 
-"holostruct.commands.argument.filepath.invalid": "§2Datei-Pfad ist ungültig!",
+"holostruct.commands.argument.filepath.invalid": "Datei-Pfad ist ungültig!",
 
 "holostruct.actionbar.hologramupdate": "§2Aktualisiere Hologramm ... %s %% [%d/%d]",
 "holostruct.actionbar.sectionlimit": "§2Zu groß zum aktuallisieren! Limit in Config: %d §2Aktuelles Hologramm: %d"
