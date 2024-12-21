@@ -116,7 +116,12 @@ public class HologramChunk {
 	}
 	
 	public void setBlockEntity(BlockPos position, BlockEntity blockentity) {
-		this.blockentities.put(new BlockPos(position.getX() & 15, position.getY(), position.getZ() & 15), blockentity);
+		BlockPos pos = new BlockPos(position.getX() & 15, position.getY(), position.getZ() & 15);
+		if (blockentity == null) {
+			this.blockentities.remove(pos);
+		} else {
+			this.blockentities.put(pos, blockentity);
+		}
 	}
 	
 }

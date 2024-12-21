@@ -17,7 +17,6 @@ public class AddEntityCommand extends Command<Boolean> {
 		this.position = entityData.getPosition();
 		this.data = entityData;
 		this.entityDisplayName = TypeConverter.data2entity(data).getDisplayName().getString();
-		
 	}
 	
 	@Override

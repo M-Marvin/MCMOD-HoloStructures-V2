@@ -5,7 +5,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import de.m_marvin.blueprints.api.RegistryName;
@@ -30,6 +34,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -45,6 +50,14 @@ public class TypeConverter {
 	public static final Supplier<RegistryAccess> HOLDER = () -> Minecraft.getInstance().level.registryAccess();
 	
 	public static final BlockStateData AIR_STATE = new BlockStateData(new RegistryName("minecraft:air"));
+	
+	public static final Map<String, Set<String>> MISSING_IDS = new HashMap<>(); 
+	
+	protected static void addMissing(RegistryName name) {
+		if (!MISSING_IDS.containsKey(name.getNamespace()))
+			MISSING_IDS.put(name.getNamespace(), new HashSet<>());
+		MISSING_IDS.get(name.getNamespace()).add(name.getName());
+	}
 	
 	/**
 	 * Converts an actual blocks state to an data type.
@@ -64,12 +77,15 @@ public class TypeConverter {
 	/**
 	 * Constructs an actual block state from an data type.
 	 * @param data The block state data type
-	 * @return The actual block state or null if it was not possible to convert.
+	 * @return The actual block state.
 	 */
 	public static BlockState data2blockState(BlockStateData data) {
-		if (data == null) return null;
+		if (data == null) return Blocks.AIR.defaultBlockState();
 		Optional<Reference<Block>> block = BuiltInRegistries.BLOCK.get(data2resLoc(data.getBlockName()));
-		if (block.isEmpty()) return null;
+		if (block.isEmpty()) {
+			addMissing(data.getBlockName());
+			return Blocks.AIR.defaultBlockState();
+		}
 		BlockState state = block.get().value().defaultBlockState();
 		for (Property<?> prop : state.getProperties()) {
 			state = setProperty(state, prop, data.getValue(prop.getName()));
@@ -110,7 +126,10 @@ public class TypeConverter {
 	public static BlockEntity data2blockEntity(BlockState block, BlockEntityData data) {
 		if (data == null) return null;
 		Optional<Reference<BlockEntityType<?>>> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.get(data2resLoc(data.getTypeName()));
-		if (type.isEmpty()) return null;
+		if (type.isEmpty()) {
+			addMissing(data.getTypeName());
+			return null;
+		}
 		BlockPos position = new BlockPos(data.getPosition().x, data.getPosition().y, data.getPosition().z);
 		BlockEntity blockEntity = type.get().value().create(position, block);
 		blockEntity.loadWithComponents(data2nbt(data.getData()), HOLDER.get());
@@ -140,7 +159,10 @@ public class TypeConverter {
 	public static Entity data2entity(EntityData data) {
 		if (data == null) return null;
 		Optional<Reference<EntityType<?>>> type = BuiltInRegistries.ENTITY_TYPE.get(data2resLoc(data.getEntityName()));
-		if (type.isEmpty()) return null;
+		if (type.isEmpty()) {
+			addMissing(data.getEntityName());
+			return null;
+		}
 		Vec3 position = new Vec3(data.getPosition().x, data.getPosition().y, data.getPosition().z);
 		@SuppressWarnings("resource")
 		Entity entity = type.get().value().create(Minecraft.getInstance().level, EntitySpawnReason.LOAD);

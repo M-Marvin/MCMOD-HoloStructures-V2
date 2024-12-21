@@ -9,6 +9,7 @@ import com.mojang.math.OctahedralGroup;
 
 import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.holostruct.HoloStruct;
+import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.HologramArgument;
 import de.m_marvin.holostruct.client.commands.arguments.ViewMode;
@@ -331,11 +332,22 @@ public class HologramCommand {
 		final Blueprint blueprintF = blueprint;
 		CompletableFuture.runAsync(() -> {
 			BlockPos position = UtilHelper.toBlockPos(source.getSource().getPosition());
+			TypeConverter.MISSING_IDS.clear();
 			Hologram hologram = HoloStruct.CLIENT.HOLOGRAMS.createHologram(blueprintF, position, hologramName);
 			
 			if (hologram == null) {
 				source.getSource().sendFailure(Component.translatable("holostruct.commands.hologram.create.failed", hologramName));
 				return;
+			}
+			
+			if (TypeConverter.MISSING_IDS.size() > 0) {
+				source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.missing.title"), false);
+				for (String namespace : TypeConverter.MISSING_IDS.keySet()) {
+					source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.missing.namespace", namespace), false);
+					for (String id : TypeConverter.MISSING_IDS.get(namespace)) {
+						source.getSource().sendSuccess(() -> Component.translatable("holostruct.commands.hologram.create.missing.id", id), false);
+					}
+				}
 			}
 			
 			hologram.updateHoloStates(HoloStruct.CLIENT.LEVELBOUND.getAccessor());

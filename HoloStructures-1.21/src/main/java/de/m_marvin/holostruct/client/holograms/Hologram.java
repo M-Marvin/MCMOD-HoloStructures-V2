@@ -382,7 +382,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 		Optional<HologramChunk> chunk = getChunkAt(position);
 		if (chunk.isPresent()) {
 			chunk.get().setBlockEntity(position, blockentity);
-			blockentity.setLevel(this.level);
+			if (blockentity != null) blockentity.setLevel(this.level);
 			markSectionDirty(chunk.get().getPosition(), position.getY() >> 4);
 			this.updateBounds = true;
 		}
@@ -413,6 +413,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 	}
 	
 	public void addEntity(Entity entity) {
+		if (entity == null) return;
 		if (!this.entities.containsKey(entity.getId())) {
 			this.entities.put(entity.getId(), entity);
 		} else {
@@ -458,7 +459,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 
 	@Override
 	public void addEntities(Collection<EntityData> entities) {
-		entities.stream().map(TypeConverter::data2entity).forEach(this::addEntity);
+		entities.stream().map(TypeConverter::data2entity).filter(e -> e != null).forEach(this::addEntity);
 	}
 
 	@Override
