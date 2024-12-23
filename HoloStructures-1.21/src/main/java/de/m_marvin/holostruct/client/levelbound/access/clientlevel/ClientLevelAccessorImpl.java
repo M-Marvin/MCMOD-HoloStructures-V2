@@ -8,7 +8,6 @@ import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.Levelbound.AccessLevel;
 import de.m_marvin.holostruct.client.levelbound.access.AccessDeniedException;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
@@ -17,6 +16,7 @@ import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.Comm
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.SetBlockEntityCommand;
 import de.m_marvin.holostruct.client.levelbound.access.clientlevel.commands.SetBlockStateCommand;
 import de.m_marvin.holostruct.client.levelbound.access.serverlevel.ServerLevelAccessorImpl;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.m_marvin.blueprints.api.IBlueprintAcessor;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

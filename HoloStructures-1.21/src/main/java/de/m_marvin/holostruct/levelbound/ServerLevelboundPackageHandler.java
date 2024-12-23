@@ -2,13 +2,13 @@ package de.m_marvin.holostruct.levelbound;
 
 import java.util.List;
 
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.levelbound.network.AddEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.GetBlockEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.GetBlockStatePackage;
 import de.m_marvin.holostruct.levelbound.network.GetEntitiesPackage;
 import de.m_marvin.holostruct.levelbound.network.SetBlockEntityPackage;
 import de.m_marvin.holostruct.levelbound.network.SetBlockStatePackage;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -48,7 +48,7 @@ public class ServerLevelboundPackageHandler {
 		context.enqueueWork(() -> {
 			BlockPos position = new BlockPos(pkg.getData().getPosition().x, pkg.getData().getPosition().y, pkg.getData().getPosition().z);
 			BlockState block = context.player().level().getBlockState(position);
-			BlockEntity blockEntity = TypeConverter.data2blockEntity(block, pkg.getData());
+			BlockEntity blockEntity = TypeConverter.data2blockEntity(context.player().getServer().registryAccess(), block, pkg.getData());
 			context.player().level().setBlockEntity(blockEntity);
 			context.reply(pkg.makeResponse(true));
 		});
@@ -60,7 +60,7 @@ public class ServerLevelboundPackageHandler {
 		context.enqueueWork(() -> {
 			BlockPos position = new BlockPos(pkg.getPosition().x, pkg.getPosition().y, pkg.getPosition().z);
 			BlockEntity blockEntity = context.player().level().getBlockEntity(position);
-			context.reply(pkg.makeResponse(TypeConverter.blockEntity2data(blockEntity)));
+			context.reply(pkg.makeResponse(TypeConverter.blockEntity2data(context.player().getServer().registryAccess(), blockEntity)));
 		});
 		
 	}
@@ -68,7 +68,7 @@ public class ServerLevelboundPackageHandler {
 	public void handlerAddEntity(AddEntityPackage pkg, IPayloadContext context) {
 
 		context.enqueueWork(() -> {
-			Entity entity = TypeConverter.data2entity(pkg.getData());
+			Entity entity = TypeConverter.data2entity(context.player().level(), pkg.getData());
 			context.player().level().addFreshEntity(entity);
 			context.reply(pkg.makeResponse(true));
 		});
@@ -80,7 +80,8 @@ public class ServerLevelboundPackageHandler {
 		context.enqueueWork(() -> {
 			AABB aabb = new AABB(pkg.getMin().x, pkg.getMin().y, pkg.getMin().z, pkg.getMax().x, pkg.getMax().y, pkg.getMax().z);
 			List<Entity> entities = context.player().level().getEntities(null, aabb);
-			context.reply(pkg.makeResponse(entities.stream().map(TypeConverter::entity2data).toList()));
+			var holder = context.player().getServer().registryAccess();
+			context.reply(pkg.makeResponse(entities.stream().map(e -> TypeConverter.entity2data(holder, e)).toList()));
 		});
 		
 	}

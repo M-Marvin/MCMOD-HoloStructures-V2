@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import de.m_marvin.blueprints.api.Blueprint;
@@ -16,8 +17,8 @@ import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.ClientConfig;
 import de.m_marvin.holostruct.client.HoloStructClient;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.levelbound.access.IRemoteLevelAccessor;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.univec.impl.Vec3i;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -25,8 +26,10 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -44,6 +47,8 @@ import net.minecraft.world.phys.AABB;
  * @author Marvin Koehler
  */
 public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
+	
+	public static final Supplier<RegistryAccess> HOLDER = () -> Minecraft.getInstance().level.registryAccess();
 	
 	public Vec3i boundsMax;
 	public Vec3i boundsMin;
@@ -437,44 +442,46 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 	public void setBlockEntity(Vec3i position, BlockEntityData blockEntity) {
 		if (blockEntity == null) setBlockEntity(new BlockPos(position.x, position.y, position.z), null);
 		BlockState state = getBlock(new BlockPos(position.x, position.y, position.z));
-		setBlockEntity(new BlockPos(position.x, position.y, position.z), TypeConverter.data2blockEntity(state, blockEntity));
+		setBlockEntity(new BlockPos(position.x, position.y, position.z), TypeConverter.data2blockEntity(HOLDER.get(), state, blockEntity));
 	}
 
 	@Override
 	public BlockEntityData getBlockEntity(Vec3i position) {
 		BlockEntity blockEntity = getBlockEntity(new BlockPos(position.x, position.y, position.z));
 		if (blockEntity == null) return null;
-		return TypeConverter.blockEntity2data(blockEntity);
+		return TypeConverter.blockEntity2data(HOLDER.get(), blockEntity);
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	public void addEntity(EntityData entity) {
-		addEntity(TypeConverter.data2entity(entity));
+		addEntity(TypeConverter.data2entity(Minecraft.getInstance().level, entity));
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	public void addEntity(Vec3i blockPos, EntityData entity) {
-		addEntity(TypeConverter.data2entity(entity));
+		addEntity(TypeConverter.data2entity(Minecraft.getInstance().level, entity));
 	}
 
 	@Override
 	public void addEntities(Collection<EntityData> entities) {
-		entities.stream().map(TypeConverter::data2entity).filter(e -> e != null).forEach(this::addEntity);
+		entities.stream().map(e-> TypeConverter.data2entity(Minecraft.getInstance().level, e)).filter(e -> e != null).forEach(this::addEntity);
 	}
 
 	@Override
 	public Collection<EntityData> getEntities() {
-		return this.entities.values().stream().map(TypeConverter::entity2data).toList();
+		return this.entities.values().stream().map(e -> TypeConverter.entity2data(HOLDER.get(), e)).toList();
 	}
 
 	@Override
 	public Collection<EntityData> getEntitiesOnBlock(Vec3i pos) {
-		return this.getEntitiesInBounds(new AABB(pos.x - 1, pos.y - 1, pos.z - 1, pos.x, pos.y, pos.z)).stream().map(TypeConverter::entity2data).toList();
+		return this.getEntitiesInBounds(new AABB(pos.x - 1, pos.y - 1, pos.z - 1, pos.x, pos.y, pos.z)).stream().map(e -> TypeConverter.entity2data(HOLDER.get(), e)).toList();
 	}
 
 	@Override
 	public Collection<EntityData> getEntitiesWithin(Vec3i min, Vec3i max) {
-		return this.getEntitiesInBounds(new AABB(min.x, min.y, min.z, max.x, max.y, max.z)).stream().map(TypeConverter::entity2data).toList();
+		return this.getEntitiesInBounds(new AABB(min.x, min.y, min.z, max.x, max.y, max.z)).stream().map(e -> TypeConverter.entity2data(HOLDER.get(), e)).toList();
 	}
 
 	@Override
@@ -492,7 +499,7 @@ public class Hologram implements IBlueprintAcessor, IFakeLevelAccess {
 			});
 			chunk.blockentities.forEach((p, blockEntity) -> {
 				Vec3i pos = new Vec3i(chunkpos.getMinBlockX(), 0, chunkpos.getMinBlockZ()).add(Vec3i.fromVec(p));
-				target.setBlockEntity(pos, TypeConverter.blockEntity2data(blockEntity));
+				target.setBlockEntity(pos, TypeConverter.blockEntity2data(HOLDER.get(), blockEntity));
 			});
 		});
 		target.addEntities(this.getEntities());

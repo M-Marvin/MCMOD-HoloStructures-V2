@@ -12,7 +12,7 @@ import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.nbtutility.TagType;
 import de.m_marvin.nbtutility.VarIntUtil;
 import de.m_marvin.nbtutility.nbt.ITagBase;

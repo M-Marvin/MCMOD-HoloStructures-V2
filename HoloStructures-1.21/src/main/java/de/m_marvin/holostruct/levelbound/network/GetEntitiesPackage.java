@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import de.m_marvin.blueprints.api.worldobjects.EntityData;
 import de.m_marvin.holostruct.HoloStruct;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.univec.impl.Vec3d;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

@@ -1,6 +1,7 @@
 package de.m_marvin.holostruct.client.mixin;
 
 import org.lwjgl.opengl.GL11;
+import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -14,7 +15,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.m_marvin.holostruct.client.holograms.rendering.posteffect.PostChainHandler;
 import net.minecraft.client.renderer.PostPass;
 
-//@Debug(export = true)
+@Debug(export = true)
 @Mixin(PostPass.class)
 public abstract class PostChainSelectiveInjection {
 
@@ -28,9 +29,7 @@ public abstract class PostChainSelectiveInjection {
 			RenderSystem.depthFunc(GL11.GL_LESS);
 			RenderSystem.depthMask(true);
 		} else {
-			RenderSystem.disableDepthTest();
 			original.call(originalGlMode);
-			RenderSystem.depthMask(false);
 		}
 	}
 

@@ -1,4 +1,4 @@
-package de.m_marvin.holostruct.client.blueprints;
+package de.m_marvin.holostruct.utility;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockEntityData;
@@ -21,7 +20,6 @@ import de.m_marvin.nbtutility.BinaryParser;
 import de.m_marvin.nbtutility.nbt.TagCompound;
 import de.m_marvin.univec.impl.Vec3d;
 import de.m_marvin.univec.impl.Vec3i;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.RegistryAccess;
@@ -33,6 +31,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -46,8 +45,6 @@ import net.minecraft.world.phys.Vec3;
  * @author Marvin Koehler
  */
 public class TypeConverter {
-
-	public static final Supplier<RegistryAccess> HOLDER = () -> Minecraft.getInstance().level.registryAccess();
 	
 	public static final BlockStateData AIR_STATE = new BlockStateData(new RegistryName("minecraft:air"));
 	
@@ -105,25 +102,27 @@ public class TypeConverter {
 	
 	/**
 	 * Converts an actual block entity to and data type.
+	 * @param holder The registry access
 	 * @param blockEntity The block entity instance
 	 * @return The block entity data type or null if it was not possible to convert
 	 */
-	public static BlockEntityData blockEntity2data(BlockEntity blockEntity) {
+	public static BlockEntityData blockEntity2data(RegistryAccess holder, BlockEntity blockEntity) {
 		if (blockEntity == null) return null;
 		RegistryName typeName = resLoc2data(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()));
 		Vec3i position = new Vec3i(blockEntity.getBlockPos().getX(), blockEntity.getBlockPos().getY(), blockEntity.getBlockPos().getZ());
 		BlockEntityData data = new BlockEntityData(position, typeName);
-		data.setData(nbt2data(blockEntity.saveWithoutMetadata(HOLDER.get())));
+		data.setData(nbt2data(blockEntity.saveWithoutMetadata(holder)));
 		return data;
 	}
 	
 	/**
 	 * Constructs an actual block entity from an data type.
+	 * @param holder The registry access
 	 * @param block The actual block state of the block entity, required for construction
 	 * @param data The block entity data type
 	 * @return The actual block entity instance or null if it was not possible to convert.
 	 */
-	public static BlockEntity data2blockEntity(BlockState block, BlockEntityData data) {
+	public static BlockEntity data2blockEntity(RegistryAccess holder, BlockState block, BlockEntityData data) {
 		if (data == null) return null;
 		Optional<Reference<BlockEntityType<?>>> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.get(data2resLoc(data.getTypeName()));
 		if (type.isEmpty()) {
@@ -132,31 +131,33 @@ public class TypeConverter {
 		}
 		BlockPos position = new BlockPos(data.getPosition().x, data.getPosition().y, data.getPosition().z);
 		BlockEntity blockEntity = type.get().value().create(position, block);
-		blockEntity.loadWithComponents(data2nbt(data.getData()), HOLDER.get());
+		blockEntity.loadWithComponents(data2nbt(data.getData()), holder);
 		return blockEntity;
 	}
 	
 	/**
 	 * Converts an actual entity to and data type.
+	 * @param holder The registry access
 	 * @param entity The entity instance
 	 * @return The entity data type or null if it was not possible to convert
 	 */
 	@SuppressWarnings("removal")
-	public static EntityData entity2data(Entity entity) {
+	public static EntityData entity2data(RegistryAccess holder, Entity entity) {
 		if (entity == null) return null;
 		RegistryName entityName = resLoc2data(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
 		Vec3d position = new Vec3d(entity.position().x, entity.position().y, entity.position().z);
 		EntityData data = new EntityData(position, entityName);
-		data.setData(nbt2data(entity.serializeNBT(HOLDER.get())));
+		data.setData(nbt2data(entity.serializeNBT(holder)));
 		return data;
 	}
 	
 	/**
 	 * Constructs an actual entity from an data type.
+	 * @param level The level to instantiate the entity in
 	 * @param data The entity data type
 	 * @return The actual entity instance or null if it was not possible to convert.
 	 */
-	public static Entity data2entity(EntityData data) {
+	public static Entity data2entity(Level level, EntityData data) {
 		if (data == null) return null;
 		Optional<Reference<EntityType<?>>> type = BuiltInRegistries.ENTITY_TYPE.get(data2resLoc(data.getEntityName()));
 		if (type.isEmpty()) {
@@ -164,8 +165,7 @@ public class TypeConverter {
 			return null;
 		}
 		Vec3 position = new Vec3(data.getPosition().x, data.getPosition().y, data.getPosition().z);
-		@SuppressWarnings("resource")
-		Entity entity = type.get().value().create(Minecraft.getInstance().level, EntitySpawnReason.LOAD);
+		Entity entity = type.get().value().create(level, EntitySpawnReason.LOAD);
 		if (data.getData() != null) entity.load(data2nbt(data.getData()));
 		entity.setPos(position);
 		return entity;

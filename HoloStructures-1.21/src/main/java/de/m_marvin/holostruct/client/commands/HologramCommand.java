@@ -9,12 +9,12 @@ import com.mojang.math.OctahedralGroup;
 
 import de.m_marvin.blueprints.api.Blueprint;
 import de.m_marvin.holostruct.HoloStruct;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
 import de.m_marvin.holostruct.client.commands.arguments.BlueprintArgument;
 import de.m_marvin.holostruct.client.commands.arguments.HologramArgument;
 import de.m_marvin.holostruct.client.commands.arguments.ViewMode;
 import de.m_marvin.holostruct.client.holograms.Hologram;
 import de.m_marvin.holostruct.client.struktedit.StruktOrientator;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.holostruct.utility.UtilHelper;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.commands.CommandSourceStack;

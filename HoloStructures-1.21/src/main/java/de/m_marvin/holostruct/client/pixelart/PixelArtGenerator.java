@@ -23,7 +23,7 @@ import de.m_marvin.blueprints.api.RegistryName;
 import de.m_marvin.blueprints.api.worldobjects.BlockStateData;
 import de.m_marvin.holostruct.HoloStruct;
 import de.m_marvin.holostruct.client.ClientConfig;
-import de.m_marvin.holostruct.client.blueprints.TypeConverter;
+import de.m_marvin.holostruct.utility.TypeConverter;
 import de.m_marvin.univec.impl.Vec3i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
